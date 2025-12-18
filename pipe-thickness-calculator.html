@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipe Thickness Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d6eaf8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 50px;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px auto 0;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.4);
+        }
+
+        .results {
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            border-left: 5px solid #3498db;
+            display: none;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 18px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .result-value {
+            font-weight: 700;
+            color: #27ae60;
+            font-size: 20px;
+        }
+
+        .material-info {
+            background: #e8f6f3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .material-info h3 {
+            color: #27ae60;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .material-info p {
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .result-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-pipe"></i> Pipe Thickness Calculator</h1>
+        </div>
+
+        <div class="content">
+            <form id="pipeForm">
+                <div class="form-group">
+                    <label for="material">Material:</label>
+                    <select id="material" required>
+                        <option value="">Select Material</option>
+                        <option value="astm-a312-tp304">ASTM A312 TP304</option>
+                        <option value="astm-a312-tp316">ASTM A312 TP316</option>
+                        <option value="astm-a312-tp316l">ASTM A312 TP316L</option>
+                        <option value="astm-a312-tp321">ASTM A312 TP321</option>
+                        <option value="astm-a312-tp347">ASTM A312 TP347</option>
+                        <option value="carbon-steel">Carbon Steel A106</option>
+                        <option value="alloy-steel">Alloy Steel A335</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="designPressure">Design Pressure (bar):</label>
+                    <input type="number" id="designPressure" placeholder="e.g., 50" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="designTemperature">Design Temperature (°C):</label>
+                    <input type="number" id="designTemperature" placeholder="e.g., 100" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="outsideDiameter">Outside Diameter (mm):</label>
+                    <input type="number" id="outsideDiameter" placeholder="e.g., 114.3" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="corrosionAllowance">Corrosion Allowance (mm):</label>
+                    <input type="number" id="corrosionAllowance" value="1.5" step="0.1" required>
+                </div>
+
+                <button type="button" class="calculate-btn" onclick="calculateThickness()">
+                    <i class="fas fa-calculator"></i>
+                    Calculate Thickness
+                </button>
+            </form>
+
+            <div class="results" id="results">
+                <div class="result-item">
+                    <span class="result-label">Required Wall Thickness:</span>
+                    <span class="result-value" id="requiredThickness">0.00 mm</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Minimum Thickness (with Corrosion):</span>
+                    <span class="result-value" id="minimumThickness">0.00 mm</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Recommended Schedule:</span>
+                    <span class="result-value" id="recommendedSchedule">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Safety Factor:</span>
+                    <span class="result-value" id="safetyFactor">4.0</span>
+                </div>
+
+                <div class="material-info" id="materialInfo">
+                    <h3>Material Information</h3>
+                    <p id="materialDetails">Select a material to see specifications.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Material properties database
+        const materials = {
+            'astm-a312-tp304': {
+                name: 'ASTM A312 TP304',
+                allowableStress: 138, // MPa at room temperature
+                description: 'Austenitic stainless steel with good corrosion resistance and weldability. Suitable for general purpose applications.',
+                maxTemp: 870,
+                density: 8000
+            },
+            'astm-a312-tp316': {
+                name: 'ASTM A312 TP316',
+                allowableStress: 138, // MPa at room temperature
+                description: 'Austenitic stainless steel with improved corrosion resistance due to molybdenum content. Excellent for marine environments.',
+                maxTemp: 870,
+                density: 8000
+            },
+            'astm-a312-tp316l': {
+                name: 'ASTM A312 TP316L',
+                allowableStress: 138, // MPa at room temperature
+                description: 'Low carbon version of 316 with better weldability and reduced carbide precipitation.',
+                maxTemp: 870,
+                density: 8000
+            },
+            'astm-a312-tp321': {
+                name: 'ASTM A312 TP321',
+                allowableStress: 138, // MPa at room temperature
+                description: 'Titanium stabilized austenitic stainless steel with good high-temperature properties.',
+                maxTemp: 900,
+                density: 8000
+            },
+            'astm-a312-tp347': {
+                name: 'ASTM A312 TP347',
+                allowableStress: 138, // MPa at room temperature
+                description: 'Niobium stabilized austenitic stainless steel, excellent for high-temperature service.',
+                maxTemp: 900,
+                density: 8000
+            },
+            'carbon-steel': {
+                name: 'Carbon Steel A106',
+                allowableStress: 138, // MPa at room temperature
+                description: 'Carbon steel suitable for high-temperature service in refineries and chemical plants.',
+                maxTemp: 427,
+                density: 7850
+            },
+            'alloy-steel': {
+                name: 'Alloy Steel A335',
+                allowableStress: 138, // MPa at room temperature
+                description: 'Low alloy steel for high-temperature service with good strength and toughness.',
+                maxTemp: 593,
+                density: 7850
+            }
+        };
+
+        // Standard pipe schedules
+        const pipeSchedules = [
+            { schedule: '5S', thickness: 1.65 },
+            { schedule: '10S', thickness: 2.11 },
+            { schedule: '20', thickness: 2.77 },
+            { schedule: '30', thickness: 3.05 },
+            { schedule: '40', thickness: 4.04 },
+            { schedule: '60', thickness: 4.85 },
+            { schedule: '80', thickness: 6.02 },
+            { schedule: '100', thickness: 7.11 },
+            { schedule: '120', thickness: 8.56 },
+            { schedule: '140', thickness: 9.52 },
+            { schedule: '160', thickness: 11.0 },
+            { schedule: 'XXS', thickness: 13.49 }
+        ];
+
+        function calculateThickness() {
+            // Get input values
+            const material = document.getElementById('material').value;
+            const designPressure = parseFloat(document.getElementById('designPressure').value);
+            const designTemp = parseFloat(document.getElementById('designTemperature').value);
+            const outsideDiameter = parseFloat(document.getElementById('outsideDiameter').value);
+            const corrosionAllowance = parseFloat(document.getElementById('corrosionAllowance').value);
+
+            if (!material || !designPressure || !designTemp || !outsideDiameter) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            const materialData = materials[material];
+            
+            // Convert pressure from bar to MPa
+            const pressureMPa = designPressure * 0.1;
+            
+            // Get temperature-adjusted allowable stress (simplified)
+            let allowableStress = materialData.allowableStress;
+            if (designTemp > 100) {
+                // Reduce allowable stress for high temperature (simplified approach)
+                const tempFactor = Math.max(0.7, 1 - (designTemp - 100) / 1000);
+                allowableStress *= tempFactor;
+            }
+
+            // Calculate required thickness using Barlow's formula
+            // t = P × D / (2 × S × E - P)
+            // Where: t = thickness, P = pressure, D = outside diameter, S = allowable stress, E = efficiency factor
+            const efficiencyFactor = 1.0; // Assuming seamless pipe
+            const safetyFactor = 4.0;
+            
+            const requiredThickness = (pressureMPa * outsideDiameter) / (2 * allowableStress * efficiencyFactor + pressureMPa);
+            
+            // Add corrosion allowance and safety factor
+            const minimumThickness = requiredThickness + corrosionAllowance;
+            
+            // Find recommended schedule
+            let recommendedSchedule = 'Custom';
+            for (let schedule of pipeSchedules) {
+                if (schedule.thickness >= minimumThickness) {
+                    recommendedSchedule = schedule.schedule;
+                    break;
+                }
+            }
+
+            // Display results
+            document.getElementById('requiredThickness').textContent = requiredThickness.toFixed(2) + ' mm';
+            document.getElementById('minimumThickness').textContent = minimumThickness.toFixed(2) + ' mm';
+            document.getElementById('recommendedSchedule').textContent = recommendedSchedule;
+            document.getElementById('safetyFactor').textContent = safetyFactor.toFixed(1);
+            
+            // Update material information
+            document.getElementById('materialDetails').textContent = materialData.description;
+            
+            // Show results
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Update material info when material changes
+        document.getElementById('material').addEventListener('change', function() {
+            const material = this.value;
+            if (material && materials[material]) {
+                document.getElementById('materialDetails').textContent = materials[material].description;
+                document.getElementById('materialInfo').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

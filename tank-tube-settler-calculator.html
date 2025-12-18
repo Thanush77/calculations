@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Size and Tube Settler Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #f5f7fa;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: white;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        input::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            background-color: #34495e;
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        .calculate-btn:hover {
+            background-color: #2c3e50;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            display: none;
+        }
+
+        .result-section {
+            margin-bottom: 25px;
+        }
+
+        .result-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #bdc3c7;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #27ae60;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .result-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tank Size and Tube Settler Calculator</h1>
+        
+        <form id="calculatorForm">
+            <div class="form-group">
+                <label for="flowRate">Flow Rate (m³/hr):</label>
+                <input type="number" id="flowRate" placeholder="Enter flow rate in m³/h" step="0.1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="baffleLength">Inlet Baffle Length (m):</label>
+                <input type="number" id="baffleLength" placeholder="Enter inlet baffle length" step="0.1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="swd">Side Water Depth (SWD) (m):</label>
+                <input type="number" id="swd" value="2.7" step="0.1" required>
+            </div>
+            
+            <button type="button" class="calculate-btn" onclick="calculate()">Calculate</button>
+        </form>
+        
+        <div class="results" id="results">
+            <div class="result-section">
+                <div class="result-title">Tank Dimensions</div>
+                <div class="result-item">
+                    <span>Tank Length:</span>
+                    <span class="result-value" id="tankLength">0.00 m</span>
+                </div>
+                <div class="result-item">
+                    <span>Tank Width:</span>
+                    <span class="result-value" id="tankWidth">0.00 m</span>
+                </div>
+                <div class="result-item">
+                    <span>Tank Area:</span>
+                    <span class="result-value" id="tankArea">0.00 m²</span>
+                </div>
+                <div class="result-item">
+                    <span>Tank Volume:</span>
+                    <span class="result-value" id="tankVolume">0.00 m³</span>
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <div class="result-title">Tube Settler Parameters</div>
+                <div class="result-item">
+                    <span>Surface Loading Rate:</span>
+                    <span class="result-value" id="surfaceLoading">0.00 m³/m²/hr</span>
+                </div>
+                <div class="result-item">
+                    <span>Hydraulic Retention Time:</span>
+                    <span class="result-value" id="retentionTime">0.00 hrs</span>
+                </div>
+                <div class="result-item">
+                    <span>Settling Velocity:</span>
+                    <span class="result-value" id="settlingVelocity">0.00 m/hr</span>
+                </div>
+                <div class="result-item">
+                    <span>Tube Length Required:</span>
+                    <span class="result-value" id="tubeLength">0.60 m</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // Get input values
+            const flowRate = parseFloat(document.getElementById('flowRate').value);
+            const baffleLength = parseFloat(document.getElementById('baffleLength').value);
+            const swd = parseFloat(document.getElementById('swd').value);
+
+            // Validate inputs
+            if (!flowRate || !baffleLength || !swd) {
+                alert('Please enter all required values.');
+                return;
+            }
+
+            // Design parameters for tube settlers
+            const surfaceLoadingRate = 2.0; // m³/m²/hr (typical for tube settlers)
+            const tubeAngle = 60; // degrees (typical tube settler angle)
+            const tubeInternalDia = 0.05; // meters (50mm typical)
+            
+            // Calculate required settling area
+            const settlingArea = flowRate / surfaceLoadingRate;
+            
+            // Calculate tank dimensions
+            // Assuming L:W ratio of 3:1 for optimal flow distribution
+            const tankWidth = Math.sqrt(settlingArea / 3);
+            const tankLength = settlingArea / tankWidth;
+            
+            // Adjust length to accommodate baffle
+            const adjustedTankLength = Math.max(tankLength, baffleLength * 1.5);
+            const adjustedTankWidth = settlingArea / adjustedTankLength;
+            
+            // Calculate tank volume
+            const tankVolume = adjustedTankLength * adjustedTankWidth * swd;
+            
+            // Calculate hydraulic retention time
+            const retentionTime = tankVolume / flowRate;
+            
+            // Calculate settling velocity (Stokes law approximation)
+            const settlingVelocity = surfaceLoadingRate / Math.cos(tubeAngle * Math.PI / 180);
+            
+            // Standard tube length for tube settlers
+            const tubeLength = 0.6; // meters (standard 600mm tubes)
+
+            // Update results
+            document.getElementById('tankLength').textContent = adjustedTankLength.toFixed(2) + ' m';
+            document.getElementById('tankWidth').textContent = adjustedTankWidth.toFixed(2) + ' m';
+            document.getElementById('tankArea').textContent = settlingArea.toFixed(2) + ' m²';
+            document.getElementById('tankVolume').textContent = tankVolume.toFixed(2) + ' m³';
+            document.getElementById('surfaceLoading').textContent = surfaceLoadingRate.toFixed(2) + ' m³/m²/hr';
+            document.getElementById('retentionTime').textContent = retentionTime.toFixed(2) + ' hrs';
+            document.getElementById('settlingVelocity').textContent = settlingVelocity.toFixed(2) + ' m/hr';
+            document.getElementById('tubeLength').textContent = tubeLength.toFixed(2) + ' m';
+
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Add enter key support
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                calculate();
+            }
+        });
+    </script>
+</body>
+</html>

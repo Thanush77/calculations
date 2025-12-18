@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETP Calculator - CalcForge Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d6eaf8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 18px;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .calculator-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #2c5aa0;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+        }
+
+        input[type="number"], select {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #fff3cd;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+        }
+
+        input[type="number"].result {
+            background-color: #d4edda;
+            font-weight: 600;
+            color: #155724;
+            cursor: not-allowed;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #28a745;
+        }
+
+        .result-card h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #28a745;
+        }
+
+        .icon {
+            font-size: 20px;
+            color: #2c5aa0;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-industry"></i> ETP Calculator</h1>
+            <p>Effluent Treatment Plant Design & Chemical Dosing Calculator</p>
+        </div>
+
+        <div class="content">
+            <!-- Influent Parameters -->
+            <div class="calculator-section">
+                <h2 class="section-title">
+                    <i class="fas fa-tint icon"></i>
+                    Influent Characteristics
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="flow-rate">Flow Rate (m³/day):</label>
+                        <input type="number" id="flow-rate" placeholder="Enter flow rate" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="influent-bod">BOD (mg/L):</label>
+                        <input type="number" id="influent-bod" placeholder="Biochemical Oxygen Demand" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="influent-cod">COD (mg/L):</label>
+                        <input type="number" id="influent-cod" placeholder="Chemical Oxygen Demand" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="influent-tss">TSS (mg/L):</label>
+                        <input type="number" id="influent-tss" placeholder="Total Suspended Solids" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="influent-ph">pH:</label>
+                        <input type="number" id="influent-ph" placeholder="pH value" step="0.1" min="0" max="14">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="temperature">Temperature (°C):</label>
+                        <input type="number" id="temperature" placeholder="Operating temperature" step="1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treatment Requirements -->
+            <div class="calculator-section">
+                <h2 class="section-title">
+                    <i class="fas fa-target icon"></i>
+                    Treatment Requirements
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="target-bod">Target BOD (mg/L):</label>
+                        <input type="number" id="target-bod" placeholder="Desired BOD level" step="1" value="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="target-cod">Target COD (mg/L):</label>
+                        <input type="number" id="target-cod" placeholder="Desired COD level" step="1" value="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="target-tss">Target TSS (mg/L):</label>
+                        <input type="number" id="target-tss" placeholder="Desired TSS level" step="1" value="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="treatment-type">Treatment Type:</label>
+                        <select id="treatment-type">
+                            <option value="primary">Primary Treatment</option>
+                            <option value="secondary">Secondary Treatment</option>
+                            <option value="tertiary">Tertiary Treatment</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateETP()">
+                    <i class="fas fa-calculator"></i>
+                    Calculate ETP Parameters
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div class="results-grid" id="results" style="display: none;">
+                <div class="result-card">
+                    <h3>BOD Removal Efficiency</h3>
+                    <div class="result-value" id="bod-efficiency">0%</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>COD Removal Efficiency</h3>
+                    <div class="result-value" id="cod-efficiency">0%</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>TSS Removal Efficiency</h3>
+                    <div class="result-value" id="tss-efficiency">0%</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Primary Clarifier Volume</h3>
+                    <div class="result-value" id="clarifier-volume">0 m³</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Aeration Tank Volume</h3>
+                    <div class="result-value" id="aeration-volume">0 m³</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Sludge Production</h3>
+                    <div class="result-value" id="sludge-production">0 kg/day</div>
+                </div>
+            </div>
+
+            <!-- Chemical Dosing -->
+            <div class="calculator-section" id="chemical-section" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-flask icon"></i>
+                    Chemical Dosing Requirements
+                </h2>
+                
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>Coagulant (Alum)</h3>
+                        <div class="result-value" id="coagulant-dose">0 kg/day</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>Flocculant (Polymer)</h3>
+                        <div class="result-value" id="flocculant-dose">0 kg/day</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>pH Adjustment (Lime)</h3>
+                        <div class="result-value" id="lime-dose">0 kg/day</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>Disinfectant (Chlorine)</h3>
+                        <div class="result-value" id="chlorine-dose">0 kg/day</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateETP() {
+            // Get input values
+            const flowRate = parseFloat(document.getElementById('flow-rate').value) || 0;
+            const influentBOD = parseFloat(document.getElementById('influent-bod').value) || 0;
+            const influentCOD = parseFloat(document.getElementById('influent-cod').value) || 0;
+            const influentTSS = parseFloat(document.getElementById('influent-tss').value) || 0;
+            const pH = parseFloat(document.getElementById('influent-ph').value) || 7;
+            const temperature = parseFloat(document.getElementById('temperature').value) || 25;
+            
+            const targetBOD = parseFloat(document.getElementById('target-bod').value) || 30;
+            const targetCOD = parseFloat(document.getElementById('target-cod').value) || 100;
+            const targetTSS = parseFloat(document.getElementById('target-tss').value) || 30;
+            const treatmentType = document.getElementById('treatment-type').value;
+
+            if (!flowRate || !influentBOD || !influentCOD) {
+                alert('Please fill in the required fields: Flow Rate, BOD, and COD');
+                return;
+            }
+
+            // Calculate removal efficiencies
+            const bodEfficiency = ((influentBOD - targetBOD) / influentBOD) * 100;
+            const codEfficiency = ((influentCOD - targetCOD) / influentCOD) * 100;
+            const tssEfficiency = ((influentTSS - targetTSS) / influentTSS) * 100;
+
+            // Calculate tank volumes
+            let clarifierVolume = 0;
+            let aerationVolume = 0;
+            let sludgeProduction = 0;
+
+            // Primary clarifier sizing (HRT = 2-4 hours)
+            clarifierVolume = flowRate * (3/24); // 3 hours HRT
+
+            // Aeration tank sizing based on treatment type
+            switch(treatmentType) {
+                case 'primary':
+                    aerationVolume = 0; // No biological treatment
+                    sludgeProduction = flowRate * influentTSS * 0.001 * 0.6; // 60% removal
+                    break;
+                case 'secondary':
+                    // Extended aeration: HRT = 18-24 hours
+                    aerationVolume = flowRate * (20/24); // 20 hours HRT
+                    sludgeProduction = flowRate * influentBOD * 0.001 * 0.4; // 40% yield
+                    break;
+                case 'tertiary':
+                    aerationVolume = flowRate * (18/24); // 18 hours HRT
+                    sludgeProduction = flowRate * influentBOD * 0.001 * 0.5; // 50% yield
+                    break;
+            }
+
+            // Chemical dosing calculations
+            const coagulantDose = flowRate * 30 * 0.001; // 30 mg/L typical alum dose
+            const flocculantDose = flowRate * 2 * 0.001; // 2 mg/L typical polymer dose
+            const limeDose = Math.abs(pH - 7) * flowRate * 10 * 0.001; // pH adjustment
+            const chlorineDose = flowRate * 5 * 0.001; // 5 mg/L for disinfection
+
+            // Display results
+            document.getElementById('bod-efficiency').textContent = Math.max(0, bodEfficiency).toFixed(1) + '%';
+            document.getElementById('cod-efficiency').textContent = Math.max(0, codEfficiency).toFixed(1) + '%';
+            document.getElementById('tss-efficiency').textContent = Math.max(0, tssEfficiency).toFixed(1) + '%';
+            document.getElementById('clarifier-volume').textContent = clarifierVolume.toFixed(1) + ' m³';
+            document.getElementById('aeration-volume').textContent = aerationVolume.toFixed(1) + ' m³';
+            document.getElementById('sludge-production').textContent = sludgeProduction.toFixed(1) + ' kg/day';
+
+            // Chemical dosing results
+            document.getElementById('coagulant-dose').textContent = coagulantDose.toFixed(1) + ' kg/day';
+            document.getElementById('flocculant-dose').textContent = flocculantDose.toFixed(2) + ' kg/day';
+            document.getElementById('lime-dose').textContent = limeDose.toFixed(1) + ' kg/day';
+            document.getElementById('chlorine-dose').textContent = chlorineDose.toFixed(1) + ' kg/day';
+
+            // Show results
+            document.getElementById('results').style.display = 'grid';
+            document.getElementById('chemical-section').style.display = 'block';
+        }
+
+        // Auto-calculate when values change
+        document.addEventListener('input', function(e) {
+            if (e.target.type === 'number' || e.target.type === 'select-one') {
+                const results = document.getElementById('results');
+                if (results.style.display === 'grid') {
+                    calculateETP();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

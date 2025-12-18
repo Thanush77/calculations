@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STP Calculator - CalcForge Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d6eaf8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8e44ad 0%, #6a1b9a 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 18px;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .calculator-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #8e44ad;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+        }
+
+        input[type="number"], select {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #fff3cd;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #8e44ad;
+            box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1);
+        }
+
+        input[type="number"].result {
+            background-color: #d4edda;
+            font-weight: 600;
+            color: #155724;
+            cursor: not-allowed;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #8e44ad 0%, #6a1b9a 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(142, 68, 173, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(142, 68, 173, 0.4);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #8e44ad;
+        }
+
+        .result-card h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #8e44ad;
+        }
+
+        .icon {
+            font-size: 20px;
+            color: #8e44ad;
+        }
+
+        .process-flow {
+            background: linear-gradient(135deg, #f4f3ff 0%, #e8e5ff 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #d1c4e9;
+        }
+
+        .process-step {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(142, 68, 173, 0.1);
+        }
+
+        .process-step .step-number {
+            background: #8e44ad;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-home"></i> STP Calculator</h1>
+            <p>Sewage Treatment Plant Design & Sizing Calculator</p>
+        </div>
+
+        <div class="content">
+            <!-- Design Parameters -->
+            <div class="calculator-section">
+                <h2 class="section-title">
+                    <i class="fas fa-drafting-compass icon"></i>
+                    Design Parameters
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="population">Population Served:</label>
+                        <input type="number" id="population" placeholder="Number of people" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="water-consumption">Water Consumption (L/person/day):</label>
+                        <input type="number" id="water-consumption" placeholder="Typically 150-200" step="1" value="180">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="peak-factor">Peak Flow Factor:</label>
+                        <input type="number" id="peak-factor" placeholder="Usually 1.5-2.5" step="0.1" value="2.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="treatment-level">Treatment Level:</label>
+                        <select id="treatment-level">
+                            <option value="primary">Primary Treatment</option>
+                            <option value="secondary" selected>Secondary Treatment</option>
+                            <option value="tertiary">Tertiary Treatment</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="influent-bod">Influent BOD (mg/L):</label>
+                        <input type="number" id="influent-bod" placeholder="Typical: 200-400" step="1" value="300">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="influent-tss">Influent TSS (mg/L):</label>
+                        <input type="number" id="influent-tss" placeholder="Typical: 200-350" step="1" value="250">
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateSTP()">
+                    <i class="fas fa-calculator"></i>
+                    Calculate STP Design
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div class="results-grid" id="results" style="display: none;">
+                <div class="result-card">
+                    <h3>Average Daily Flow</h3>
+                    <div class="result-value" id="avg-flow">0 m³/day</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Peak Hourly Flow</h3>
+                    <div class="result-value" id="peak-flow">0 m³/hr</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Primary Clarifier Volume</h3>
+                    <div class="result-value" id="primary-volume">0 m³</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Aeration Tank Volume</h3>
+                    <div class="result-value" id="aeration-volume">0 m³</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Secondary Clarifier Volume</h3>
+                    <div class="result-value" id="secondary-volume">0 m³</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Total Sludge Production</h3>
+                    <div class="result-value" id="sludge-production">0 m³/day</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Power Requirement</h3>
+                    <div class="result-value" id="power-requirement">0 kW</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Land Requirement</h3>
+                    <div class="result-value" id="land-area">0 m²</div>
+                </div>
+            </div>
+
+            <!-- Treatment Process Flow -->
+            <div class="calculator-section" id="process-section" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-project-diagram icon"></i>
+                    Treatment Process Flow
+                </h2>
+                
+                <div class="process-flow" id="process-flow">
+                    <!-- Process steps will be dynamically generated -->
+                </div>
+            </div>
+
+            <!-- Effluent Quality -->
+            <div class="calculator-section" id="quality-section" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-certificate icon"></i>
+                    Expected Effluent Quality
+                </h2>
+                
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>BOD Removal</h3>
+                        <div class="result-value" id="bod-removal">0%</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>TSS Removal</h3>
+                        <div class="result-value" id="tss-removal">0%</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>Effluent BOD</h3>
+                        <div class="result-value" id="effluent-bod">0 mg/L</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>Effluent TSS</h3>
+                        <div class="result-value" id="effluent-tss">0 mg/L</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateSTP() {
+            // Get input values
+            const population = parseFloat(document.getElementById('population').value) || 0;
+            const waterConsumption = parseFloat(document.getElementById('water-consumption').value) || 180;
+            const peakFactor = parseFloat(document.getElementById('peak-factor').value) || 2.0;
+            const treatmentLevel = document.getElementById('treatment-level').value;
+            const influentBOD = parseFloat(document.getElementById('influent-bod').value) || 300;
+            const influentTSS = parseFloat(document.getElementById('influent-tss').value) || 250;
+
+            if (!population) {
+                alert('Please enter the population served');
+                return;
+            }
+
+            // Calculate flow rates (80% of water consumption becomes wastewater)
+            const avgFlow = population * waterConsumption * 0.8 / 1000; // m³/day
+            const peakFlow = avgFlow * peakFactor / 24; // m³/hr
+
+            // Calculate tank volumes based on treatment level
+            let primaryVolume = 0;
+            let aerationVolume = 0;
+            let secondaryVolume = 0;
+            let bodRemoval = 0;
+            let tssRemoval = 0;
+            let powerRequirement = 0;
+
+            switch(treatmentLevel) {
+                case 'primary':
+                    // Primary clarifier: HRT = 2-3 hours
+                    primaryVolume = avgFlow * (2.5/24);
+                    aerationVolume = 0;
+                    secondaryVolume = 0;
+                    bodRemoval = 30; // 30% BOD removal
+                    tssRemoval = 60; // 60% TSS removal
+                    powerRequirement = population * 0.5; // 0.5 kW per person
+                    break;
+                    
+                case 'secondary':
+                    // Primary clarifier: HRT = 2 hours
+                    primaryVolume = avgFlow * (2/24);
+                    // Aeration tank: HRT = 6-8 hours, MLSS = 3000-4000 mg/L
+                    aerationVolume = avgFlow * (7/24);
+                    // Secondary clarifier: HRT = 2-3 hours
+                    secondaryVolume = avgFlow * (2.5/24);
+                    bodRemoval = 85; // 85% BOD removal
+                    tssRemoval = 85; // 85% TSS removal
+                    powerRequirement = population * 2.0; // 2.0 kW per person
+                    break;
+                    
+                case 'tertiary':
+                    // Primary clarifier: HRT = 1.5 hours
+                    primaryVolume = avgFlow * (1.5/24);
+                    // Aeration tank: HRT = 8-10 hours
+                    aerationVolume = avgFlow * (9/24);
+                    // Secondary clarifier + tertiary filters
+                    secondaryVolume = avgFlow * (3/24);
+                    bodRemoval = 95; // 95% BOD removal
+                    tssRemoval = 95; // 95% TSS removal
+                    powerRequirement = population * 3.0; // 3.0 kW per person
+                    break;
+            }
+
+            // Calculate sludge production
+            const primarySludge = avgFlow * influentTSS * 0.001 * (tssRemoval/100) * 0.5; // m³/day
+            const secondarySludge = avgFlow * influentBOD * 0.001 * 0.4; // biological sludge
+            const totalSludge = primarySludge + secondarySludge;
+
+            // Calculate land requirement (rule of thumb: 1-2 m² per person)
+            const landArea = population * 1.5;
+
+            // Calculate effluent quality
+            const effluentBOD = influentBOD * (100 - bodRemoval) / 100;
+            const effluentTSS = influentTSS * (100 - tssRemoval) / 100;
+
+            // Display results
+            document.getElementById('avg-flow').textContent = avgFlow.toFixed(1) + ' m³/day';
+            document.getElementById('peak-flow').textContent = peakFlow.toFixed(1) + ' m³/hr';
+            document.getElementById('primary-volume').textContent = primaryVolume.toFixed(1) + ' m³';
+            document.getElementById('aeration-volume').textContent = aerationVolume.toFixed(1) + ' m³';
+            document.getElementById('secondary-volume').textContent = secondaryVolume.toFixed(1) + ' m³';
+            document.getElementById('sludge-production').textContent = totalSludge.toFixed(2) + ' m³/day';
+            document.getElementById('power-requirement').textContent = powerRequirement.toFixed(0) + ' kW';
+            document.getElementById('land-area').textContent = landArea.toFixed(0) + ' m²';
+
+            // Display effluent quality
+            document.getElementById('bod-removal').textContent = bodRemoval + '%';
+            document.getElementById('tss-removal').textContent = tssRemoval + '%';
+            document.getElementById('effluent-bod').textContent = effluentBOD.toFixed(0) + ' mg/L';
+            document.getElementById('effluent-tss').textContent = effluentTSS.toFixed(0) + ' mg/L';
+
+            // Generate process flow
+            generateProcessFlow(treatmentLevel);
+
+            // Show results
+            document.getElementById('results').style.display = 'grid';
+            document.getElementById('process-section').style.display = 'block';
+            document.getElementById('quality-section').style.display = 'block';
+        }
+
+        function generateProcessFlow(treatmentLevel) {
+            const processFlow = document.getElementById('process-flow');
+            let steps = [];
+
+            switch(treatmentLevel) {
+                case 'primary':
+                    steps = [
+                        'Screening & Grit Removal',
+                        'Primary Clarifier',
+                        'Sludge Thickening',
+                        'Disinfection',
+                        'Effluent Discharge'
+                    ];
+                    break;
+                case 'secondary':
+                    steps = [
+                        'Screening & Grit Removal',
+                        'Primary Clarifier',
+                        'Aeration Tank',
+                        'Secondary Clarifier',
+                        'Sludge Recirculation',
+                        'Disinfection',
+                        'Effluent Discharge'
+                    ];
+                    break;
+                case 'tertiary':
+                    steps = [
+                        'Screening & Grit Removal',
+                        'Primary Clarifier',
+                        'Aeration Tank',
+                        'Secondary Clarifier',
+                        'Tertiary Filtration',
+                        'Nutrient Removal',
+                        'Disinfection',
+                        'Effluent Discharge'
+                    ];
+                    break;
+            }
+
+            processFlow.innerHTML = '';
+            steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'process-step';
+                stepDiv.innerHTML = `
+                    <div class="step-number">${index + 1}</div>
+                    <div>${step}</div>
+                `;
+                processFlow.appendChild(stepDiv);
+            });
+        }
+
+        // Auto-calculate when values change
+        document.addEventListener('input', function(e) {
+            if (e.target.type === 'number' || e.target.type === 'select-one') {
+                const results = document.getElementById('results');
+                if (results.style.display === 'grid') {
+                    calculateSTP();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salt Quantity Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: white;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        input::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            display: none;
+        }
+
+        .result-item {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Salt Quantity Calculator</h1>
+        
+        <form id="saltForm">
+            <div class="form-group">
+                <label for="flow">Flow (m³/day):</label>
+                <input type="number" id="flow" placeholder="Enter flow in m³/day" step="0.1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="tds">TDS (ppm):</label>
+                <input type="number" id="tds" placeholder="Enter TDS in ppm" step="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="moisture">Moisture Content (%):</label>
+                <input type="number" id="moisture" placeholder="Enter moisture % (0-100)" step="0.1" min="0" max="100" required>
+            </div>
+            
+            <button type="button" class="calculate-btn" onclick="calculate()">Calculate</button>
+        </form>
+        
+        <div class="results" id="results">
+            <div class="result-item">
+                Salt Required (kg/day): <span class="result-value" id="saltRequired">0.00</span>
+            </div>
+            <div class="result-item">
+                Dry Salt Weight (kg/day): <span class="result-value" id="drySaltWeight">0.00</span>
+            </div>
+            <div class="result-item">
+                Salt with Moisture (kg/day): <span class="result-value" id="saltWithMoisture">0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // Get input values
+            const flow = parseFloat(document.getElementById('flow').value);
+            const tds = parseFloat(document.getElementById('tds').value);
+            const moisture = parseFloat(document.getElementById('moisture').value);
+
+            // Validate inputs
+            if (!flow || !tds || moisture === '' || moisture < 0 || moisture > 100) {
+                alert('Please enter valid values for all fields.');
+                return;
+            }
+
+            // Calculate salt required for regeneration
+            // Typical calculation: Salt required = Flow × TDS × conversion factor
+            // For ion exchange regeneration, approximately 100-150g NaCl per gram of hardness removed
+            // Simplified calculation: Salt needed = TDS removal × flow × regeneration factor
+            
+            const saltRequired = (flow * tds * 0.15) / 1000; // kg/day (assuming 15% regeneration efficiency)
+            
+            // Calculate dry salt weight (pure NaCl needed)
+            const drySaltWeight = saltRequired;
+            
+            // Calculate salt with moisture content
+            // If salt has X% moisture, then actual weight = dry weight / (1 - moisture/100)
+            const moistureFactor = 1 - (moisture / 100);
+            const saltWithMoisture = drySaltWeight / moistureFactor;
+
+            // Display results
+            document.getElementById('saltRequired').textContent = saltRequired.toFixed(2);
+            document.getElementById('drySaltWeight').textContent = drySaltWeight.toFixed(2);
+            document.getElementById('saltWithMoisture').textContent = saltWithMoisture.toFixed(2);
+
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Add enter key support
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                calculate();
+            }
+        });
+    </script>
+</body>
+</html>

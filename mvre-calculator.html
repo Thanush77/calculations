@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVRE Calculator - CalcForge Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d6eaf8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 18px;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .calculator-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #f39c12;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+        }
+
+        input[type="number"], select {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #fff3cd;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #f39c12;
+            box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+        }
+
+        input[type="number"].result {
+            background-color: #d4edda;
+            font-weight: 600;
+            color: #155724;
+            cursor: not-allowed;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #f39c12;
+        }
+
+        .result-card h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f39c12;
+        }
+
+        .icon {
+            font-size: 20px;
+            color: #f39c12;
+        }
+
+        .efficiency-chart {
+            background: linear-gradient(135deg, #fff8dc 0%, #f5f5dc 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .efficiency-bar {
+            background: #e9ecef;
+            height: 30px;
+            border-radius: 15px;
+            margin: 10px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .efficiency-fill {
+            background: linear-gradient(90deg, #f39c12 0%, #e67e22 100%);
+            height: 100%;
+            border-radius: 15px;
+            transition: width 0.8s ease;
+            position: relative;
+        }
+
+        .efficiency-label {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .efficiency-value {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: 700;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table th {
+            background: #f39c12;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-compress-alt"></i> MVRE Calculator</h1>
+            <p>Mechanical Vapor Recompression Evaporator Design & Performance</p>
+        </div>
+
+        <div class="content">
+            <!-- Operating Parameters -->
+            <div class="calculator-section">
+                <h2 class="section-title">
+                    <i class="fas fa-thermometer-half icon"></i>
+                    Operating Parameters
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="feed-flow">Feed Flow Rate (m³/hr):</label>
+                        <input type="number" id="feed-flow" placeholder="Enter feed flow rate" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feed-concentration">Feed Concentration (%):</label>
+                        <input type="number" id="feed-concentration" placeholder="Initial concentration" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="product-concentration">Product Concentration (%):</label>
+                        <input type="number" id="product-concentration" placeholder="Final concentration" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="evaporation-temp">Evaporation Temperature (°C):</label>
+                        <input type="number" id="evaporation-temp" placeholder="Operating temperature" step="1" value="80">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="compression-ratio">Compression Ratio:</label>
+                        <input type="number" id="compression-ratio" placeholder="Typically 1.5-3.0" step="0.1" value="2.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="compressor-efficiency">Compressor Efficiency (%):</label>
+                        <input type="number" id="compressor-efficiency" placeholder="75-85%" step="1" value="80">
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Configuration -->
+            <div class="calculator-section">
+                <h2 class="section-title">
+                    <i class="fas fa-cogs icon"></i>
+                    System Configuration
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="compressor-type">Compressor Type:</label>
+                        <select id="compressor-type">
+                            <option value="centrifugal">Centrifugal Compressor</option>
+                            <option value="roots">Roots Blower</option>
+                            <option value="turbo">Turbo Blower</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="heat-exchanger">Heat Exchanger Type:</label>
+                        <select id="heat-exchanger">
+                            <option value="plate">Plate Heat Exchanger</option>
+                            <option value="shell-tube">Shell & Tube</option>
+                            <option value="falling-film">Falling Film</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="operating-pressure">Operating Pressure (bar):</label>
+                        <input type="number" id="operating-pressure" placeholder="System pressure" step="0.1" value="1.2">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="residence-time">Residence Time (min):</label>
+                        <input type="number" id="residence-time" placeholder="Typical 5-15 min" step="1" value="10">
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateMVRE()">
+                    <i class="fas fa-calculator"></i>
+                    Calculate MVRE Performance
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div class="results-grid" id="results" style="display: none;">
+                <div class="result-card">
+                    <h3>Evaporation Rate</h3>
+                    <div class="result-value" id="evaporation-rate">0 m³/hr</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Concentrate Flow</h3>
+                    <div class="result-value" id="concentrate-flow">0 m³/hr</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Steam Economy</h3>
+                    <div class="result-value" id="steam-economy">0 kg/kg</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Power Consumption</h3>
+                    <div class="result-value" id="power-consumption">0 kW</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Specific Energy</h3>
+                    <div class="result-value" id="specific-energy">0 kWh/m³</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Heat Transfer Area</h3>
+                    <div class="result-value" id="heat-area">0 m²</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Compressor Capacity</h3>
+                    <div class="result-value" id="compressor-capacity">0 m³/hr</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>Overall Efficiency</h3>
+                    <div class="result-value" id="overall-efficiency">0%</div>
+                </div>
+            </div>
+
+            <!-- Efficiency Chart -->
+            <div class="calculator-section" id="efficiency-section" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-bar icon"></i>
+                    System Efficiency Analysis
+                </h2>
+                
+                <div class="efficiency-chart">
+                    <div class="efficiency-bar">
+                        <div class="efficiency-label">Thermal Efficiency</div>
+                        <div class="efficiency-fill" id="thermal-efficiency-bar">
+                            <div class="efficiency-value" id="thermal-efficiency-value">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="efficiency-bar">
+                        <div class="efficiency-label">Compressor Efficiency</div>
+                        <div class="efficiency-fill" id="compressor-efficiency-bar">
+                            <div class="efficiency-value" id="compressor-efficiency-value">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="efficiency-bar">
+                        <div class="efficiency-label">Heat Recovery Efficiency</div>
+                        <div class="efficiency-fill" id="heat-recovery-bar">
+                            <div class="efficiency-value" id="heat-recovery-value">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="calculator-section" id="comparison-section" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-balance-scale icon"></i>
+                    Technology Comparison
+                </h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>MVRE</th>
+                            <th>Multi-Effect Evaporator</th>
+                            <th>Thermal Evaporator</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Steam Economy (kg/kg)</td>
+                            <td id="mvre-steam-economy">-</td>
+                            <td>3-7</td>
+                            <td>0.8-1.2</td>
+                        </tr>
+                        <tr>
+                            <td>Power Consumption (kWh/m³)</td>
+                            <td id="mvre-power">-</td>
+                            <td>5-15</td>
+                            <td>2-8</td>
+                        </tr>
+                        <tr>
+                            <td>Operating Pressure</td>
+                            <td>Vacuum/Atmospheric</td>
+                            <td>Vacuum</td>
+                            <td>Atmospheric</td>
+                        </tr>
+                        <tr>
+                            <td>Maintenance</td>
+                            <td>Moderate (Compressor)</td>
+                            <td>Low</td>
+                            <td>High (Heating)</td>
+                        </tr>
+                        <tr>
+                            <td>Capital Cost</td>
+                            <td>High</td>
+                            <td>Medium</td>
+                            <td>Low</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateMVRE() {
+            // Get input values
+            const feedFlow = parseFloat(document.getElementById('feed-flow').value) || 0;
+            const feedConcentration = parseFloat(document.getElementById('feed-concentration').value) || 0;
+            const productConcentration = parseFloat(document.getElementById('product-concentration').value) || 0;
+            const evaporationTemp = parseFloat(document.getElementById('evaporation-temp').value) || 80;
+            const compressionRatio = parseFloat(document.getElementById('compression-ratio').value) || 2.0;
+            const compressorEfficiency = parseFloat(document.getElementById('compressor-efficiency').value) || 80;
+            const compressorType = document.getElementById('compressor-type').value;
+            const heatExchanger = document.getElementById('heat-exchanger').value;
+            const operatingPressure = parseFloat(document.getElementById('operating-pressure').value) || 1.2;
+            const residenceTime = parseFloat(document.getElementById('residence-time').value) || 10;
+
+            if (!feedFlow || !feedConcentration || !productConcentration) {
+                alert('Please enter Feed Flow Rate, Feed Concentration, and Product Concentration');
+                return;
+            }
+
+            if (productConcentration <= feedConcentration) {
+                alert('Product Concentration must be higher than Feed Concentration');
+                return;
+            }
+
+            // Calculate mass balance
+            const concentrationRatio = productConcentration / feedConcentration;
+            const concentrateFlow = feedFlow / concentrationRatio;
+            const evaporationRate = feedFlow - concentrateFlow;
+            
+            // Calculate steam economy (kg distillate per kg steam)
+            // MVRE typically achieves 8-25 kg/kg steam economy
+            const baseSteamEconomy = 15; // Base value for MVRE
+            let steamEconomyFactor = 1;
+            
+            switch(compressorType) {
+                case 'centrifugal':
+                    steamEconomyFactor = 1.2;
+                    break;
+                case 'roots':
+                    steamEconomyFactor = 1.0;
+                    break;
+                case 'turbo':
+                    steamEconomyFactor = 1.1;
+                    break;
+            }
+            
+            const steamEconomy = baseSteamEconomy * steamEconomyFactor * (compressorEfficiency / 100);
+            
+            // Calculate power consumption
+            // Theoretical compression power: P = m * R * T * ln(Pr) / η
+            const gasConstant = 287; // J/kg·K for steam
+            const absoluteTemp = evaporationTemp + 273.15;
+            const massFlow = evaporationRate * 1000 / 3600; // kg/s (assuming water density)
+            
+            const theoreticalPower = (massFlow * gasConstant * absoluteTemp * Math.log(compressionRatio)) / 1000; // kW
+            const actualPower = theoreticalPower / (compressorEfficiency / 100);
+            
+            // Add auxiliary power (pumps, controls, etc.)
+            const totalPower = actualPower * 1.15;
+            
+            // Calculate specific energy consumption
+            const specificEnergy = totalPower / evaporationRate; // kWh/m³
+            
+            // Calculate heat transfer area
+            let heatTransferCoeff = 2000; // W/m²·K
+            switch(heatExchanger) {
+                case 'plate':
+                    heatTransferCoeff = 3000;
+                    break;
+                case 'shell-tube':
+                    heatTransferCoeff = 1500;
+                    break;
+                case 'falling-film':
+                    heatTransferCoeff = 2500;
+                    break;
+            }
+            
+            const deltaT = 10; // Temperature difference across heat exchanger
+            const latentHeat = 2257; // kJ/kg for water at 100°C
+            const heatDuty = evaporationRate * 1000 * latentHeat / 3600; // kW
+            const heatArea = heatDuty * 1000 / (heatTransferCoeff * deltaT); // m²
+            
+            // Calculate compressor capacity (volumetric flow)
+            const steamDensity = 0.6; // kg/m³ at operating conditions
+            const compressorCapacity = (evaporationRate * 1000) / steamDensity; // m³/hr
+            
+            // Calculate efficiencies
+            const thermalEfficiency = Math.min(95, 70 + (steamEconomy - 10) * 2);
+            const heatRecoveryEfficiency = Math.min(95, 80 + (compressionRatio - 1.5) * 10);
+            const overallEfficiency = (thermalEfficiency + compressorEfficiency + heatRecoveryEfficiency) / 3;
+            
+            // Display results
+            document.getElementById('evaporation-rate').textContent = evaporationRate.toFixed(1) + ' m³/hr';
+            document.getElementById('concentrate-flow').textContent = concentrateFlow.toFixed(1) + ' m³/hr';
+            document.getElementById('steam-economy').textContent = steamEconomy.toFixed(1) + ' kg/kg';
+            document.getElementById('power-consumption').textContent = totalPower.toFixed(0) + ' kW';
+            document.getElementById('specific-energy').textContent = specificEnergy.toFixed(1) + ' kWh/m³';
+            document.getElementById('heat-area').textContent = heatArea.toFixed(0) + ' m²';
+            document.getElementById('compressor-capacity').textContent = compressorCapacity.toFixed(0) + ' m³/hr';
+            document.getElementById('overall-efficiency').textContent = overallEfficiency.toFixed(1) + '%';
+            
+            // Update efficiency charts
+            updateEfficiencyChart('thermal-efficiency-bar', 'thermal-efficiency-value', thermalEfficiency);
+            updateEfficiencyChart('compressor-efficiency-bar', 'compressor-efficiency-value', compressorEfficiency);
+            updateEfficiencyChart('heat-recovery-bar', 'heat-recovery-value', heatRecoveryEfficiency);
+            
+            // Update comparison table
+            document.getElementById('mvre-steam-economy').textContent = steamEconomy.toFixed(1);
+            document.getElementById('mvre-power').textContent = specificEnergy.toFixed(1);
+            
+            // Show results
+            document.getElementById('results').style.display = 'grid';
+            document.getElementById('efficiency-section').style.display = 'block';
+            document.getElementById('comparison-section').style.display = 'block';
+        }
+        
+        function updateEfficiencyChart(barId, valueId, efficiency) {
+            const bar = document.getElementById(barId);
+            const valueElement = document.getElementById(valueId);
+            
+            bar.style.width = efficiency + '%';
+            valueElement.textContent = efficiency.toFixed(1) + '%';
+        }
+
+        // Auto-calculate when values change
+        document.addEventListener('input', function(e) {
+            if (e.target.type === 'number' || e.target.type === 'select-one') {
+                const results = document.getElementById('results');
+                if (results.style.display === 'grid') {
+                    calculateMVRE();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

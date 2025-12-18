@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sludge Processing Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #f4f1e8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #8b4513;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #6d4c28;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d4af7a;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: white;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #8b4513;
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+        }
+
+        input::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            background-color: #8b4513;
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        .calculate-btn:hover {
+            background-color: #6d4c28;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #faf8f3;
+            border-radius: 8px;
+            border-left: 4px solid #8b4513;
+            display: none;
+        }
+
+        .results h2 {
+            font-size: 24px;
+            color: #8b4513;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e8dcc0;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #8b4513;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .result-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .result-value {
+                min-width: auto;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sludge Processing Calculator</h1>
+        
+        <form id="sludgeForm">
+            <div class="form-group">
+                <label for="feedFlow">Sludge Feed Flow (m³/day):</label>
+                <input type="number" id="feedFlow" placeholder="Enter feed flow" step="0.1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="concentration">Sludge Concentration (mg/L):</label>
+                <input type="number" id="concentration" placeholder="Enter concentration" step="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="recovery">Solids Recovery (%):</label>
+                <input type="number" id="recovery" placeholder="Enter recovery percentage" step="0.1" min="0" max="100" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="consistency">Cake Consistency (%):</label>
+                <input type="number" id="consistency" placeholder="Enter cake consistency" step="0.1" min="0" max="100" required>
+            </div>
+            
+            <button type="button" class="calculate-btn" onclick="calculate()">Calculate</button>
+        </form>
+        
+        <div class="results" id="results">
+            <h2>Results:</h2>
+            <div class="result-item">
+                <span>Sludge Mass (kg/day):</span>
+                <span class="result-value" id="sludgeMass">0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Cake Mass (kg/day):</span>
+                <span class="result-value" id="cakeMass">0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Cake Volume (m³/day):</span>
+                <span class="result-value" id="cakeVolume">0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Centrate Volume (m³/day):</span>
+                <span class="result-value" id="centrateVolume">0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Centrate TSS Mass (kg/day):</span>
+                <span class="result-value" id="centrateTssMass">0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Centrate TSS Concentration (mg/L):</span>
+                <span class="result-value" id="centrateTssConc">0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // Get input values
+            const feedFlow = parseFloat(document.getElementById('feedFlow').value);
+            const concentration = parseFloat(document.getElementById('concentration').value);
+            const recovery = parseFloat(document.getElementById('recovery').value);
+            const consistency = parseFloat(document.getElementById('consistency').value);
+
+            // Validate inputs
+            if (!feedFlow || !concentration || recovery === '' || consistency === '' || 
+                recovery < 0 || recovery > 100 || consistency < 0 || consistency > 100) {
+                alert('Please enter valid values for all fields.');
+                return;
+            }
+
+            // Calculate sludge mass (kg/day)
+            const sludgeMass = (feedFlow * concentration) / 1000; // Convert mg/L to kg/m³
+
+            // Calculate cake mass (kg/day) - based on recovery percentage
+            const cakeMass = sludgeMass * (recovery / 100);
+
+            // Calculate cake volume (m³/day)
+            // Assuming cake density of 1000 kg/m³ at given consistency
+            const cakeVolume = cakeMass / (1000 * (consistency / 100));
+
+            // Calculate centrate volume (m³/day)
+            const centrateVolume = feedFlow - cakeVolume;
+
+            // Calculate centrate TSS mass (kg/day) - solids not recovered
+            const centrateTssMass = sludgeMass - cakeMass;
+
+            // Calculate centrate TSS concentration (mg/L)
+            const centrateTssConc = centrateVolume > 0 ? (centrateTssMass * 1000) / centrateVolume : 0;
+
+            // Display results
+            document.getElementById('sludgeMass').textContent = sludgeMass.toFixed(2);
+            document.getElementById('cakeMass').textContent = cakeMass.toFixed(2);
+            document.getElementById('cakeVolume').textContent = cakeVolume.toFixed(2);
+            document.getElementById('centrateVolume').textContent = centrateVolume.toFixed(2);
+            document.getElementById('centrateTssMass').textContent = centrateTssMass.toFixed(2);
+            document.getElementById('centrateTssConc').textContent = centrateTssConc.toFixed(2);
+
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Add enter key support
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                calculate();
+            }
+        });
+    </script>
+</body>
+</html>

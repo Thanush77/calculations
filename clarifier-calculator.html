@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clarifier Diameter Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .calculate-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+
+        .result-item {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .result-value {
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clarifier Diameter Calculator</h1>
+        
+        <form id="clarifierForm">
+            <div class="form-group">
+                <label for="flowRate">Design Flow Rate at Inlet (m³/hr):</label>
+                <input type="number" id="flowRate" value="15" step="0.1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="limeSodaSludge">Lime Soda Sludge (ppm):</label>
+                <input type="number" id="limeSodaSludge" value="100" step="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="suspendedSolids">Suspended Solids in Feed (ppm):</label>
+                <input type="number" id="suspendedSolids" value="100" step="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="sideWaterDepth">Side Water Depth Considered (m):</label>
+                <input type="number" id="sideWaterDepth" value="3" step="0.1" required>
+            </div>
+            
+            <button type="button" class="calculate-btn" onclick="calculate()">Calculate</button>
+        </form>
+        
+        <div class="results" id="results" style="display: none;">
+            <div class="result-item">
+                Sludge Flow Rate: <span class="result-value" id="sludgeFlowRate">0.09</span> m³/hr
+            </div>
+            <div class="result-item">
+                Diameter of the Clarifier: <span class="result-value" id="clarifierDiameter">4.74</span> m
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // Get input values
+            const flowRate = parseFloat(document.getElementById('flowRate').value);
+            const limeSodaSludge = parseFloat(document.getElementById('limeSodaSludge').value);
+            const suspendedSolids = parseFloat(document.getElementById('suspendedSolids').value);
+            const sideWaterDepth = parseFloat(document.getElementById('sideWaterDepth').value);
+            
+            // Calculate total suspended solids
+            const totalSuspendedSolids = limeSodaSludge + suspendedSolids;
+            
+            // Calculate sludge flow rate
+            // Assuming 3% solids concentration in sludge
+            const sludgeConcentration = 30000; // 3% = 30,000 ppm
+            const sludgeFlowRate = (flowRate * totalSuspendedSolids) / sludgeConcentration;
+            
+            // Calculate clarifier diameter
+            // Using surface overflow rate of 1.0 m³/m²/hr for lime soda clarifier
+            const surfaceOverflowRate = 1.0;
+            const requiredArea = flowRate / surfaceOverflowRate;
+            const diameter = Math.sqrt((4 * requiredArea) / Math.PI);
+            
+            // Display results
+            document.getElementById('sludgeFlowRate').textContent = sludgeFlowRate.toFixed(2);
+            document.getElementById('clarifierDiameter').textContent = diameter.toFixed(2);
+            document.getElementById('results').style.display = 'block';
+        }
+        
+        // Calculate on load
+        window.onload = function() {
+            calculate();
+        };
+    </script>
+</body>
+</html>
