@@ -1,248 +1,510 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pipe Size Calculator</title>
+    <title>Pipe Sizing Design Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #0891b2;
+            /* Cyan-600 */
+            --primary-dark: #0e7490;
+            --secondary: #64748b;
+            --accent: #155e75;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #ecfeff;
+            /* Cyan-50 */
+            --card-bg: #ffffff;
+            --border-color: #cffafe;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            color: var(--accent);
+            line-height: 1.5;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #1976d2;
-            font-size: 28px;
-            font-weight: 600;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .container {
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-            max-width: 500px;
+        .design-studio {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #333;
+        @media (max-width: 1024px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .form-group {
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to right, #ecfeff, #cffafe);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .form-section {
             margin-bottom: 25px;
         }
 
-        label {
+        .form-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #a5f3fc;
+            padding-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
             display: block;
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
         }
 
-        input[type="number"], select {
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background-color: white;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--accent);
         }
 
-        input[type="number"]:focus, select:focus {
+        .input-wrapper input:focus {
+            border-color: var(--primary);
             outline: none;
-            border-color: #1976d2;
-            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
         }
 
-        select {
-            cursor: pointer;
+        .unit-badge {
+            position: absolute;
+            right: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
         }
 
-        input::placeholder {
-            color: #aaa;
-            font-style: italic;
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
         }
 
-        .calculate-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        .result-block {
+            background: #edfaff;
+            /* Light Cyan */
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #a5f3fc;
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 16px;
-            font-size: 18px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
             font-weight: 600;
-            border-radius: 8px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.3s;
-            margin-top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
-        .calculate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        .action-btn:hover {
+            background: var(--primary-dark);
         }
 
-        .calculate-btn:active {
-            transform: translateY(0);
-        }
-
-        .results {
-            margin-top: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-            border-radius: 8px;
-            border-left: 4px solid #4caf50;
-            display: none;
-        }
-
-        .result-item {
-            font-size: 18px;
+        .warning-box {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
             margin-bottom: 15px;
-            color: #333;
-        }
-
-        .result-value {
-            font-weight: 600;
-            color: #2e7d32;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 20px;
-            }
-
-            .header {
-                font-size: 24px;
-            }
-
-            h1 {
-                font-size: 20px;
-            }
+            display: none;
         }
     </style>
 </head>
+
 <body>
-    <div class="header">PIPE SIZE CALCULATOR</div>
-    
-    <div class="container">
-        <h1>Line Sizing Calculator</h1>
-        
-        <form id="pipeForm">
-            <div class="form-group">
-                <label for="flowRate">Flow Rate (m³/h):</label>
-                <input type="number" id="flowRate" placeholder="Enter flow rate in m³/h" step="0.1" required>
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-sliders-h"></i> Line Parameters</div>
             </div>
-            
-            <div class="form-group">
-                <label for="velocity">Select Velocity:</label>
-                <select id="velocity" required>
-                    <option value="">Select velocity type</option>
-                    <option value="gravity">Gravity (0.5-1.5 m/s)</option>
-                    <option value="suction">Suction (1.0-2.0 m/s)</option>
-                    <option value="discharge">Discharge (1.5-3.0 m/s)</option>
-                    <option value="steam">Steam (15-30 m/s)</option>
-                    <option value="compressed_air">Compressed Air (10-25 m/s)</option>
-                    <option value="water_service">Water Service (1.0-2.5 m/s)</option>
-                </select>
+            <div class="panel-body">
+
+                <!-- 1. Fluid Service -->
+                <div class="form-section">
+                    <div class="form-section-title">Fluid & Service</div>
+                    <div class="input-group">
+                        <label>Service Type</label>
+                        <div class="input-wrapper">
+                            <select id="service">
+                                <option value="water_del" selected>Water Delivery (1-2.5 m/s)</option>
+                                <option value="suction">Pump Suction (0.8-1.5 m/s)</option>
+                                <option value="gravity">Gravity Flow (0.5-1.0 m/s)</option>
+                                <option value="steam">Steam (15-30 m/s)</option>
+                                <option value="air">Compressed Air (15-25 m/s)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Flow Rate</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="flow" value="50">
+                            <span class="unit-badge">m³/hr</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Physical Properties -->
+                <div class="form-section">
+                    <div class="form-section-title">Fluid Physics</div>
+                    <div class="input-group">
+                        <label>Temperature</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="temp" value="25">
+                            <span class="unit-badge">°C</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Density (Rho)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="density" value="997">
+                            <span class="unit-badge">kg/m³</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Pipe Spec -->
+                <div class="form-section">
+                    <div class="form-section-title">Pipe Specification</div>
+                    <div class="input-group">
+                        <label>Material Roughness</label>
+                        <div class="input-wrapper">
+                            <select id="material">
+                                <option value="0.045">Steel (Commercial)</option>
+                                <option value="0.0015" selected>PVC / HDPE (Smooth)</option>
+                                <option value="0.15">Galvanized Iron</option>
+                                <option value="0.26">Cast Iron</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Line Length</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="len" value="100">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Override ID (Optional)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="custom_id" placeholder="Auto-calc">
+                            <span class="unit-badge">mm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="PipeEngine.calculate()">
+                    <i class="fas fa-calculator"></i> Size Line
+                </button>
             </div>
-            
-            <button type="button" class="calculate-btn" onclick="calculateDiameter()">Calculate Diameter</button>
-        </form>
-        
-        <div class="results" id="results">
-            <div class="result-item">
-                Recommended Velocity Range: <span class="result-value" id="velocityRange">0.00 - 0.00 m/s</span>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-microchip"></i> Hydraulic Sizing</div>
             </div>
-            <div class="result-item">
-                Calculated Diameter (min): <span class="result-value" id="diameterMin">0.00 mm</span>
-            </div>
-            <div class="result-item">
-                Calculated Diameter (max): <span class="result-value" id="diameterMax">0.00 mm</span>
-            </div>
-            <div class="result-item">
-                Recommended Pipe Size: <span class="result-value" id="recommendedSize">DN 00</span>
+            <div class="panel-body">
+
+                <div id="warnings" class="warning-box"></div>
+
+                <div class="result-grid">
+                    <!-- Sizing Result -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-ruler"></i> Recommended Size</h4>
+                        <div class="calc-row">
+                            <span>Service Target</span>
+                            <span class="calc-val" id="res_target_vel">0 m/s</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Calc. Min Diameter</span>
+                            <span class="calc-val" id="res_min_d">0 mm</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Selected DN</span>
+                            <span class="calc-val" style="font-size:16px; color:#0e7490;" id="res_dn">DN 0</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Actual ID</span>
+                            <span class="calc-val" id="res_id">0 mm</span>
+                        </div>
+                    </div>
+
+                    <!-- Hydraulics -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-water"></i> Flow Physics</h4>
+                        <div class="calc-row">
+                            <span>Actual Velocity</span>
+                            <span class="calc-val" style="font-size:16px;" id="res_vel">0 m/s</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Velocity Head</span>
+                            <span class="calc-val" id="res_vh">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Reynolds No.</span>
+                            <span class="calc-val" id="res_re">0</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Blowing Regime</span>
+                            <span class="calc-val" id="res_regime">Turbulent</span>
+                        </div>
+                    </div>
+
+                    <!-- Pressure Drop -->
+                    <div class="result-block" style="grid-column: span 2; background:#ecfeff; border-color:#0891b2;">
+                        <h4><i class="fas fa-tachometer-alt"></i> Pressure Drop (Darcy)</h4>
+                        <div class="calc-row">
+                            <span>Friction Factor (f)</span>
+                            <span class="calc-val" id="res_f">0.02</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Head Loss / 100m</span>
+                            <span class="calc-val" id="res_loss_100">0 m/100m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Total Pressure Drop</span>
+                            <span class="calc-val" style="font-size:20px; color:#0e7490;" id="res_dp_bar">0.00
+                                bar</span>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Velocity ranges for different applications
-        const velocityRanges = {
-            'gravity': { min: 0.5, max: 1.5, name: '0.5 - 1.5 m/s' },
-            'suction': { min: 1.0, max: 2.0, name: '1.0 - 2.0 m/s' },
-            'discharge': { min: 1.5, max: 3.0, name: '1.5 - 3.0 m/s' },
-            'steam': { min: 15, max: 30, name: '15 - 30 m/s' },
-            'compressed_air': { min: 10, max: 25, name: '10 - 25 m/s' },
-            'water_service': { min: 1.0, max: 2.5, name: '1.0 - 2.5 m/s' }
+        window.PipeEngine = {
+            calculate: function () {
+                try {
+                    // Inputs
+                    const Q_hr = this.val('flow');
+                    const Q_sec = Q_hr / 3600;
+                    const Temp = this.val('temp');
+                    const Rho = this.val('density');
+                    const Roughness = parseFloat(document.getElementById('material').value);
+                    const Length = this.val('len');
+                    const Service = document.getElementById('service').value;
+
+                    // 1. Determine Target Velocity
+                    let V_target = 1.5; // Default m/s
+                    let V_max_allow = 3.0;
+                    switch (Service) {
+                        case 'suction': V_target = 1.0; V_max_allow = 1.6; break;
+                        case 'gravity': V_target = 0.8; V_max_allow = 1.0; break;
+                        case 'steam': V_target = 25.0; V_max_allow = 40.0; break;
+                        case 'air': V_target = 20.0; V_max_allow = 30.0; break;
+                        default: V_target = 1.8; V_max_allow = 2.5; break;
+                    }
+
+                    // 2. Initial Sizing (Continuity)
+                    // A = Q / V => D = sqrt(4Q / pi*V)
+                    const D_ideal_m = Math.sqrt((4 * Q_sec) / (Math.PI * V_target));
+                    const D_ideal_mm = D_ideal_m * 1000;
+
+                    // Select Standard
+                    const StandardDN = [15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 600];
+                    // Find standard >= Ideal
+                    let DN = StandardDN.find(d => d >= D_ideal_mm) || 600;
+
+                    // Override?
+                    const CustomID = this.val('custom_id');
+                    let D_actual_mm = DN; // Simplify: Schedule 40 ID approx DN for larger sizes, rough logic
+                    if (CustomID > 0) D_actual_mm = CustomID;
+
+                    const D_m = D_actual_mm / 1000;
+
+                    // 3. Hydraulics Check
+                    const Area = (Math.PI / 4) * D_m * D_m;
+                    const V_actual = Q_sec / Area;
+                    const V_head = (V_actual * V_actual) / (2 * 9.81);
+
+                    // Reynolds Number
+                    // Viscosity Water @ 20C approx 1e-3 Pa.s (1 cP). Or Nu = 1e-6 m2/s.
+                    // Viscosity Gas/Steam varies.
+                    // Simplified Nu model for water-like liquids:
+                    let Nu = 1.004e-6;
+                    if (Service === 'steam' || Service === 'air') {
+                        Nu = 1.5e-5; // Approx for air/steam
+                    } else {
+                        // Water temp correction
+                        Nu = 1.78e-6 / (1 + 0.0337 * Temp + 0.000221 * Temp * Temp);
+                    }
+
+                    const Re = (V_actual * D_m) / Nu;
+                    let Regime = "Laminar";
+                    if (Re > 4000) Regime = "Turbulent";
+                    else if (Re > 2000) Regime = "Transition";
+
+                    // Friction Factor (Swamee-Jain)
+                    let f = 0.03;
+                    if (Re > 2000) {
+                        const rr = Roughness / D_actual_mm; // e/Dmm ? No e/D. both mm.
+                        // Swamee-Jain: f = 0.25 / [log10(e/3.7D + 5.74/Re^0.9)]^2
+                        // e in mm, D in mm ok.
+                        const term1 = Roughness / (3.7 * D_actual_mm);
+                        const term2 = 5.74 / Math.pow(Re, 0.9);
+                        f = 0.25 / Math.pow(Math.log10(term1 + term2), 2);
+                    } else {
+                        f = 64 / Re;
+                    }
+
+                    // Head Loss (Darcy)
+                    // h_f = f * (L/D) * (v^2/2g)
+                    const H_loss_total = f * (Length / D_m) * V_head;
+                    const H_loss_100m = (H_loss_total / Length) * 100;
+
+                    // Pressure Drop (Bar)
+                    // dP = Rho * g * H_loss / 100000
+                    const dP_bar = (Rho * 9.81 * H_loss_total) / 100000;
+
+
+                    // --- OUTPUT ---
+                    this.set('res_target_vel', V_target + ' m/s');
+                    this.set('res_min_d', D_ideal_mm.toFixed(1) + ' mm');
+                    this.set('res_dn', 'DN ' + DN);
+                    this.set('res_id', D_actual_mm.toFixed(1) + ' mm');
+
+                    this.set('res_vel', V_actual.toFixed(2) + ' m/s');
+                    this.set('res_vh', V_head.toFixed(3) + ' m');
+                    this.set('res_re', Re.toExponential(2));
+                    this.set('res_regime', Regime);
+
+                    this.set('res_f', f.toFixed(4));
+                    this.set('res_loss_100', H_loss_100m.toFixed(2) + ' m');
+                    this.set('res_dp_bar', dP_bar.toFixed(3) + ' bar');
+
+                    // Style Velocity
+                    const elVel = document.getElementById('res_vel');
+                    if (V_actual > V_max_allow) elVel.style.color = '#ef4444';
+                    else elVel.style.color = '#155e75';
+
+                    // Warnings
+                    const warns = [];
+                    if (V_actual > V_max_allow) warns.push(`Velocity ${V_actual.toFixed(2)} m/s exceeds limit (${V_max_allow} m/s). Upsize pipe.`);
+                    if (Service === 'suction' && V_actual > 1.5) warns.push("Suction velocity > 1.5 m/s. Check NPSH.");
+                    if (Service === 'gravity' && V_actual < 0.6) warns.push("Gravity velocity < 0.6 m/s. Sedimentation risk.");
+                    if (dP_bar > 0.5 && Service !== 'steam') warns.push("High Pressure Drop (>0.5 bar). Check pumping energy.");
+
+                    const el = document.getElementById('warnings');
+                    if (warns.length > 0) {
+                        el.style.display = 'block';
+                        el.innerHTML = warns.map(w => `<div><i class="fas fa-exclamation-triangle"></i> ${w}</div>`).join('');
+                    } else el.style.display = 'none';
+
+                } catch (e) { console.error(e); }
+            },
+            val: function (id) { return parseFloat(document.getElementById(id).value) || 0; },
+            set: function (id, v) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = v;
+            }
         };
 
-        // Standard pipe sizes (DN - Nominal Diameter in mm)
-        const standardPipeSizes = [
-            15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900, 1000
-        ];
-
-        function calculateDiameter() {
-            const flowRate = parseFloat(document.getElementById('flowRate').value);
-            const velocityType = document.getElementById('velocity').value;
-
-            if (!flowRate || !velocityType) {
-                alert('Please enter all required values.');
-                return;
-            }
-
-            const velocityRange = velocityRanges[velocityType];
-            const flowRateMs = flowRate / 3600; // Convert m³/h to m³/s
-
-            // Calculate diameter using: D = sqrt(4Q / (π × V))
-            // For minimum diameter (maximum velocity)
-            const diameterMinM = Math.sqrt((4 * flowRateMs) / (Math.PI * velocityRange.max));
-            const diameterMinMm = diameterMinM * 1000;
-
-            // For maximum diameter (minimum velocity)
-            const diameterMaxM = Math.sqrt((4 * flowRateMs) / (Math.PI * velocityRange.min));
-            const diameterMaxMm = diameterMaxM * 1000;
-
-            // Find recommended standard pipe size
-            let recommendedSize = standardPipeSizes[0];
-            for (let size of standardPipeSizes) {
-                if (size >= diameterMinMm) {
-                    recommendedSize = size;
-                    break;
-                }
-            }
-
-            // Update results
-            document.getElementById('velocityRange').textContent = velocityRange.name;
-            document.getElementById('diameterMin').textContent = diameterMinMm.toFixed(1) + ' mm';
-            document.getElementById('diameterMax').textContent = diameterMaxMm.toFixed(1) + ' mm';
-            document.getElementById('recommendedSize').textContent = 'DN ' + recommendedSize;
-
-            document.getElementById('results').style.display = 'block';
+        window.onload = function () {
+            PipeEngine.calculate();
+            document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', () => PipeEngine.calculate()));
         }
-
-        // Add enter key support
-        document.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                calculateDiameter();
-            }
-        });
     </script>
 </body>
+
 </html>

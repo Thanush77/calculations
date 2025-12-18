@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,6 +39,27 @@
             text-align: center;
         }
 
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #718096;
+            margin-bottom: -2px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
         .form-group {
             margin-bottom: 24px;
         }
@@ -50,23 +72,34 @@
             font-weight: 500;
         }
 
-        select, input[type="number"] {
+        input[type="number"] {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 16px;
             transition: border-color 0.3s;
-            background-color: white;
         }
 
-        select:focus, input[type="number"]:focus {
+        input[type="number"]:focus {
             outline: none;
             border-color: #007bff;
         }
 
-        select {
+        .calculate-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
             cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .calculate-btn:hover {
+            background-color: #0056b3;
         }
 
         .results {
@@ -75,6 +108,7 @@
             background-color: #f8f9fa;
             border-radius: 4px;
             border: 1px solid #e9ecef;
+            display: none;
         }
 
         .result-item {
@@ -92,181 +126,139 @@
         }
 
         .result-value {
-            padding: 8px 12px;
-            border: 1px solid #28a745;
-            border-radius: 4px;
-            background-color: #d4edda;
-            color: #155724;
             font-weight: 600;
-            min-width: 120px;
-            text-align: center;
+            color: #28a745;
         }
 
-        .tank-volumes {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
+        /* Hide logic for tabs */
+        .calculator-mode {
+            display: none;
         }
 
-        .volume-option {
-            padding: 8px 12px;
-            border: 2px solid #ffd700;
-            border-radius: 4px;
-            background-color: #ffff99;
-            text-align: center;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .volume-option:hover {
-            background-color: #ffed4a;
-        }
-
-        .volume-option.selected {
-            background-color: #ffd700;
-            border-color: #ff8c00;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 20px;
-            }
-
-            h1 {
-                font-size: 28px;
-            }
-
-            .result-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-
-            .result-value {
-                min-width: auto;
-                width: 100%;
-            }
+        .calculator-mode.active {
+            display: block;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Tank Size Calculator</h1>
-        
-        <form id="tankForm">
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('dims')">Find Dimensions</div>
+            <div class="tab" onclick="switchTab('vol')">Find Volume</div>
+        </div>
+
+        <!-- Mode 1: Known Volume, Find Dimensions -->
+        <div id="mode-dims" class="calculator-mode active">
             <div class="form-group">
-                <label for="tankVolume">Select Tank Volume (Liters):</label>
-                <div class="tank-volumes">
-                    <div class="volume-option" data-volume="350">350</div>
-                    <div class="volume-option" data-volume="500">500</div>
-                    <div class="volume-option" data-volume="750">750</div>
-                    <div class="volume-option" data-volume="1000">1000</div>
-                    <div class="volume-option" data-volume="1500">1500</div>
-                    <div class="volume-option" data-volume="2000">2000</div>
-                    <div class="volume-option" data-volume="2500">2500</div>
-                    <div class="volume-option" data-volume="3000">3000</div>
-                    <div class="volume-option" data-volume="4000">4000</div>
-                    <div class="volume-option" data-volume="5000">5000</div>
+                <label for="targetVolume">Target Volume (Liters):</label>
+                <input type="number" id="targetVolume" placeholder="e.g., 5000">
+            </div>
+            <div class="form-group">
+                <label for="aspectRatio">Aspect Ratio (Height / Diameter) - Optional:</label>
+                <input type="number" id="aspectRatio" placeholder="Default 1.0" value="1.0" step="0.1">
+            </div>
+            <button class="calculate-btn" onclick="calculateDims()">Calculate Dimensions</button>
+
+            <div class="results" id="results-dims">
+                <div class="result-item">
+                    <span>Suggested Diameter:</span>
+                    <span class="result-value" id="calcDiameter">0.00 m</span>
                 </div>
-                <select id="tankVolume" style="margin-top: 10px;">
-                    <option value="">Or select from dropdown</option>
-                    <option value="350">350 Liters</option>
-                    <option value="500">500 Liters</option>
-                    <option value="750">750 Liters</option>
-                    <option value="1000">1000 Liters</option>
-                    <option value="1500">1500 Liters</option>
-                    <option value="2000">2000 Liters</option>
-                    <option value="2500">2500 Liters</option>
-                    <option value="3000">3000 Liters</option>
-                    <option value="4000">4000 Liters</option>
-                    <option value="5000">5000 Liters</option>
-                </select>
+                <div class="result-item">
+                    <span>Suggested Height:</span>
+                    <span class="result-value" id="calcHeight">0.00 m</span>
+                </div>
             </div>
-        </form>
-        
-        <div class="results" id="results">
-            <div class="result-item">
-                <span>Diameter (m):</span>
-                <div class="result-value" id="diameter">0.8</div>
+        </div>
+
+        <!-- Mode 2: Known Dimensions, Find Volume -->
+        <div id="mode-vol" class="calculator-mode">
+            <div class="form-group">
+                <label for="inputDiameter">Diameter (m):</label>
+                <input type="number" id="inputDiameter" placeholder="e.g., 2.5" step="0.01">
             </div>
-            <div class="result-item">
-                <span>Tank Height Without Agitator (m):</span>
-                <div class="result-value" id="height">1</div>
+            <div class="form-group">
+                <label for="inputHeight">Height (m):</label>
+                <input type="number" id="inputHeight" placeholder="e.g., 3.0" step="0.01">
+            </div>
+            <button class="calculate-btn" onclick="calculateVol()">Calculate Volume</button>
+
+            <div class="results" id="results-vol">
+                <div class="result-item">
+                    <span>Total Volume:</span>
+                    <span class="result-value" id="calcVolume">0.00 m³</span>
+                </div>
+                <div class="result-item">
+                    <span>Volume in Liters:</span>
+                    <span class="result-value" id="calcLiters">0 L</span>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Tank dimension data (volume in liters: {diameter in m, height in m})
-        const tankDimensions = {
-            350: { diameter: 0.8, height: 1.0 },
-            500: { diameter: 0.9, height: 1.1 },
-            750: { diameter: 1.0, height: 1.2 },
-            1000: { diameter: 1.1, height: 1.3 },
-            1500: { diameter: 1.2, height: 1.4 },
-            2000: { diameter: 1.3, height: 1.5 },
-            2500: { diameter: 1.4, height: 1.6 },
-            3000: { diameter: 1.5, height: 1.7 },
-            4000: { diameter: 1.6, height: 1.8 },
-            5000: { diameter: 1.7, height: 1.9 }
-        };
+        function switchTab(mode) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            // Hide all modes
+            document.querySelectorAll('.calculator-mode').forEach(m => m.classList.remove('active'));
 
-        function calculateTankSize(volume) {
-            if (!volume || !tankDimensions[volume]) {
+            // Activate select
+            if (mode === 'dims') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('mode-dims').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('mode-vol').classList.add('active');
+            }
+        }
+
+        function calculateDims() {
+            const volLiters = parseFloat(document.getElementById('targetVolume').value);
+            let ratio = parseFloat(document.getElementById('aspectRatio').value) || 1.0;
+
+            if (!volLiters) {
+                alert('Please enter a target volume.');
                 return;
             }
 
-            const dimensions = tankDimensions[volume];
-            
-            // Update display
-            document.getElementById('diameter').textContent = dimensions.diameter;
-            document.getElementById('height').textContent = dimensions.height;
+            const volM3 = volLiters / 1000;
+
+            // V = pi * r^2 * h
+            // h = D * ratio
+            // V = pi * (D/2)^2 * (D * ratio)
+            // V = pi * D^2/4 * D * ratio = (pi * ratio * D^3) / 4
+            // D^3 = (4 * V) / (pi * ratio)
+
+            const diameter = Math.cbrt((4 * volM3) / (Math.PI * ratio));
+            const height = diameter * ratio;
+
+            document.getElementById('calcDiameter').textContent = diameter.toFixed(3) + ' m';
+            document.getElementById('calcHeight').textContent = height.toFixed(3) + ' m';
+            document.getElementById('results-dims').style.display = 'block';
         }
 
-        // Handle volume option clicks
-        document.querySelectorAll('.volume-option').forEach(option => {
-            option.addEventListener('click', function() {
-                // Remove selected class from all options
-                document.querySelectorAll('.volume-option').forEach(opt => 
-                    opt.classList.remove('selected')
-                );
-                
-                // Add selected class to clicked option
-                this.classList.add('selected');
-                
-                // Update dropdown
-                const volume = this.getAttribute('data-volume');
-                document.getElementById('tankVolume').value = volume;
-                
-                // Calculate dimensions
-                calculateTankSize(parseInt(volume));
-            });
-        });
+        function calculateVol() {
+            const d = parseFloat(document.getElementById('inputDiameter').value);
+            const h = parseFloat(document.getElementById('inputHeight').value);
 
-        // Handle dropdown selection
-        document.getElementById('tankVolume').addEventListener('change', function() {
-            const volume = parseInt(this.value);
-            
-            // Update volume options
-            document.querySelectorAll('.volume-option').forEach(opt => {
-                opt.classList.remove('selected');
-                if (opt.getAttribute('data-volume') === this.value) {
-                    opt.classList.add('selected');
-                }
-            });
-            
-            // Calculate dimensions
-            calculateTankSize(volume);
-        });
+            if (!d || !h) {
+                alert('Please enter diameter and height.');
+                return;
+            }
 
-        // Initialize with default value (350L)
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('[data-volume="350"]').classList.add('selected');
-            document.getElementById('tankVolume').value = '350';
-            calculateTankSize(350);
-        });
+            const radius = d / 2;
+            const volumeM3 = Math.PI * Math.pow(radius, 2) * h;
+            const volumeLiters = volumeM3 * 1000;
+
+            document.getElementById('calcVolume').textContent = volumeM3.toFixed(3) + ' m³';
+            document.getElementById('calcLiters').textContent = volumeLiters.toFixed(0) + ' L';
+            document.getElementById('results-vol').style.display = 'block';
+        }
     </script>
 </body>
+
 </html>

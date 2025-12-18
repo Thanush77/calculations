@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pump Selection & Application Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #0f766e;
+            /* Teal-700 */
+            --primary-dark: #115e59;
+            --secondary: #64748b;
+            --accent: #134e4a;
+            --bg-page: #f0fdfa;
+            /* Teal-50 */
+            --card-bg: #ffffff;
+            --border-color: #ccfbf1;
+            --tab-active: #0f766e;
+            --tab-inactive: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .engine-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 800px;
+        }
+
+        /* Header */
+        .engine-header {
+            background: linear-gradient(to right, #0f766e, #0d9488);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            padding: 15px 25px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: white;
+        }
+
+        /* Content Area */
+        .content-area {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Inputs (Left) */
+        .input-panel {
+            width: 400px;
+            padding: 25px;
+            border-right: 1px solid #e2e8f0;
+            background: #f8fafc;
+            overflow-y: auto;
+            max-height: 800px;
+        }
+
+        .section-header {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px 30px 8px 10px;
+            /* Space for unit */
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        input:focus {
+            outline: 2px solid var(--primary);
+            border-color: transparent;
+        }
+
+        .unit {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        /* Main View (Right) */
+        .main-view {
+            flex: 1;
+            padding: 25px;
+            background: white;
+            overflow-y: auto;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .stat-val {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .validation-box {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .val-pass {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .val-fail {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .val-warn {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .btn-calc {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn-calc:hover {
+            background: var(--primary-dark);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            background: #f1f5f9;
+            padding: 8px;
+            color: #475569;
+        }
+
+        td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="engine-container">
+        <div class="engine-header">
+            <div class="app-title"><i class="fas fa-industry"></i> Pump Selection Engine</div>
+            <div style="font-size:12px;">Unified Hydraulic Design & Selection</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="app.setTab('process')">1. Process & System</button>
+            <button class="tab-btn" onclick="app.setTab('pump')">2. Pump Selection</button>
+            <button class="tab-btn" onclick="app.setTab('economic')">3. Economics</button>
+        </div>
+
+        <div class="content-area">
+            <!-- LEFT PANEL: Dynamic Inputs based on Tab -->
+            <div class="input-panel" id="input_panel">
+
+                <!-- Process Tab Inputs -->
+                <div id="tab_process">
+                    <div class="section-header">Fluid Properties</div>
+                    <div class="input-group">
+                        <label>Design Flow</label>
+                        <div class="control-wrapper">
+                            <input type="number" id="q_des" value="50">
+                            <span class="unit">m³/hr</span>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div class="input-group" style="flex:1">
+                            <label>Temp</label>
+                            <div class="control-wrapper">
+                                <input type="number" id="temp" value="25">
+                                <span class="unit">°C</span>
+                            </div>
+                        </div>
+                        <div class="input-group" style="flex:1">
+                            <label>Density</label>
+                            <div class="control-wrapper">
+                                <input type="number" id="rho" value="997">
+                                <span class="unit">kg/m³</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header" style="margin-top:20px;">System Head</div>
+                    <div class="input-group">
+                        <label>Static Suction Lift/Head (Z1)</label>
+                        <div class="control-wrapper">
+                            <input type="number" id="z1" value="-2">
+                            <span class="unit">m</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Static Discharge Head (Z2)</label>
+                        <div class="control-wrapper">
+                            <input type="number" id="z2" value="20">
+                            <span class="unit">m</span>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div class="input-group" style="flex:1">
+                            <label>P1 (Suc)</label>
+                            <div class="control-wrapper">
+                                <input type="number" id="p1" value="0">
+                                <span class="unit">bar</span>
+                            </div>
+                        </div>
+                        <div class="input-group" style="flex:1">
+                            <label>P2 (Dis)</label>
+                            <div class="control-wrapper">
+                                <input type="number" id="p2" value="0.5">
+                                <span class="unit">bar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header" style="margin-top:20px;">Piping Config</div>
+                    <div class="control-row">
+                        <div class="input-group" style="flex:1">
+                            <label>Suc. DN</label>
+                            <select id="dn_suc">
+                                <option value="80">DN80</option>
+                                <option value="100">DN100</option>
+                                <option value="125" selected>DN125</option>
+                                <option value="150">DN150</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="flex:1">
+                            <label>Dis. DN</label>
+                            <select id="dn_dis">
+                                <option value="80">DN80</option>
+                                <option value="100" selected>DN100</option>
+                                <option value="125">DN125</option>
+                                <option value="150">DN150</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div class="input-group" style="flex:1">
+                            <label>L_suc (Total)</label>
+                            <div class="control-wrapper">
+                                <input type="number" id="l_suc" value="10">
+                                <span class="unit">m</span>
+                            </div>
+                        </div>
+                        <div class="input-group" style="flex:1">
+                            <label>L_dis (Total)</label>
+                            <div class="control-wrapper">
+                                <input type="number" id="l_dis" value="150">
+                                <span class="unit">m</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div class="input-group" style="flex:1">
+                            <label>Fit K (Suc)</label>
+                            <input type="number" id="k_suc" value="1.5">
+                        </div>
+                        <div class="input-group" style="flex:1">
+                            <label>Fit K (Dis)</label>
+                            <input type="number" id="k_dis" value="5.0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pump Tab Inputs -->
+                <div id="tab_pump" style="display:none;">
+                    <div class="section-header">Candidate Pump (Simulated)</div>
+                    <div class="input-group">
+                        <label>Select Model</label>
+                        <select id="pump_model" onchange="app.loadPump()">
+                            <option value="A">Model A (Small: BEP 40m3 @ 30m)</option>
+                            <option value="B" selected>Model B (Med: BEP 60m3 @ 45m)</option>
+                            <option value="C">Model C (Large: BEP 100m3 @ 60m)</option>
+                        </select>
+                    </div>
+
+                    <div class="section-header" style="margin-top:20px;">Curve Coeffs (H = A + BQ + CQ²)</div>
+                    <div class="input-group"><label>Coeff A (Shutoff Head)</label><input type="number" id="c_a"
+                            readonly></div>
+                    <div class="input-group"><label>Coeff B</label><input type="number" id="c_b" readonly></div>
+                    <div class="input-group"><label>Coeff C</label><input type="number" id="c_c" readonly></div>
+
+                    <div class="section-header" style="margin-top:20px;">Limits</div>
+                    <div class="input-group">
+                        <label>NPSHr @ BEP</label>
+                        <div class="control-wrapper"><input type="number" id="npsh_bep" readonly><span
+                                class="unit">m</span></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Best Eff (%)</label>
+                        <div class="control-wrapper"><input type="number" id="eff_bep" readonly><span
+                                class="unit">%</span></div>
+                    </div>
+                </div>
+
+                <!-- Economics Tab Inputs -->
+                <div id="tab_economic" style="display:none;">
+                    <div class="section-header">Operational Profile</div>
+                    <div class="input-group">
+                        <label>Running Hours / Year</label>
+                        <div class="control-wrapper"><input type="number" id="hrs_yr" value="8000"><span
+                                class="unit">hrs</span></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Energy Tariff</label>
+                        <div class="control-wrapper"><input type="number" id="tariff" value="0.12"><span
+                                class="unit">$/kWh</span></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Pump Asset Cost</label>
+                        <div class="control-wrapper"><input type="number" id="capex" value="5000"><span
+                                class="unit">$</span></div>
+                    </div>
+                </div>
+
+                <button class="btn-calc" onclick="app.calculate()"><i class="fas fa-play"></i> RUN SELECTION</button>
+
+            </div>
+
+            <!-- RIGHT PANEL: Dashboard -->
+            <div class="main-view">
+
+                <div class="dashboard-grid">
+
+                    <!-- Main Chart -->
+                    <div class="card" style="grid-column: span 2;">
+                        <h4><i class="fas fa-chart-area"></i> System vs Pump Curve Intersection</h4>
+                        <div class="chart-container">
+                            <canvas id="pumpChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Operating Point -->
+                    <div class="card">
+                        <h4><i class="fas fa-crosshairs"></i> Operating Point</h4>
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Flow (Q_op)</div>
+                                <div class="stat-val" id="res_q_op">--</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Head (H_op)</div>
+                                <div class="stat-val" id="res_h_op">--</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Efficiency</div>
+                                <div class="stat-val" id="res_eff_op">--</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Power (Shaft)</div>
+                                <div class="stat-val" id="res_p_shaft">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Engineering Validation -->
+                    <div class="card">
+                        <h4><i class="fas fa-check-circle"></i> Design Validation</h4>
+
+                        <div id="val_bep" class="validation-box val-warn">
+                            <i class="fas fa-question-circle"></i> <span>Check BEP Zone</span>
+                        </div>
+                        <div id="val_npsh" class="validation-box val-warn">
+                            <i class="fas fa-question-circle"></i> <span>Check NPSH</span>
+                        </div>
+                        <div id="val_vel" class="validation-box val-warn">
+                            <i class="fas fa-question-circle"></i> <span>Check Velocity</span>
+                        </div>
+                    </div>
+
+                    <!-- Cost Analysis -->
+                    <div class="card" style="grid-column: span 2;">
+                        <h4><i class="fas fa-coins"></i> Lifecycle Cost Analysis (Annual)</h4>
+                        <div style="display:flex; justify-content:space-around; align-items:center;">
+                            <div>
+                                <div class="stat-label">Energy Consumed</div>
+                                <div class="stat-val" id="res_energy">0 kWh/yr</div>
+                            </div>
+                            <div>
+                                <div class="stat-label">OPEX (Energy)</div>
+                                <div class="stat-val" style="color:#0f766e" id="res_opex">$0 / yr</div>
+                            </div>
+                            <div>
+                                <div class="stat-label">5-Year TCO</div>
+                                <div class="stat-val" id="res_tco">$0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Pump DB
+        const PUMPS = {
+            'A': { name: 'Model A', A: 50, B: 0.1, C: -0.015, bepQ: 40, bepEff: 65, npshA: 1.5, npshB: 0.002 }, // Q in m3/h
+            'B': { name: 'Model B', A: 65, B: 0.2, C: -0.012, bepQ: 60, bepEff: 72, npshA: 2.0, npshB: 0.0015 },
+            'C': { name: 'Model C', A: 80, B: 0.1, C: -0.005, bepQ: 100, bepEff: 78, npshA: 2.5, npshB: 0.001 }
+        };
+
+        let myChart = null;
+
+        const app = {
+            init: function () {
+                this.loadPump();
+                this.calculate();
+            },
+
+            setTab: function (tab) {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                event.target.classList.add('active');
+                document.getElementById('tab_process').style.display = 'none';
+                document.getElementById('tab_pump').style.display = 'none';
+                document.getElementById('tab_economic').style.display = 'none';
+                document.getElementById('tab_' + tab).style.display = 'block';
+            },
+
+            val: function (id) { return parseFloat(document.getElementById(id).value) || 0; },
+
+            loadPump: function () {
+                const id = document.getElementById('pump_model').value;
+                const p = PUMPS[id];
+                document.getElementById('c_a').value = p.A;
+                document.getElementById('c_b').value = p.B;
+                document.getElementById('c_c').value = p.C;
+                document.getElementById('npsh_bep').value = p.npshA + p.npshB * Math.pow(p.bepQ, 2); // approx
+                document.getElementById('eff_bep').value = p.bepEff;
+                this.calculate(); // Auto recalc on pump change
+            },
+
+            calculate: function () {
+                // --- 1. System Curve Calculation ---
+                // Need H_sys = H_static + K * Q^2
+                // H_static = (Z2 - Z1) + (P2 - P1)*10e5 / rho g
+                const Z1 = this.val('z1');
+                const Z2 = this.val('z2');
+                const P1 = this.val('p1');
+                const P2 = this.val('p2');
+                const Rho = this.val('rho');
+                const g = 9.81;
+
+                const H_stat = (Z2 - Z1) + ((P2 - P1) * 100000) / (Rho * g);
+
+                // Calc Friction Coefficient 'K' at Design Flow
+                const Q_des = this.val('q_des'); // m3/h
+                const Q_des_s = Q_des / 3600;
+
+                // Simplified Darcy for System K
+                // Calculate H_fric at Design Flow, then K = H_fric / Q^2
+                const D_suc = this.val('dn_suc') / 1000;
+                const D_dis = this.val('dn_dis') / 1000;
+                const L_suc = this.val('l_suc');
+                const L_dis = this.val('l_dis');
+                const K_suc = this.val('k_suc');
+                const K_dis = this.val('k_dis');
+
+                // Helper: Loss calculation (returns head loss in m)
+                function getLoss(Q_s, D, L, K_fit) {
+                    if (Q_s === 0) return 0;
+                    const A = Math.PI * D * D / 4;
+                    const V = Q_s / A;
+                    // Swamee-Jain / Darcy
+                    const nu = 1e-6; // water
+                    const e = 0.045 / 1000; // steel
+                    const Re = V * D / nu;
+                    let f = 0.02;
+                    if (Re > 2000) {
+                        f = 0.25 / Math.pow(Math.log10(e / (3.7 * D) + 5.74 / Math.pow(Re, 0.9)), 2);
+                    }
+                    const Hf = f * (L / D) * (V * V) / (2 * g);
+                    const Hm = K_fit * (V * V) / (2 * g);
+                    return Hf + Hm;
+                }
+
+                const H_f_des = getLoss(Q_des_s, D_suc, L_suc, K_suc) + getLoss(Q_des_s, D_dis, L_dis, K_dis);
+                const System_K = H_f_des / (Q_des * Q_des); // K based on m3/hr
+
+                // --- 2. Pump Curve ---
+                const PID = document.getElementById('pump_model').value;
+                const PC = PUMPS[PID];
+
+                // --- 3. Intersection (Operating Point) ---
+                // Solve: H_stat + K*Q^2 = A + B*Q + C*Q^2
+                // (K - C)*Q^2 - B*Q + (H_stat - A) = 0
+                // Quadratic Eq: aQ^2 + bQ + c = 0
+                const qa = System_K - PC.C;
+                const qb = -PC.B;
+                const qc = H_stat - PC.A;
+
+                // Q = (-b +/- sqrt(b^2 - 4ac)) / 2a
+                let Q_op = 0;
+                const disc = qb * qb - 4 * qa * qc;
+                if (disc >= 0) {
+                    Q_op = (-qb + Math.sqrt(disc)) / (2 * qa); // Positive root usually
+                }
+
+                const H_op = H_stat + System_K * Q_op * Q_op;
+
+                // --- 4. Validation ---
+                // 4.1 BEP Check
+                const BEP_pct = (Q_op / PC.bepQ) * 100;
+                let bepHTML = `<i class="fas fa-check"></i> Within BEP (70-110%)`;
+                let bepClass = 'val-pass';
+                if (BEP_pct < 70 || BEP_pct > 110) {
+                    bepHTML = `<i class="fas fa-exclamation-triangle"></i> Poor Efficiency (${BEP_pct.toFixed(0)}% of BEP)`;
+                    bepClass = 'val-warn';
+                }
+                this.setVal('val_bep', bepHTML, bepClass);
+
+                // 4.2 NPSH Check
+                // Calc NPSHa at Q_op
+                const Q_op_s = Q_op / 3600;
+                const H_loss_suc_op = getLoss(Q_op_s, D_suc, L_suc, K_suc);
+                const Atm = 10.33;
+                const Vap = 0.32; // approx 25C
+                // P1 is gauge
+                const H_p1 = (P1 * 100000) / (Rho * g);
+                const NPSHa_op = Atm + H_p1 + Z1 - H_loss_suc_op - Vap;
+
+                // Calc NPSHr (Quadratic fit approx)
+                const NPSHr_op = PC.npshA + PC.npshB * Q_op * Q_op;
+
+                let npshHTML = `<i class="fas fa-check"></i> NPSHa (${NPSHa_op.toFixed(1)}m) > Req (${NPSHr_op.toFixed(1)}m)`;
+                let npshClass = 'val-pass';
+                if (NPSHa_op < NPSHr_op + 1.0) {
+                    npshHTML = `<i class="fas fa-radiation"></i> Low NPSH Margin (${(NPSHa_op - NPSHr_op).toFixed(1)}m)`;
+                    npshClass = 'val-fail';
+                }
+                this.setVal('val_npsh', npshHTML, npshClass);
+
+                // 4.3 Velocity Check
+                const V_suc = Q_op_s / (Math.PI * D_suc * D_suc / 4);
+                let velHTML = `<i class="fas fa-check"></i> Suction Velocity OK (${V_suc.toFixed(1)} m/s)`;
+                let velClass = 'val-pass';
+                if (V_suc > 1.5) {
+                    velHTML = `<i class="fas fa-wind"></i> High Suc. Velocity (${V_suc.toFixed(1)} m/s)`;
+                    velClass = 'val-warn';
+                }
+                this.setVal('val_vel', velHTML, velClass);
+
+
+                // --- 5. Analysis & Economics ---
+                // Est Efficiency at Op Point (Parabolic approx around BEP)
+                // Eff = BEP_eff - k*(Q - BEP)^2 
+                // Let's assume eff drops 10% points at 50% flow deviation
+                const k_eff = 10 / Math.pow(0.5 * PC.bepQ, 2);
+                let Eff_op = PC.bepEff - k_eff * Math.pow(Q_op - PC.bepQ, 2);
+                if (Eff_op < 10) Eff_op = 10;
+
+                // Power
+                // P_hyd = rho g Q H / 1000
+                const P_hyd = (Rho * g * Q_op_s * H_op) / 1000;
+                const P_shaft = P_hyd / (Eff_op / 100);
+
+                // Cost
+                const Hrs = this.val('hrs_yr');
+                const Tariff = this.val('tariff');
+                const Capex = this.val('capex');
+                const Energy = P_shaft * Hrs;
+                const Opex = Energy * Tariff;
+                const TCO = Capex + (Opex * 5);
+
+
+                // --- UI UPDATES ---
+                document.getElementById('res_q_op').innerText = Q_op.toFixed(1) + ' m³/hr';
+                document.getElementById('res_h_op').innerText = H_op.toFixed(1) + ' m';
+                document.getElementById('res_eff_op').innerText = Eff_op.toFixed(1) + ' %';
+                document.getElementById('res_p_shaft').innerText = P_shaft.toFixed(2) + ' kW';
+
+                document.getElementById('res_energy').innerText = Energy.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' kWh/yr';
+                document.getElementById('res_opex').innerText = '$' + Opex.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' / yr';
+                document.getElementById('res_tco').innerText = '$' + TCO.toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+
+                // --- CHART ---
+                this.updateChart(H_stat, System_K, PC, Q_op_s, H_op);
+            },
+
+            setVal: function (id, html, cls) {
+                const el = document.getElementById(id);
+                el.innerHTML = html;
+                el.className = 'validation-box ' + cls;
+            },
+
+            updateChart: function (H_stat, K, PC, Q_op, H_op) {
+                // Generate Points (0 to 150% of Pump BEP)
+                const MaxQ = PC.bepQ * 1.5;
+                const Steps = 20;
+                const labels = [];
+                const dataSys = [];
+                const dataPump = [];
+
+                for (let i = 0; i <= Steps; i++) {
+                    const Q = (MaxQ / Steps) * i;
+                    labels.push(Q.toFixed(0));
+
+                    // Sys Head
+                    const Hs = H_stat + K * Q * Q;
+                    dataSys.push(Hs);
+
+                    // Pump Head
+                    const Hp = PC.A + PC.B * Q + PC.C * Q * Q;
+                    if (Hp < 0) dataPump.push(null);
+                    else dataPump.push(Hp);
+                }
+
+                const ctx = document.getElementById('pumpChart').getContext('2d');
+                if (myChart) myChart.destroy();
+
+                myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'System Curve',
+                                data: dataSys,
+                                borderColor: '#64748b',
+                                borderDash: [5, 5],
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Pump Curve (' + PC.name + ')',
+                                data: dataPump,
+                                borderColor: '#0f766e',
+                                borderWidth: 3,
+                                pointRadius: 0,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: 'Flow (m³/hr)' } },
+                            y: { title: { display: true, text: 'Head (m)' } }
+                        },
+                        plugins: {
+                            annotation: {
+                                annotations: {
+                                    point1: {
+                                        type: 'point',
+                                        xValue: labels.indexOf(Q_op.toFixed(0)), // Approx
+                                        yValue: H_op,
+                                        backgroundColor: 'red',
+                                        radius: 5
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        window.onload = function () {
+            app.init();
+            // Attach listeners
+            document.querySelectorAll('input').forEach(i => i.addEventListener('change', () => app.calculate()));
+            document.querySelectorAll('select').forEach(i => i.addEventListener('change', () => app.calculate()));
+        };
+
+    </script>
+</body>
+
+</html>

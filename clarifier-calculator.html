@@ -1,183 +1,470 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clarifier Diameter Calculator</title>
+    <title>Clarifier Design Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #64748b;
+            --accent: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f5f5f5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            color: var(--accent);
+            line-height: 1.5;
+        }
+
+        /* Layout Grid */
+        .design-studio {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: #f8fafc;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
         }
 
-        .container {
-            background: white;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 100%;
+        .panel-title {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #333;
+        .panel-body {
+            padding: 20px;
         }
 
-        .form-group {
-            margin-bottom: 24px;
+        /* Form Elements */
+        .form-section {
+            margin-bottom: 20px;
         }
 
-        label {
+        .form-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
             display: block;
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #333;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 4px;
             font-weight: 500;
         }
 
-        input[type="number"] {
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.2s;
         }
 
-        input[type="number"]:focus {
+        .input-wrapper input:focus {
+            border-color: var(--primary);
             outline: none;
-            border-color: #007bff;
         }
 
-        .calculate-btn {
-            background-color: #007bff;
+        .unit-badge {
+            position: absolute;
+            right: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        /* Results */
+        .result-block {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: var(--primary-dark);
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-label {
+            color: var(--secondary);
+        }
+
+        .calc-val {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 10px;
-        }
-
-        .calculate-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .results {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border: 1px solid #e9ecef;
-        }
-
-        .result-item {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .result-value {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 20px;
-            }
+        .action-btn:hover {
+            opacity: 0.9;
+        }
 
-            h1 {
-                font-size: 28px;
-            }
+        .warning-box {
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            color: #c2410c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .warning-item {
+            margin-bottom: 4px;
+            display: flex;
+            gap: 6px;
+            align-items: flex-start;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Clarifier Diameter Calculator</h1>
-        
-        <form id="clarifierForm">
-            <div class="form-group">
-                <label for="flowRate">Design Flow Rate at Inlet (m³/hr):</label>
-                <input type="number" id="flowRate" value="15" step="0.1" required>
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-sliders-h"></i> Design Basis</div>
             </div>
-            
-            <div class="form-group">
-                <label for="limeSodaSludge">Lime Soda Sludge (ppm):</label>
-                <input type="number" id="limeSodaSludge" value="100" step="1" required>
+            <div class="panel-body">
+
+                <!-- 1. Hydraulic Design -->
+                <div class="form-section">
+                    <div class="form-section-title">Hydraulic Parameters</div>
+                    <div class="input-group">
+                        <label>Design Flow Rate (Avg)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="flow" value="100">
+                            <span class="unit-badge">m³/hr</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Peak Factor</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="peak_factor" value="1.0">
+                            <span class="unit-badge">x</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Surface Overflow Rate (SOR)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sor" value="1.0">
+                            <span class="unit-badge">m³/m²/hr</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Side Water Depth (SWD)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="swd" value="3.5">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Solids & Sludge -->
+                <div class="form-section">
+                    <div class="form-section-title">Solids & Sludge</div>
+                    <div class="input-group">
+                        <label>TSS in Feed</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="tss" value="100">
+                            <span class="unit-badge">ppm</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Chemical Sludge</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="chem_sludge" value="100">
+                            <span class="unit-badge">ppm</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Bottom Sludge Conc.</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sludge_conc" value="3">
+                            <span class="unit-badge">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Sludge Specific Gravity</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sludge_sg" value="1.03">
+                            <span class="unit-badge">SG</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="ClarifierEngine.calculate()">
+                    <i class="fas fa-calculator"></i> Design Clarifier
+                </button>
             </div>
-            
-            <div class="form-group">
-                <label for="suspendedSolids">Suspended Solids in Feed (ppm):</label>
-                <input type="number" id="suspendedSolids" value="100" step="1" required>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-drafting-compass"></i> Engineering Analysis</div>
             </div>
-            
-            <div class="form-group">
-                <label for="sideWaterDepth">Side Water Depth Considered (m):</label>
-                <input type="number" id="sideWaterDepth" value="3" step="0.1" required>
-            </div>
-            
-            <button type="button" class="calculate-btn" onclick="calculate()">Calculate</button>
-        </form>
-        
-        <div class="results" id="results" style="display: none;">
-            <div class="result-item">
-                Sludge Flow Rate: <span class="result-value" id="sludgeFlowRate">0.09</span> m³/hr
-            </div>
-            <div class="result-item">
-                Diameter of the Clarifier: <span class="result-value" id="clarifierDiameter">4.74</span> m
+            <div class="panel-body">
+
+                <!-- Warnings -->
+                <div id="warnings" class="warning-box"></div>
+
+                <!-- Geometry -->
+                <div class="result-block">
+                    <h4><i class="fas fa-ruler-combined"></i> Geometry & Sizing</h4>
+                    <div class="calc-row">
+                        <span class="calc-label">Required Surface Area</span>
+                        <span class="calc-val" id="res_area">0 m²</span>
+                    </div>
+                    <div class="calc-row" style="background:#eff6ff; padding:8px; border-radius:4px;">
+                        <span class="calc-label" style="font-weight:700; color:#1e40af;">Clarifier Diameter</span>
+                        <span class="calc-val" style="font-size:15px; color:#1e40af;" id="res_dia">0 m</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Clarifier Volume</span>
+                        <span class="calc-val" id="res_vol">0 m³</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Detention Time</span>
+                        <span class="calc-val" id="res_detention">0 hrs</span>
+                    </div>
+                </div>
+
+                <!-- Performance Loads -->
+                <div class="result-block">
+                    <h4><i class="fas fa-tachometer-alt"></i> Loading Rates</h4>
+                    <div class="calc-row">
+                        <span class="calc-label">Solids Loading Rate (SLR)</span>
+                        <span class="calc-val" id="res_slr">0 kg/m²/d</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Weir Loading Rate</span>
+                        <span class="calc-val" id="res_wlr">0 m³/m/d</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Peak Flow</span>
+                        <span class="calc-val" id="res_peak">0 m³/hr</span>
+                    </div>
+                </div>
+
+                <!-- Sludge Production -->
+                <div class="result-block">
+                    <h4><i class="fas fa-trash-alt"></i> Sludge Production</h4>
+                    <div class="calc-row">
+                        <span class="calc-label">Total Solids Mass</span>
+                        <span class="calc-val" id="res_s_mass">0 kg/day</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Sludge Volumetric Rate</span>
+                        <span class="calc-val" id="res_s_flow_h">0 m³/hr</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Daily Sludge Volume</span>
+                        <span class="calc-val" id="res_s_flow_d">0 m³/day</span>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        function calculate() {
-            // Get input values
-            const flowRate = parseFloat(document.getElementById('flowRate').value);
-            const limeSodaSludge = parseFloat(document.getElementById('limeSodaSludge').value);
-            const suspendedSolids = parseFloat(document.getElementById('suspendedSolids').value);
-            const sideWaterDepth = parseFloat(document.getElementById('sideWaterDepth').value);
-            
-            // Calculate total suspended solids
-            const totalSuspendedSolids = limeSodaSludge + suspendedSolids;
-            
-            // Calculate sludge flow rate
-            // Assuming 3% solids concentration in sludge
-            const sludgeConcentration = 30000; // 3% = 30,000 ppm
-            const sludgeFlowRate = (flowRate * totalSuspendedSolids) / sludgeConcentration;
-            
-            // Calculate clarifier diameter
-            // Using surface overflow rate of 1.0 m³/m²/hr for lime soda clarifier
-            const surfaceOverflowRate = 1.0;
-            const requiredArea = flowRate / surfaceOverflowRate;
-            const diameter = Math.sqrt((4 * requiredArea) / Math.PI);
-            
-            // Display results
-            document.getElementById('sludgeFlowRate').textContent = sludgeFlowRate.toFixed(2);
-            document.getElementById('clarifierDiameter').textContent = diameter.toFixed(2);
-            document.getElementById('results').style.display = 'block';
-        }
-        
-        // Calculate on load
-        window.onload = function() {
-            calculate();
+        // Engineering Engine for Clarifiers
+        window.ClarifierEngine = {
+            calculate: function () {
+                try {
+                    // 1. Get Inputs
+                    const Q_avg = this.val('flow');
+                    const PF = this.val('peak_factor');
+                    const Q_peak = Q_avg * PF;
+
+                    const SOR = this.val('sor');
+                    const SWD = this.val('swd');
+
+                    const TSS = this.val('tss');
+                    const ChemSludge = this.val('chem_sludge');
+                    const TotalTSS_ppm = TSS + ChemSludge; // mg/L or g/m3
+
+                    const SludgeConc = this.val('sludge_conc'); // %
+                    const SludgeSG = this.val('sludge_sg');
+
+                    // 2. Hydraulic Calculations
+                    // Area based on Peak Flow? CPHEEO says Avg for biological, Peak for some. 
+                    // Usually clarifier design is checked for Peak SOR, but sized on Avg with max limit.
+                    // For this tool, we will use Q_avg for sizing Area unless user inputs Peak Q directly.
+                    // Let's stick to Q_avg for Area, but show Peak Load.
+
+                    const Area = Q_avg / (SOR || 1.0);
+                    const Dia = Math.sqrt((4 * Area) / Math.PI);
+                    const Volume = Area * SWD;
+                    const DetentionTime = Volume / Q_avg;
+
+                    // 3. Performance Loading
+                    // Weir Length = PI * D
+                    const WeirLen = Math.PI * Dia;
+                    const WeirLoad = (Q_avg * 24) / WeirLen; // m3/day / m
+
+                    // Solids Loading Rate (SLR) = Mass / Area
+                    // Mass (kg/d) = Q(m3/d) * TSS(g/m3) / 1000
+                    const Mass_kg_day = (Q_avg * 24 * TotalTSS_ppm) / 1000;
+                    const SLR = Mass_kg_day / Area; // kg/m2/day
+
+                    // 4. Sludge Production
+                    // Vol = Mass / (Density * Conc)
+                    // Density = 1000 * SG
+                    // Conc = % / 100
+                    const SludgeDensity = 1000 * SludgeSG;
+                    const SludgeFraction = SludgeConc / 100;
+                    const SludgeVol_day = Mass_kg_day / (SludgeDensity * SludgeFraction);
+                    const SludgeVol_hr = SludgeVol_day / 24;
+
+                    // 5. UI Updates
+                    this.set('res_area', Area.toFixed(1) + ' m²');
+                    this.set('res_dia', Dia.toFixed(2) + ' m');
+                    this.set('res_vol', Volume.toFixed(1) + ' m³');
+                    this.set('res_detention', DetentionTime.toFixed(1) + ' hrs');
+
+                    this.set('res_slr', SLR.toFixed(1) + ' kg/m²/d');
+                    this.set('res_wlr', WeirLoad.toFixed(1) + ' m³/m/d');
+                    this.set('res_peak', Q_peak.toFixed(1) + ' m³/hr');
+
+                    this.set('res_s_mass', Mass_kg_day.toFixed(0) + ' kg/day');
+                    this.set('res_s_flow_h', SludgeVol_hr.toFixed(2) + ' m³/hr');
+                    this.set('res_s_flow_d', SludgeVol_day.toFixed(1) + ' m³/day');
+
+                    // 6. Warnings
+                    const warns = [];
+                    if (DetentionTime < 2.0) warns.push("Detention Time < 2 hrs. Insufficient settling time.");
+                    if (SOR > 2.5) warns.push("High SOR (>2.5). Risk of solids carryover.");
+                    if (WeirLoad > 300) warns.push("High Weir Loading (>300). Add V-Notch weir.");
+                    if (SLR > 80 && SOR < 1.0) warns.push("High Solids Loading for this Hydraulic rate.");
+
+                    const warnBox = document.getElementById('warnings');
+                    if (warns.length > 0) {
+                        warnBox.style.display = 'block';
+                        warnBox.innerHTML = warns.map(w => `<div class="warning-item"><i class="fas fa-exclamation-triangle"></i> <span>${w}</span></div>`).join('');
+                    } else {
+                        warnBox.style.display = 'none';
+                    }
+
+                } catch (e) {
+                    console.error(e);
+                    alert("Design Error: " + e.message);
+                }
+            },
+
+            val: function (id) {
+                const el = document.getElementById(id);
+                return el ? (parseFloat(el.value) || 0) : 0;
+            },
+
+            set: function (id, text) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            }
+        };
+
+        // Init
+        window.onload = function () {
+            ClarifierEngine.calculate();
+            document.querySelectorAll('input').forEach(i => i.addEventListener('input', () => ClarifierEngine.calculate()));
         };
     </script>
 </body>
+
 </html>

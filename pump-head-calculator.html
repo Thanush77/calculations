@@ -1,413 +1,680 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pump Head Calculation</title>
+    <title>Pump Head & Power Design Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #4338ca;
+            /* Indigo-700 */
+            --primary-dark: #3730a3;
+            --secondary: #64748b;
+            --accent: #312e81;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #eef2ff;
+            /* Indigo-50 */
+            --card-bg: #ffffff;
+            --border-color: #c7d2fe;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #e6e6e6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            color: var(--accent);
+            line-height: 1.5;
         }
 
-        .container {
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 800px;
+        .design-studio {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #333;
+        @media (max-width: 1200px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        input[type="number"], select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-            background-color: white;
-        }
-
-        input[type="number"]:focus, select:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-
-        .fittings-section {
-            margin: 30px 0;
-            padding: 20px;
-            background-color: #f8f9fa;
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
 
-        .fittings-section h3 {
-            font-size: 16px;
-            margin-bottom: 15px;
-            color: #333;
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to right, #eef2ff, #c7d2fe);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .fitting-group {
+        .panel-title {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--primary-dark);
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #e3f2fd;
-            border-radius: 4px;
+            gap: 8px;
         }
 
-        .fitting-group label {
-            flex: 1;
-            margin-bottom: 0;
-            font-size: 14px;
+        .panel-body {
+            padding: 20px;
         }
 
-        .fitting-group input {
-            width: 80px;
-            margin-left: 10px;
+        .form-section {
+            margin-bottom: 25px;
         }
 
-        .calculate-btn {
+        .form-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #a5b4fc;
+            padding-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
             width: 100%;
-            background-color: #28a745;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--accent);
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        @media(max-width: 800px) {
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-block {
+            background: #eef2ff;
+            /* Light Indigo */
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #a5b4fc;
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 15px;
-            font-size: 16px;
-            border-radius: 4px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
-        .calculate-btn:hover {
-            background-color: #218838;
+        .action-btn:hover {
+            background: var(--primary-dark);
         }
 
-        .results {
-            margin-top: 30px;
-            padding: 25px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
+        .warning-box {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
             display: none;
         }
 
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 5px 0;
-            border-bottom: 1px solid #e9ecef;
+        /* Piping Spec Grid */
+        .piping-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
-        .result-row:last-child {
-            border-bottom: none;
-            font-weight: 600;
-            font-size: 16px;
-            color: #28a745;
+        .sys-curve-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 10px;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
+        .sys-curve-table th {
+            background: #e0e7ff;
+            padding: 6px;
+            text-align: left;
+            color: var(--primary-dark);
+        }
 
-            .fitting-group {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
+        .sys-curve-table td {
+            border-bottom: 1px solid #e0e7ff;
+            padding: 6px;
+        }
 
-            .fitting-group input {
-                width: 100%;
-                margin-left: 0;
-            }
+        .sys-curve-table tr:hover {
+            background: #f5f3ff;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Pump Head Calculation</h1>
-        
-        <form id="pumpForm">
-            <div class="form-group">
-                <label for="flowRate">Flow Rate (m³/hr):</label>
-                <input type="number" id="flowRate" step="0.1" required>
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-sliders-h"></i> System Configuration</div>
             </div>
-            
-            <div class="form-group">
-                <label for="suctionSize">Suction Line Size (m):</label>
-                <input type="number" id="suctionSize" step="0.001" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="dischargeSize">Discharge Line Size (m):</label>
-                <input type="number" id="dischargeSize" step="0.001" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="materialType">Material Type:</label>
-                <select id="materialType" required>
-                    <option value="pvc">PVC</option>
-                    <option value="steel">Steel</option>
-                    <option value="cast-iron">Cast Iron</option>
-                    <option value="hdpe">HDPE</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="suctionLength">Suction Pipe Length (m):</label>
-                <input type="number" id="suctionLength" step="0.1" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="dischargeLength">Discharge Pipe Length (m):</label>
-                <input type="number" id="dischargeLength" step="0.1" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="dischargeHeight">Discharge Vertical Height (m):</label>
-                <input type="number" id="dischargeHeight" step="0.1" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="specialLoss">Special Equipment Head Loss (m):</label>
-                <input type="number" id="specialLoss" step="0.1" value="0" required>
-            </div>
+            <div class="panel-body">
 
-            <div class="fittings-section">
-                <h3>Suction Line Fittings:</h3>
-                
-                <div class="fitting-group">
-                    <label>Ball Valve:</label>
-                    <input type="number" id="suctionBallValve" value="0" min="0">
+                <!-- 1. Process Data -->
+                <div class="form-section">
+                    <div class="form-section-title">Process Conditions</div>
+                    <div class="input-group">
+                        <label>Design Flow Rate</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="flow" value="50">
+                            <span class="unit-badge">m³/hr</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Fluid Temperature</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="temp" value="25">
+                            <span class="unit-badge">°C</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Density</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="density" value="997">
+                            <span class="unit-badge">kg/m³</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="fitting-group">
-                    <label>Butterfly Valve:</label>
-                    <input type="number" id="suctionButterflyValve" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>Elbow - 45 deg:</label>
-                    <input type="number" id="suctionElbow45" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>Elbow - 90 deg:</label>
-                    <input type="number" id="suctionElbow90" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>Gate valve:</label>
-                    <input type="number" id="suctionGateValve" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>Globe valve:</label>
-                    <input type="number" id="suctionGlobeValve" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>flange:</label>
-                    <input type="number" id="suctionFlange" value="0" min="0">
-                </div>
-            </div>
 
-            <div class="fittings-section">
-                <h3>Discharge Line Fittings:</h3>
-                
-                <div class="fitting-group">
-                    <label>Ball Valve:</label>
-                    <input type="number" id="dischargeBallValve" value="0" min="0">
+                <!-- 2. Static Heads -->
+                <div class="form-section">
+                    <div class="form-section-title">Static Head Profile</div>
+                    <div class="input-group">
+                        <label>Suction Source Elevation (Z1)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="z_suc" value="-2">
+                            <span class="unit-badge">m (Rel. to Pump)</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Suction Tank Pressure (P1)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="p_suc" value="0">
+                            <span class="unit-badge">barg</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Discharge Point Elevation (Z2)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="z_dis" value="15">
+                            <span class="unit-badge">m (Rel. to Pump)</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Discharge Term. Pressure (P2)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="p_dis" value="0.5">
+                            <span class="unit-badge">barg</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="fitting-group">
-                    <label>Butterfly Valve:</label>
-                    <input type="number" id="dischargeButterflyValve" value="0" min="0">
+
+                <!-- 3. Piping Spec -->
+                <div class="form-section">
+                    <div class="form-section-title">Pipelines & Losses</div>
+
+                    <div class="piping-grid">
+                        <!-- Suction -->
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:var(--primary);">SUCTION</label>
+                            <div class="input-group">
+                                <label>Pipe Size</label>
+                                <select id="dn_suc">
+                                    <option value="80">DN 80</option>
+                                    <option value="100">DN 100</option>
+                                    <option value="125" selected>DN 125</option>
+                                    <option value="150">DN 150</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Length</label>
+                                <input type="number" id="l_suc" value="10" placeholder="Length">
+                            </div>
+                            <div class="input-group">
+                                <label>Fittings (Sum K)</label>
+                                <input type="number" id="k_suc" value="1.5" placeholder="K Factor">
+                            </div>
+                        </div>
+
+                        <!-- Discharge -->
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:var(--primary);">DISCHARGE</label>
+                            <div class="input-group">
+                                <label>Pipe Size</label>
+                                <select id="dn_dis">
+                                    <option value="80">DN 80</option>
+                                    <option value="100" selected>DN 100</option>
+                                    <option value="125">DN 125</option>
+                                    <option value="150">DN 150</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Length</label>
+                                <input type="number" id="l_dis" value="150" placeholder="Length">
+                            </div>
+                            <div class="input-group">
+                                <label>Fittings (Sum K)</label>
+                                <input type="number" id="k_dis" value="5.0" placeholder="K Factor">
+                            </div>
+                            <div class="input-group">
+                                <label>Equipment Drop</label>
+                                <input type="number" id="h_eq" value="5" placeholder="Filters/HEX (m)">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="fitting-group">
-                    <label>Elbow - 45 deg:</label>
-                    <input type="number" id="dischargeElbow45" value="0" min="0">
+
+                <!-- 4. Pump Spec -->
+                <div class="form-section">
+                    <div class="form-section-title">Pump Capability</div>
+                    <div class="input-group">
+                        <label>Pump Efficiency</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="eff" value="70">
+                            <span class="unit-badge">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>NPSHr (Vendor)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="npsh_r" value="3.0">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="fitting-group">
-                    <label>Elbow - 90 deg:</label>
-                    <input type="number" id="dischargeElbow90" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>Check Valve:</label>
-                    <input type="number" id="dischargeCheckValve" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>Tee:</label>
-                    <input type="number" id="dischargeTee" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>FTA:</label>
-                    <input type="number" id="dischargeFTA" value="0" min="0">
-                </div>
-                
-                <div class="fitting-group">
-                    <label>flange:</label>
-                    <input type="number" id="dischargeFlange" value="0" min="0">
-                </div>
+
+                <button class="action-btn" onclick="PumpEngine.calculate()">
+                    <i class="fas fa-calculator"></i> Calculate Head & Power
+                </button>
             </div>
-            
-            <button type="button" class="calculate-btn" onclick="calculate()">Calculate</button>
-        </form>
-        
-        <div class="results" id="results">
-            <div class="result-row">
-                <span>Suction Friction Loss:</span>
-                <span id="suctionFriction">0.00 m</span>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-chart-line"></i> Hydraulic Analysis</div>
             </div>
-            <div class="result-row">
-                <span>Discharge Friction Loss:</span>
-                <span id="dischargeFriction">0.00 m</span>
-            </div>
-            <div class="result-row">
-                <span>Suction Minor Losses:</span>
-                <span id="suctionMinor">0.00 m</span>
-            </div>
-            <div class="result-row">
-                <span>Discharge Minor Losses:</span>
-                <span id="dischargeMinor">0.00 m</span>
-            </div>
-            <div class="result-row">
-                <span>Static Head:</span>
-                <span id="staticHead">0.00 m</span>
-            </div>
-            <div class="result-row">
-                <span>Special Equipment Loss:</span>
-                <span id="specialLossDisplay">0.00 m</span>
-            </div>
-            <div class="result-row">
-                <span>Total Dynamic Head (TDH):</span>
-                <span id="totalHead">0.00 m</span>
+            <div class="panel-body">
+
+                <div id="warnings" class="warning-box"></div>
+
+                <div class="result-grid">
+
+                    <!-- Head Breakdown -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-water"></i> Total Dynamic Head</h4>
+                        <div class="calc-row">
+                            <span>Static Head</span>
+                            <span class="calc-val" id="res_h_static">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Suction Friction</span>
+                            <span class="calc-val" id="res_h_f_suc">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Discharge Friction</span>
+                            <span class="calc-val" id="res_h_f_dis">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Equipment/Minor</span>
+                            <span class="calc-val" id="res_h_misc">0 m</span>
+                        </div>
+                        <div class="calc-row" style="border-top: 1px solid #ccc; margin-top:5px; padding-top:5px;">
+                            <span style="font-weight:700; color:var(--primary);">TDH Required</span>
+                            <span class="calc-val" style="font-size:18px; color:var(--primary);" id="res_tdh">0 m</span>
+                        </div>
+                    </div>
+
+                    <!-- NPSH Check -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-arrow-down"></i> Suction Health</h4>
+                        <div class="calc-row">
+                            <span>Suction Lift/Head</span>
+                            <span class="calc-val" id="res_suc_head">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Vapor Pressure</span>
+                            <span class="calc-val" id="res_vp">0.32 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>NPSH Available</span>
+                            <span class="calc-val" style="font-size:16px;" id="res_npsh_a">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>NPSH Required</span>
+                            <span class="calc-val" id="res_npsh_r_disp">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Status</span>
+                            <span class="calc-val" id="res_npsh_status">OK</span>
+                        </div>
+                    </div>
+
+                    <!-- Power -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-bolt"></i> Power & Energy</h4>
+                        <div class="calc-row">
+                            <span>Hydraulic Power</span>
+                            <span class="calc-val" id="res_p_hyd">0 kW</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Pump Efficiency</span>
+                            <span class="calc-val" id="res_eff_disp">0%</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Shaft Power</span>
+                            <span class="calc-val" style="font-size:16px; color:#4338ca;" id="res_p_shaft">0 kW</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Est. Motor Rating</span>
+                            <span class="calc-val" id="res_motor">0 kW</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Curve Spec -->
+                <div class="result-block" style="margin-top:20px; border-color:#818cf8; background:#fff;">
+                    <h4><i class="fas fa-bezier-curve"></i> System Curve Data</h4>
+                    <table class="sys-curve-table">
+                        <thead>
+                            <tr>
+                                <th>Flow (m³/h)</th>
+                                <th>Static (m)</th>
+                                <th>Friction (m)</th>
+                                <th>Total Head (m)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="curve_table">
+                            <!-- JS Generated -->
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        // Friction factors for different materials (Hazen-Williams C values)
-        const frictionFactors = {
-            'pvc': 150,
-            'steel': 120,
-            'cast-iron': 100,
-            'hdpe': 140
+        window.PumpEngine = {
+            calculate: function () {
+                try {
+                    // Inputs
+                    const Q_hr = this.val('flow');
+                    const Q_sec = Q_hr / 3600;
+                    const Temp = this.val('temp');
+                    const Rho = this.val('density');
+
+                    // Static Heads
+                    const Z_suc = this.val('z_suc');
+                    const P_suc_bar = this.val('p_suc');
+                    const Z_dis = this.val('z_dis');
+                    const P_dis_bar = this.val('p_dis');
+
+                    // Piping
+                    const DN_suc = parseFloat(document.getElementById('dn_suc').value);
+                    const L_suc = this.val('l_suc');
+                    const K_suc = this.val('k_suc');
+
+                    const DN_dis = parseFloat(document.getElementById('dn_dis').value);
+                    const L_dis = this.val('l_dis');
+                    const K_dis = this.val('k_dis');
+                    const H_eq = this.val('h_eq');
+
+                    // Pump
+                    const P_eff = this.val('eff') / 100;
+                    const NPSHr = this.val('npsh_r');
+
+                    // Constants
+                    const g = 9.81;
+                    const AtmHead = 10.33; // Approx sea level, assumes gauge pressures are input relative to 0 barg atm.
+                    // Vapor pressure approx (Water)
+                    let Vap_bar_abs = 0.0317; // 25C
+                    // Simple Antoine approx 0-100C for water
+                    const T = Temp;
+                    const P_vap_kpa = Math.exp(16.3872 - 3885.7 / (T + 230.17)); // kPa
+                    const P_vap_head = (P_vap_kpa * 1000) / (Rho * g);
+
+
+                    // --- CALCULATIONS ---
+
+                    // 1. Static Head (Differential Elevation + Pressure)
+                    const H_static_elev = Z_dis - Z_suc;
+                    const H_static_press = ((P_dis_bar - P_suc_bar) * 100000) / (Rho * g);
+                    const H_static_total = H_static_elev + H_static_press;
+
+                    // 2. Friction & Minor Losses (Darcy-Weisbach)
+                    function calcLoss(Q, D_mm, L, K) {
+                        const D_m = D_mm / 1000;
+                        const Area = (Math.PI / 4) * D_m * D_m;
+                        const V = Q / Area;
+
+                        // Viscosity (Water approx)
+                        const Nu = 1.004e-6; // 20C simpl
+                        const Re = (V * D_m) / Nu;
+                        const Roughness = 0.045 / 1000; // Steel
+
+                        let f = 0.02; // Turb approx
+                        if (Re > 2000) {
+                            const term1 = Roughness / (3.7 * D_m);
+                            const term2 = 5.74 / Math.pow(Re, 0.9);
+                            f = 0.25 / Math.pow(Math.log10(term1 + term2), 2);
+                        } else if (Re > 0) f = 64 / Re;
+
+                        const H_f = f * (L / D_m) * (V * V) / (2 * g);
+                        const H_m = K * (V * V) / (2 * g);
+                        return { hf: H_f, hm: H_m, v: V, re: Re };
+                    }
+
+                    const Suc = calcLoss(Q_sec, DN_suc, L_suc, K_suc);
+                    const Dis = calcLoss(Q_sec, DN_dis, L_dis, K_dis);
+
+                    const H_friction_total = Suc.hf + Dis.hf + Suc.hm + Dis.hm + H_eq;
+
+                    const TDH = H_static_total + H_friction_total;
+
+
+                    // 3. NPSH Available
+                    // NPSHa = (P_atm + P_suc_gauge)/Rho*g + Z_suc - H_loss_suc - P_vap
+                    // Z_suc is elevation relative to pump centerline (negative if lift)
+                    // H_loss_suc = Suc.hf + Suc.hm
+
+                    // Convert P_suc_bar to head
+                    const H_p_suc = (P_suc_bar * 100000) / (Rho * g);
+
+                    const NPSHa = AtmHead + H_p_suc + Z_suc - (Suc.hf + Suc.hm) - P_vap_head;
+
+                    // 4. Power
+                    // Ph (kW) = Rho * g * Q * H / 1000
+                    const P_hyd_kW = (Rho * g * Q_sec * TDH) / 1000;
+                    const P_shaft_kW = P_hyd_kW / P_eff;
+
+                    // Standard Motor (Next sized)
+                    const StdMotors = [0.37, 0.55, 0.75, 1.1, 1.5, 2.2, 3.7, 5.5, 7.5, 11, 15, 18.5, 22, 30, 37, 45, 55, 75];
+                    const Motor_kW = StdMotors.find(m => m >= (P_shaft_kW * 1.1)) || (P_shaft_kW * 1.15);
+
+
+                    // --- OUTPUT ---
+                    this.set('res_h_static', H_static_total.toFixed(2) + ' m');
+                    this.set('res_h_f_suc', Suc.hf.toFixed(2) + ' m');
+                    this.set('res_h_f_dis', Dis.hf.toFixed(2) + ' m');
+                    this.set('res_h_misc', (Suc.hm + Dis.hm + H_eq).toFixed(2) + ' m');
+                    this.set('res_tdh', TDH.toFixed(2) + ' m');
+
+                    this.set('res_vp', P_vap_head.toFixed(2) + ' m');
+                    this.set('res_npsh_a', NPSHa.toFixed(2) + ' m');
+                    this.set('res_npsh_r_disp', NPSHr.toFixed(1) + ' m');
+
+                    const elNpsh = document.getElementById('res_npsh_status');
+                    const NpshMargin = NPSHa - NPSHr;
+                    if (NPSHa > NPSHr + 0.5) {
+                        elNpsh.innerText = `OK (Margin ${NpshMargin.toFixed(1)}m)`;
+                        elNpsh.style.color = '#10b981';
+                    } else {
+                        elNpsh.innerText = `LOW / CAVITATION (Margin ${NpshMargin.toFixed(1)}m)`;
+                        elNpsh.style.color = '#ef4444';
+                    }
+
+                    this.set('res_p_hyd', P_hyd_kW.toFixed(2) + ' kW');
+                    this.set('res_eff_disp', (P_eff * 100).toFixed(0) + '%');
+                    this.set('res_p_shaft', P_shaft_kW.toFixed(2) + ' kW');
+                    this.set('res_motor', (typeof Motor_kW === 'number' ? Motor_kW.toFixed(2) : Motor_kW) + ' kW');
+
+                    // Warnings
+                    const warns = [];
+                    if (Suc.v > 1.5) warns.push(`Suction velocity ${Suc.v.toFixed(2)} m/s is high (>1.5). Risk of NPSH issues.`);
+                    if (Dis.v > 3.0) warns.push(`Discharge velocity ${Dis.v.toFixed(2)} m/s is high (>3.0). High friction loss.`);
+                    if (NPSHa < NPSHr) warns.push("NPSH Available is less than Required. Pump will cavitate.");
+
+                    const el = document.getElementById('warnings');
+                    if (warns.length > 0) {
+                        el.style.display = 'block';
+                        el.innerHTML = warns.map(w => `<div><i class="fas fa-exclamation-triangle"></i> ${w}</div>`).join('');
+                    } else el.style.display = 'none';
+
+                    // System Curve Gen (5 points: 50%, 75%, 100%, 125%, 150% Flow)
+                    const tbody = document.getElementById('curve_table');
+                    tbody.innerHTML = '';
+                    [0.5, 0.75, 1.0, 1.25, 1.5].forEach(f => {
+                        const Q_step_hr = Q_hr * f;
+                        const Q_step_sec = Q_step_hr / 3600;
+                        const S_step = calcLoss(Q_step_sec, DN_suc, L_suc, K_suc);
+                        const D_step = calcLoss(Q_step_sec, DN_dis, L_dis, K_dis);
+                        const H_f_step = S_step.hf + D_step.hf + S_step.hm + D_step.hm + H_eq;
+                        // Note: equipment loss might be quadratic too, assuming yes
+                        // Actually H_eq provided is fixed? Usually H_eq varies with Q^2. let's assume it scales.
+
+                        // Scale fixed/pressure static? P losses likely constant? No.
+                        // Static Head is constant (Elevation + Pressure diff). Friction varies.
+
+                        const H_tot_step = H_static_total + H_f_step; // Approx
+
+                        const tr = `<tr>
+                            <td>${Q_step_hr.toFixed(1)}</td>
+                            <td>${H_static_total.toFixed(1)}</td>
+                            <td>${H_f_step.toFixed(1)}</td>
+                            <td style="font-weight:bold;">${H_tot_step.toFixed(1)}</td>
+                        </tr>`;
+                        tbody.innerHTML += tr;
+                    });
+
+                } catch (e) { console.error(e); }
+            },
+            val: function (id) { return parseFloat(document.getElementById(id).value) || 0; },
+            set: function (id, v) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = v;
+            }
         };
 
-        // Minor loss coefficients
-        const minorLossCoefficients = {
-            'ballValve': 0.05,
-            'butterflyValve': 0.3,
-            'elbow45': 0.4,
-            'elbow90': 0.9,
-            'gateValve': 0.2,
-            'globeValve': 10.0,
-            'checkValve': 2.0,
-            'tee': 1.8,
-            'fta': 0.5,
-            'flange': 0.1
-        };
-
-        function calculate() {
-            // Get input values
-            const flowRate = parseFloat(document.getElementById('flowRate').value) / 3600; // Convert to m³/s
-            const suctionSize = parseFloat(document.getElementById('suctionSize').value);
-            const dischargeSize = parseFloat(document.getElementById('dischargeSize').value);
-            const materialType = document.getElementById('materialType').value;
-            const suctionLength = parseFloat(document.getElementById('suctionLength').value);
-            const dischargeLength = parseFloat(document.getElementById('dischargeLength').value);
-            const dischargeHeight = parseFloat(document.getElementById('dischargeHeight').value);
-            const specialLoss = parseFloat(document.getElementById('specialLoss').value);
-
-            // Calculate velocities
-            const suctionArea = Math.PI * Math.pow(suctionSize / 2, 2);
-            const dischargeArea = Math.PI * Math.pow(dischargeSize / 2, 2);
-            const suctionVelocity = flowRate / suctionArea;
-            const dischargeVelocity = flowRate / dischargeArea;
-
-            // Get friction factor
-            const C = frictionFactors[materialType];
-
-            // Calculate friction losses using Hazen-Williams
-            const suctionFriction = 10.67 * Math.pow(flowRate, 1.852) * suctionLength / 
-                                    (Math.pow(C, 1.852) * Math.pow(suctionSize, 4.871));
-            const dischargeFriction = 10.67 * Math.pow(flowRate, 1.852) * dischargeLength / 
-                                      (Math.pow(C, 1.852) * Math.pow(dischargeSize, 4.871));
-
-            // Calculate suction minor losses
-            let suctionMinorLoss = 0;
-            suctionMinorLoss += parseInt(document.getElementById('suctionBallValve').value) * minorLossCoefficients.ballValve;
-            suctionMinorLoss += parseInt(document.getElementById('suctionButterflyValve').value) * minorLossCoefficients.butterflyValve;
-            suctionMinorLoss += parseInt(document.getElementById('suctionElbow45').value) * minorLossCoefficients.elbow45;
-            suctionMinorLoss += parseInt(document.getElementById('suctionElbow90').value) * minorLossCoefficients.elbow90;
-            suctionMinorLoss += parseInt(document.getElementById('suctionGateValve').value) * minorLossCoefficients.gateValve;
-            suctionMinorLoss += parseInt(document.getElementById('suctionGlobeValve').value) * minorLossCoefficients.globeValve;
-            suctionMinorLoss += parseInt(document.getElementById('suctionFlange').value) * minorLossCoefficients.flange;
-            suctionMinorLoss = suctionMinorLoss * Math.pow(suctionVelocity, 2) / (2 * 9.81);
-
-            // Calculate discharge minor losses
-            let dischargeMinorLoss = 0;
-            dischargeMinorLoss += parseInt(document.getElementById('dischargeBallValve').value) * minorLossCoefficients.ballValve;
-            dischargeMinorLoss += parseInt(document.getElementById('dischargeButterflyValve').value) * minorLossCoefficients.butterflyValve;
-            dischargeMinorLoss += parseInt(document.getElementById('dischargeElbow45').value) * minorLossCoefficients.elbow45;
-            dischargeMinorLoss += parseInt(document.getElementById('dischargeElbow90').value) * minorLossCoefficients.elbow90;
-            dischargeMinorLoss += parseInt(document.getElementById('dischargeCheckValve').value) * minorLossCoefficients.checkValve;
-            dischargeMinorLoss += parseInt(document.getElementById('dischargeTee').value) * minorLossCoefficients.tee;
-            dischargeMinorLoss += parseInt(document.getElementById('dischargeFTA').value) * minorLossCoefficients.fta;
-            dischargeMinorLoss += parseInt(document.getElementById('dischargeFlange').value) * minorLossCoefficients.flange;
-            dischargeMinorLoss = dischargeMinorLoss * Math.pow(dischargeVelocity, 2) / (2 * 9.81);
-
-            // Calculate total head
-            const totalHead = dischargeHeight + suctionFriction + dischargeFriction + 
-                             suctionMinorLoss + dischargeMinorLoss + specialLoss;
-
-            // Display results
-            document.getElementById('suctionFriction').textContent = suctionFriction.toFixed(2) + ' m';
-            document.getElementById('dischargeFriction').textContent = dischargeFriction.toFixed(2) + ' m';
-            document.getElementById('suctionMinor').textContent = suctionMinorLoss.toFixed(2) + ' m';
-            document.getElementById('dischargeMinor').textContent = dischargeMinorLoss.toFixed(2) + ' m';
-            document.getElementById('staticHead').textContent = dischargeHeight.toFixed(2) + ' m';
-            document.getElementById('specialLossDisplay').textContent = specialLoss.toFixed(2) + ' m';
-            document.getElementById('totalHead').textContent = totalHead.toFixed(2) + ' m';
-
-            document.getElementById('results').style.display = 'block';
+        window.onload = function () {
+            PumpEngine.calculate();
+            document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', () => PumpEngine.calculate()));
         }
     </script>
 </body>
+
 </html>

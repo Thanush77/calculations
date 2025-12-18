@@ -1,202 +1,493 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salt Quantity Calculator</title>
+    <title>Salt & Resin Softener Design Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #64748b;
+            --accent: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f0f0f0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            color: var(--accent);
+            line-height: 1.5;
+        }
+
+        /* Layout Grid */
+        .design-studio {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: #f8fafc;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
         }
 
-        .container {
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
+        .panel-title {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #333;
+        .panel-body {
+            padding: 20px;
         }
 
-        .form-group {
-            margin-bottom: 25px;
+        /* Form Elements */
+        .form-section {
+            margin-bottom: 20px;
         }
 
-        label {
+        .form-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
             display: block;
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #333;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 4px;
             font-weight: 500;
         }
 
-        input[type="number"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background-color: white;
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
         }
 
-        input[type="number"]:focus {
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
         }
 
-        input::placeholder {
-            color: #aaa;
-            font-style: italic;
+        .unit-badge {
+            position: absolute;
+            right: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
         }
 
-        .calculate-btn {
-            width: 100%;
-            background-color: #6c757d;
+        /* Results */
+        .result-block {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: var(--primary-dark);
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-label {
+            color: var(--secondary);
+        }
+
+        .calc-val {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 500;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 10px;
-        }
-
-        .calculate-btn:hover {
-            background-color: #5a6268;
-        }
-
-        .results {
-            margin-top: 30px;
-            padding: 25px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
-            display: none;
-        }
-
-        .result-item {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .result-value {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: 600;
-            color: #28a745;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 20px;
-            }
+        .action-btn:hover {
+            opacity: 0.9;
+        }
 
-            h1 {
-                font-size: 24px;
-            }
+        .warning-box {
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            color: #c2410c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Salt Quantity Calculator</h1>
-        
-        <form id="saltForm">
-            <div class="form-group">
-                <label for="flow">Flow (m³/day):</label>
-                <input type="number" id="flow" placeholder="Enter flow in m³/day" step="0.1" required>
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-sliders-h"></i> Design Parameters</div>
             </div>
-            
-            <div class="form-group">
-                <label for="tds">TDS (ppm):</label>
-                <input type="number" id="tds" placeholder="Enter TDS in ppm" step="1" required>
+            <div class="panel-body">
+
+                <!-- 1. Water Quality -->
+                <div class="form-section">
+                    <div class="form-section-title">Water Chemistry</div>
+                    <div class="input-group">
+                        <label>Design Flow Rate</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="flow" value="100">
+                            <span class="unit-badge">m³/hr</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Total Hardness (Inlet)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="th_in" value="500">
+                            <span class="unit-badge">ppm CaCO3</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Target Hardness (Outlet)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="th_out" value="5">
+                            <span class="unit-badge">ppm CaCO3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Resin Design -->
+                <div class="form-section">
+                    <div class="form-section-title">Resin Engineering</div>
+                    <div class="input-group">
+                        <label>Resin Volume</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="resin_vol" value="2500">
+                            <span class="unit-badge">Liters</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Exchange Capacity</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="capacity" value="60">
+                            <span class="unit-badge">g CaCO3/L</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Regeneration Salt Dose</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="salt_dose" value="150">
+                            <span class="unit-badge">g NaCl/L</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Operational Factors -->
+                <div class="form-section">
+                    <div class="form-section-title">Operations & Safety</div>
+                    <div class="input-group">
+                        <label>Salt Purity</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="purity" value="98.5">
+                            <span class="unit-badge">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Safety Factor</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="safety" value="1.1">
+                            <span class="unit-badge">x</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Salt Cost</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="cost_kg" value="6.5">
+                            <span class="unit-badge">₹/kg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Brine System</div>
+                    <div class="input-group">
+                        <label>Brine Tank Conc.</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="brine_conc" value="26">
+                            <span class="unit-badge">% w/w</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="ResinEngine.calculate()">
+                    <i class="fas fa-sync-alt"></i> Run Engineering Design
+                </button>
             </div>
-            
-            <div class="form-group">
-                <label for="moisture">Moisture Content (%):</label>
-                <input type="number" id="moisture" placeholder="Enter moisture % (0-100)" step="0.1" min="0" max="100" required>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-chart-line"></i> Design Analysis</div>
             </div>
-            
-            <button type="button" class="calculate-btn" onclick="calculate()">Calculate</button>
-        </form>
-        
-        <div class="results" id="results">
-            <div class="result-item">
-                Salt Required (kg/day): <span class="result-value" id="saltRequired">0.00</span>
-            </div>
-            <div class="result-item">
-                Dry Salt Weight (kg/day): <span class="result-value" id="drySaltWeight">0.00</span>
-            </div>
-            <div class="result-item">
-                Salt with Moisture (kg/day): <span class="result-value" id="saltWithMoisture">0.00</span>
+            <div class="panel-body">
+
+                <!-- Warnings -->
+                <div id="warnings" class="warning-box"></div>
+
+                <!-- Process Performance -->
+                <div class="result-block">
+                    <h4><i class="fas fa-water"></i> Process Performance</h4>
+                    <div class="calc-row">
+                        <span class="calc-label">Hardness Load</span>
+                        <span class="calc-val" id="res_load">0 kg/day</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Cycle Throughput</span>
+                        <span class="calc-val" id="res_throughput">0 m³</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Regeneration Freq.</span>
+                        <span class="calc-val" id="res_freq">0 hrs</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Regens per Day</span>
+                        <span class="calc-val" id="res_regens_day">0</span>
+                    </div>
+                </div>
+
+                <!-- Salt & Logistics -->
+                <div class="result-block">
+                    <h4><i class="fas fa-cubes"></i> Salt Logistics</h4>
+                    <div class="calc-row">
+                        <span class="calc-label">Salt per Regen</span>
+                        <span class="calc-val" id="res_salt_regen">0 kg</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label" style="font-weight:700; color:#2563eb;">Daily Calculation</span>
+                        <span class="calc-val" style="font-size:15px; color:#2563eb;" id="res_salt_day">0 kg/day</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Monthly Bags (50kg)</span>
+                        <span class="calc-val" id="res_bags">0 bags</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Brine Vol Req.</span>
+                        <span class="calc-val" id="res_brine_vol">0 m³</span>
+                    </div>
+                </div>
+
+                <!-- Financials -->
+                <div class="result-block">
+                    <h4><i class="fas fa-rupee-sign"></i> Operational Cost</h4>
+                    <div class="calc-row">
+                        <span class="calc-label">Daily Salt Cost</span>
+                        <span class="calc-val" id="cost_day" style="font-size:16px; color:#166534;">₹0</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Cost per m³ Treated</span>
+                        <span class="calc-val" id="cost_m3">₹0.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Monthly Opex</span>
+                        <span class="calc-val" id="cost_month">₹0</span>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        function calculate() {
-            // Get input values
-            const flow = parseFloat(document.getElementById('flow').value);
-            const tds = parseFloat(document.getElementById('tds').value);
-            const moisture = parseFloat(document.getElementById('moisture').value);
+        // Engineering Engine for Resin Softeners
+        window.ResinEngine = {
+            calculate: function () {
+                try {
+                    // 1. Get Inputs
+                    const Q_hr = this.val('flow');
+                    const Q_day = Q_hr * 24;
+                    const Hin = this.val('th_in');
+                    const Hout = this.val('th_out');
+                    const Hrem = Math.max(0, Hin - Hout);
 
-            // Validate inputs
-            if (!flow || !tds || moisture === '' || moisture < 0 || moisture > 100) {
-                alert('Please enter valid values for all fields.');
-                return;
+                    const Vol_Resin = this.val('resin_vol'); // Liters
+                    const Capacity = this.val('capacity'); // g CaCO3 / L Resin
+                    const Dose = this.val('salt_dose'); // g NaCl / L Resin
+
+                    const Purity = this.val('purity') / 100;
+                    const Safety = this.val('safety');
+                    const CostKg = this.val('cost_kg');
+                    const BrineConc = this.val('brine_conc') / 100;
+
+                    // 2. Calculations
+                    // Hardness Load (kg/day) = Q(m3/d) * Hrem(g/m3) / 1000
+                    const Load_kg_day = (Q_day * Hrem) / 1000;
+
+                    // System Capacity per Cycle (kg CaCO3) = Vol(L) * Cap(g/L) / 1000
+                    const System_Cap_kg = (Vol_Resin * Capacity) / 1000;
+
+                    // Throughput per Cycle (m3) = SysCap(kg) * 1000 / Hrem(g/m3)
+                    const Throughput_m3 = (System_Cap_kg * 1000) / Hrem;
+                    const Throughput_hrs = Throughput_m3 / Q_hr;
+
+                    // Regenerations per day
+                    const Regens_per_day = Q_day / Throughput_m3;
+
+                    // Salt Logic
+                    // Salt per Regen (kg) = Vol(L) * Dose(g/L) / 1000
+                    const Salt_per_Regen_Pure = (Vol_Resin * Dose) / 1000;
+                    const Salt_per_Regen_Actual = (Salt_per_Regen_Pure * Safety) / Purity;
+
+                    // Daily Salt
+                    const Salt_Day = Salt_per_Regen_Actual * Regens_per_day;
+                    const Salt_Month = Salt_Day * 30;
+
+                    // Brine Volume (m3) per regen based on concentration
+                    // Density assumption for brine approx 1.15-1.2 kg/L, typically salt solubility is limit
+                    // Simple engineering check: Vol = Mass / Conc (approx logic for sizing)
+                    // If 26% w/w, approx 300g/L. 
+                    const Brine_Vol_m3 = (Salt_per_Regen_Actual / (BrineConc * 1150)); // 1150 kg/m3 density approx
+
+                    // Costs
+                    const Cost_Daily = Salt_Day * CostKg;
+                    const Cost_Unit = Q_day > 0 ? Cost_Daily / Q_day : 0;
+
+                    // 3. UI Updates
+                    this.set('res_load', Load_kg_day.toFixed(1) + ' kg/day');
+                    this.set('res_throughput', Throughput_m3.toFixed(1) + ' m³');
+                    this.set('res_freq', Throughput_hrs.toFixed(1) + ' hrs');
+                    this.set('res_regens_day', Regens_per_day.toFixed(2));
+
+                    this.set('res_salt_regen', Salt_per_Regen_Actual.toFixed(1) + ' kg');
+                    this.set('res_salt_day', Salt_Day.toFixed(1) + ' kg/day');
+                    this.set('res_bags', (Salt_Month / 50).toFixed(1) + ' bags');
+                    this.set('res_brine_vol', Brine_Vol_m3.toFixed(2) + ' m³');
+
+                    this.set('cost_day', '₹' + Math.round(Cost_Daily).toLocaleString());
+                    this.set('cost_m3', '₹' + Cost_Unit.toFixed(2));
+                    this.set('cost_month', '₹' + Math.round(Salt_Month * CostKg).toLocaleString());
+
+                    // Warnings
+                    const warns = [];
+                    if (Hin > 1000) warns.push("High TDS/Hardness (>1000). Consider RO or pretreatment.");
+                    if (Throughput_hrs < 4) warns.push("Regen frequency < 4 hrs. System is undersized.");
+
+                    const warnBox = document.getElementById('warnings');
+                    if (warns.length > 0) {
+                        warnBox.style.display = 'block';
+                        warnBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + warns.join('<br>');
+                    } else {
+                        warnBox.style.display = 'none';
+                    }
+
+                } catch (e) {
+                    console.error(e);
+                    alert("Calculation Error. Check inputs.");
+                }
+            },
+
+            val: function (id) {
+                const el = document.getElementById(id);
+                return el ? (parseFloat(el.value) || 0) : 0;
+            },
+
+            set: function (id, text) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
             }
+        };
 
-            // Calculate salt required for regeneration
-            // Typical calculation: Salt required = Flow × TDS × conversion factor
-            // For ion exchange regeneration, approximately 100-150g NaCl per gram of hardness removed
-            // Simplified calculation: Salt needed = TDS removal × flow × regeneration factor
-            
-            const saltRequired = (flow * tds * 0.15) / 1000; // kg/day (assuming 15% regeneration efficiency)
-            
-            // Calculate dry salt weight (pure NaCl needed)
-            const drySaltWeight = saltRequired;
-            
-            // Calculate salt with moisture content
-            // If salt has X% moisture, then actual weight = dry weight / (1 - moisture/100)
-            const moistureFactor = 1 - (moisture / 100);
-            const saltWithMoisture = drySaltWeight / moistureFactor;
-
-            // Display results
-            document.getElementById('saltRequired').textContent = saltRequired.toFixed(2);
-            document.getElementById('drySaltWeight').textContent = drySaltWeight.toFixed(2);
-            document.getElementById('saltWithMoisture').textContent = saltWithMoisture.toFixed(2);
-
-            document.getElementById('results').style.display = 'block';
-        }
-
-        // Add enter key support
-        document.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                calculate();
-            }
-        });
+        // Init
+        window.onload = function () {
+            ResinEngine.calculate();
+            document.querySelectorAll('input').forEach(i => i.addEventListener('input', () => ResinEngine.calculate()));
+        };
     </script>
 </body>
+
 </html>

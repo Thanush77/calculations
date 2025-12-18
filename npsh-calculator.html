@@ -1,407 +1,540 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NPSH Calculator with Negative Suction</title>
+    <title>NPSH Design Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #4f46e5;
+            /* Indigo-600 */
+            --primary-dark: #4338ca;
+            --secondary: #64748b;
+            --accent: #3730a3;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #eef2ff;
+            /* Indigo-50 */
+            --card-bg: #ffffff;
+            --border-color: #e0e7ff;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f5f5f5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            color: var(--accent);
+            line-height: 1.5;
         }
 
-        .container {
-            background: white;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            max-width: 1000px;
+        .design-studio {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #333;
-            text-align: center;
+        @media (max-width: 1024px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .diagram {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
-            background-color: #f8f9fa;
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
 
-        .diagram svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .form-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .form-column {
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to right, #eef2ff, #e0e7ff);
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        input[type="number"], select {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            background-color: white;
-        }
-
-        input[type="number"]:focus, select:focus {
-            outline: none;
-            border-color: #4a90e2;
-        }
-
-        .checkbox-group {
-            margin-top: 20px;
-        }
-
-        .checkbox-group h3 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .checkbox-item {
+        .panel-title {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--primary-dark);
             display: flex;
             align-items: center;
+            gap: 8px;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
             margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #c7d2fe;
+            padding-bottom: 4px;
+            letter-spacing: 0.5px;
         }
 
-        .checkbox-item input[type="checkbox"] {
-            margin-right: 10px;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
+        .input-group {
+            margin-bottom: 12px;
         }
 
-        .checkbox-item label {
-            margin-bottom: 0;
-            cursor: pointer;
-            font-weight: normal;
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
         }
 
-        .calculate-btn {
-            background-color: #333;
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--accent);
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .result-block {
+            background: #f5f3ff;
+            /* Light Indigo */
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #c7d2fe;
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 4px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
-            margin: 20px auto 0;
-            display: block;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
-        .calculate-btn:hover {
-            background-color: #555;
+        .action-btn:hover {
+            background: var(--primary-dark);
         }
 
-        .results {
-            margin-top: 30px;
-            padding: 25px;
-            background-color: #e8f4fd;
-            border-radius: 8px;
-            border: 1px solid #b3d9f2;
+        .warning-box {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
             display: none;
         }
 
-        .result-item {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
+        .graphic-container {
+            text-align: center;
+            margin-bottom: 20px;
+            opacity: 0.8;
         }
 
-        .result-value {
-            font-weight: 600;
-            color: #1976d2;
-        }
-
-        .warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            color: #856404;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .form-container {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
+        .graphic-container svg {
+            width: 100%;
+            height: auto;
+            max-height: 120px;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>NPSH Calculator with Negative Suction</h1>
-        
-        <div class="diagram">
-            <svg viewBox="0 0 600 400" width="600" height="400">
-                <!-- Tank -->
-                <rect x="100" y="200" width="120" height="150" fill="none" stroke="black" stroke-width="2"/>
-                <rect x="100" y="200" width="120" height="120" fill="#e3f2fd" opacity="0.5"/>
-                <text x="160" y="375" text-anchor="middle" font-size="16">Tank</text>
-                
-                <!-- Pump -->
-                <circle cx="450" cy="275" r="30" fill="none" stroke="black" stroke-width="2"/>
-                <text x="450" y="280" text-anchor="middle" font-size="14">M</text>
-                <text x="450" y="320" text-anchor="middle" font-size="16">Pump</text>
-                
-                <!-- Suction pipe -->
-                <line x1="220" y1="275" x2="420" y2="275" stroke="black" stroke-width="2"/>
-                
-                <!-- Discharge pipe -->
-                <line x1="480" y1="275" x2="550" y2="275" stroke="black" stroke-width="2"/>
-                <line x1="550" y1="275" x2="550" y2="200" stroke="black" stroke-width="2"/>
-                
-                <!-- Arrow -->
-                <polygon points="545,205 550,195 555,205" fill="black"/>
-                
-                <!-- Elevation arrow -->
-                <line x1="50" y1="200" x2="50" y2="275" stroke="black" stroke-width="1" stroke-dasharray="5,5"/>
-                <polygon points="45,205 50,200 55,205" fill="black"/>
-                <polygon points="45,270 50,275 55,270" fill="black"/>
-                <text x="30" y="240" text-anchor="middle" font-size="14" transform="rotate(-90 30 240)">Suction Lift</text>
-            </svg>
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-water"></i> Suction Conditions</div>
+            </div>
+            <div class="panel-body">
+
+                <!-- 1. Site Conditions -->
+                <div class="form-section">
+                    <div class="form-section-title">Site & Fluid</div>
+                    <div class="input-group">
+                        <label>Fluid Temperature</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="temp" value="30">
+                            <span class="unit-badge">°C</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Site Elevation (Altitude)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="altitude" value="0">
+                            <span class="unit-badge">m ASL</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Pump & Piping -->
+                <div class="form-section">
+                    <div class="form-section-title">Suction Line</div>
+                    <div class="input-group">
+                        <label>Flow Rate</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="flow" value="50">
+                            <span class="unit-badge">m³/hr</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Suction Lift (Static)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="lift" value="3.0">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Pipe ID</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="dia" value="100">
+                            <span class="unit-badge">mm</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Pipe Material</label>
+                        <div class="input-wrapper">
+                            <select id="material">
+                                <option value="0.05">Steel (Commercial)</option>
+                                <option value="0.005" selected>PVC / Plastic</option>
+                                <option value="0.26">Cast Iron</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Total Pipe Length</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="len" value="10">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Losses -->
+                <div class="form-section">
+                    <div class="form-section-title">Fittings & Safety</div>
+                    <div class="input-group">
+                        <label>Elbows (90°)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="n_elbow" value="2">
+                            <span class="unit-badge">Qty</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Foot Valve / Strainer</label>
+                        <div class="input-wrapper">
+                            <select id="k_valve">
+                                <option value="0">None (Flooded)</option>
+                                <option value="1.5" selected>Standard Foot Valve</option>
+                                <option value="2.5">Strainer + Valve</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Required Margin</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="margin" value="0.5">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="NpshEngine.calculate()">
+                    <i class="fas fa-check-circle"></i> Check NPSH
+                </button>
+            </div>
         </div>
-        
-        <form id="npshForm">
-            <div class="form-container">
-                <div class="form-column">
-                    <div class="form-group">
-                        <label for="temperature">Liquid Temperature (°C):</label>
-                        <input type="number" id="temperature" value="30" step="1" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="pipeMaterial">Pipe Material:</label>
-                        <select id="pipeMaterial" required>
-                            <option value="pvc">PVC</option>
-                            <option value="steel">Steel</option>
-                            <option value="cast-iron">Cast Iron</option>
-                            <option value="hdpe">HDPE</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="pipeLength">Pipe Length (m):</label>
-                        <input type="number" id="pipeLength" value="4.7" step="0.1" required>
-                    </div>
-                </div>
-                
-                <div class="form-column">
-                    <div class="form-group">
-                        <label for="pipeDiameter">Pipe Diameter (mm):</label>
-                        <input type="number" id="pipeDiameter" value="80" step="1" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="suctionHeight">Suction Lift Height (m):</label>
-                        <input type="number" id="suctionHeight" value="4.7" step="0.1" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="flowRate">Flow Rate (m³/hr):</label>
-                        <input type="number" id="flowRate" value="15" step="0.1" required>
-                    </div>
-                </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-chart-bar"></i> Engineering Analysis</div>
             </div>
-            
-            <div class="checkbox-group">
-                <h3>Select Pipe Fittings:</h3>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="elbow" value="elbow">
-                    <label for="elbow">Elbow (90°)</label>
+            <div class="panel-body">
+
+                <div class="graphic-container">
+                    <!-- Simple SVG Illustration of Suction Lift -->
+                    <svg viewBox="0 0 400 120">
+                        <line x1="50" y1="20" x2="50" y2="100" stroke="#64748b" stroke-width="2" stroke-dasharray="4" />
+                        <text x="60" y="60" fill="#64748b" font-size="12">Atm Pressure</text>
+
+                        <rect x="150" y="50" width="100" height="50" fill="#c7d2fe" />
+                        <line x1="150" y1="50" x2="250" y2="50" stroke="#4338ca" stroke-width="2" />
+                        <text x="200" y="40" fill="#4338ca" text-anchor="middle" font-size="12">Liquid Level</text>
+
+                        <circle cx="350" cy="20" r="15" stroke="#4338ca" fill="white" stroke-width="2" />
+                        <text x="350" y="25" text-anchor="middle" font-size="10" fill="#4338ca">Pump</text>
+
+                        <line x1="200" y1="50" x2="200" y2="80" stroke="#10b981" stroke-width="2" />
+                        <line x1="200" y1="80" x2="350" y2="80" stroke="#10b981" stroke-width="2" />
+                        <line x1="350" y1="80" x2="350" y2="35" stroke="#10b981" stroke-width="2" />
+                    </svg>
                 </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="reducer" value="reducer">
-                    <label for="reducer">Reducer</label>
+
+                <div id="warnings" class="warning-box"></div>
+
+                <div class="result-grid">
+                    <!-- Pressures -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-cloud"></i> Pressures (Head)</h4>
+                        <div class="calc-row">
+                            <span>Atmospheric (Site)</span>
+                            <span class="calc-val" id="res_atm">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Vapor Pressure</span>
+                            <span class="calc-val" id="res_vap">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Static Lift</span>
+                            <span class="calc-val" style="color:#b91c1c;" id="res_lift">0 m</span>
+                        </div>
+                    </div>
+
+                    <!-- Hydraulics -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-water"></i> Suction Hydraulics</h4>
+                        <div class="calc-row">
+                            <span>Velocity</span>
+                            <span class="calc-val" id="res_vel">0 m/s</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Velocity Head</span>
+                            <span class="calc-val" id="res_hv">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Friction Loss</span>
+                            <span class="calc-val" id="res_h_frict">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Minor Loss</span>
+                            <span class="calc-val" id="res_h_minor">0 m</span>
+                        </div>
+                    </div>
+
+                    <!-- NPSH Result -->
+                    <div class="result-block" style="grid-column: span 2; background:#e0e7ff; border-color:#818cf8;">
+                        <h4><i class="fas fa-check-double"></i> NPSH Available</h4>
+                        <div class="calc-row">
+                            <span>Total Suction Loss</span>
+                            <span class="calc-val" id="res_loss_tot">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>NPSHa</span>
+                            <span class="calc-val" style="font-size:24px; color:#4338ca;" id="res_npsha">0.00 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Max Allowable NPSHr</span>
+                            <span class="calc-val" id="res_npshr_lim">0.00 m</span>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="footValve" value="footValve">
-                    <label for="footValve">Foot Valve</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="tee" value="tee">
-                    <label for="tee">Tee</label>
-                </div>
-            </div>
-            
-            <button type="button" class="calculate-btn" onclick="calculateNPSH()">Calculate NPSH</button>
-        </form>
-        
-        <div class="results" id="results">
-            <div class="result-item">
-                Atmospheric Pressure: <span class="result-value" id="atmPressure">10.33</span> m
-            </div>
-            <div class="result-item">
-                Vapor Pressure: <span class="result-value" id="vaporPressure">0.43</span> m
-            </div>
-            <div class="result-item">
-                Friction Loss: <span class="result-value" id="frictionLoss">0.25</span> m
-            </div>
-            <div class="result-item">
-                <strong>NPSHa (Available): <span class="result-value" id="npshAvailable">4.95</span> m</strong>
-            </div>
-            <div class="warning" id="warning" style="display: none;">
-                Warning: NPSHa is low. Consider reducing suction lift or increasing pipe diameter.
             </div>
         </div>
     </div>
 
     <script>
-        // Vapor pressure data (temperature in °C, pressure in meters of water)
-        const vaporPressureData = {
-            0: 0.062,
-            10: 0.125,
-            20: 0.238,
-            30: 0.432,
-            40: 0.752,
-            50: 1.258,
-            60: 2.031,
-            70: 3.177,
-            80: 4.829,
-            90: 7.149,
-            100: 10.33
-        };
+        window.NpshEngine = {
+            calculate: function () {
+                try {
+                    // Inputs
+                    const Q_hr = this.val('flow');
+                    const Q_sec = Q_hr / 3600;
+                    const Z_lift = this.val('lift');
+                    const D_mm = this.val('dia');
+                    const D_m = D_mm / 1000;
+                    const L = this.val('len');
+                    const Roughness = parseFloat(document.getElementById('material').value);
 
-        // Friction factors for different pipe materials (Hazen-Williams C values)
-        const frictionFactors = {
-            'pvc': 150,
-            'steel': 120,
-            'cast-iron': 100,
-            'hdpe': 140
-        };
+                    const Temp = this.val('temp');
+                    const Altitude = this.val('altitude');
 
-        // Minor loss coefficients
-        const minorLossCoefficients = {
-            'elbow': 0.9,
-            'reducer': 0.5,
-            'footValve': 1.5,
-            'tee': 1.8
-        };
+                    // 1. Atmospheric Pressure (Altitude Corrected)
+                    // H_atm = 10.33 * (1 - 2.25577e-5 * Alt)^5.25588
+                    // Simplified fit: 10.33 * (1 - Alt/44330)^5.255
+                    const H_atm = 10.33 * Math.pow((1 - Altitude / 44330), 5.255);
 
-        function interpolateVaporPressure(temperature) {
-            const temps = Object.keys(vaporPressureData).map(Number).sort((a, b) => a - b);
-            
-            for (let i = 0; i < temps.length - 1; i++) {
-                if (temperature >= temps[i] && temperature <= temps[i + 1]) {
-                    const t1 = temps[i];
-                    const t2 = temps[i + 1];
-                    const p1 = vaporPressureData[t1];
-                    const p2 = vaporPressureData[t2];
-                    return p1 + (p2 - p1) * (temperature - t1) / (t2 - t1);
-                }
+                    // 2. Vapor Pressure (Antoine / Approx)
+                    // P_vap (kPa). H_vap = P_vap / (rho * g). 
+                    // Simplified: Approx curve for water head in m
+                    // 0C -> 0.06m, 100C -> 10.33m.
+                    const H_vap = this.getVaporHead(Temp);
+
+                    // 3. Hydraulics
+                    const Area = (Math.PI / 4) * D_m * D_m;
+                    const V = Q_sec / Area;
+                    const V_head = (V * V) / (2 * 9.81);
+
+                    // Friction (Darcy-Weisbach)
+                    // f approx eq: Swamee-Jain or simple approx for turbulent pipe.
+                    // f = 0.25 / (log10(e/3.7D + 5.74/Re^0.9))^2
+                    // Kinematic Viscosity Nu (water) approx 1e-6 m2/s at 20C. 
+                    // Temp correction: Nu = 1.78e-6 / (1 + 0.0337T + 0.00022T^2)
+                    const Nu = 1.78e-6 / (1 + 0.0337 * Temp + 0.000221 * Temp * Temp);
+                    const Re = (V * D_m) / Nu;
+
+                    let f = 0.02; // Fallback
+                    if (Re > 2000) {
+                        const rr = Roughness / D_mm; // e/D (both mm)
+                        f = 0.25 / Math.pow(Math.log10(rr / 3.7 + 5.74 / Math.pow(Re, 0.9)), 2);
+                    }
+
+                    const H_frict = (f * L * V * V) / (D_m * 2 * 9.81);
+
+                    // Minor Losses (K Values)
+                    const K_elbow = this.val('n_elbow') * 0.9; // 0.9 per elbow
+                    const K_valve = parseFloat(document.getElementById('k_valve').value);
+                    const K_entrance = 0.5; // Re-entrant default
+                    const K_total = K_elbow + K_valve + K_entrance;
+                    const H_minor = K_total * V_head;
+
+                    const Total_Loss_Pipe = H_frict + H_minor;
+
+                    // 4. NPSHa Calculation
+                    // Formula: Atm - Vap - Lift - Loss
+                    // Note: If flooded suction (negative lift), Z_lift would be negative input (but label says Lift, usually positive value implies lift UP)
+                    // Let's assume Lift input is positive distance UP from liquid to pump eye.
+                    const NPSHa = H_atm - H_vap - Z_lift - Total_Loss_Pipe;
+
+                    const Margin = this.val('margin');
+                    const NPSHr_Limit = NPSHa - Margin;
+
+                    // --- OUTPUT ---
+                    this.set('res_atm', H_atm.toFixed(2) + ' m');
+                    this.set('res_vap', H_vap.toFixed(2) + ' m');
+                    this.set('res_lift', Z_lift.toFixed(2) + ' m');
+
+                    this.set('res_vel', V.toFixed(2) + ' m/s');
+                    this.set('res_hv', V_head.toFixed(3) + ' m');
+                    this.set('res_h_frict', H_frict.toFixed(2) + ' m');
+                    this.set('res_h_minor', H_minor.toFixed(2) + ' m');
+                    this.set('res_loss_tot', Total_Loss_Pipe.toFixed(2) + ' m');
+
+                    this.set('res_npsha', NPSHa.toFixed(2) + ' m');
+                    this.set('res_npshr_lim', NPSHr_Limit.toFixed(2) + ' m');
+
+                    // Warnings
+                    const warns = [];
+                    if (NPSHa < 3.0) warns.push("NPSHa Value Critical (< 3.0m). Cavitation likely.");
+                    if (V > 1.5) warns.push("Suction Velocity High (> 1.5 m/s). Increase pipe size.");
+                    if (Temp > 60 && Z_lift > 2) warns.push("High Temp Suction Lift. Vapor lock risk.");
+                    if (re < 4000) warns.push("Flow may be laminar/transitional. Friction calc approx.");
+
+                    const el = document.getElementById('warnings');
+                    if (warns.length > 0) {
+                        el.style.display = 'block';
+                        el.innerHTML = warns.map(w => `<div><i class="fas fa-exclamation-triangle"></i> ${w}</div>`).join('');
+                        document.getElementById('res_npsha').style.color = '#ef4444';
+                    } else {
+                        el.style.display = 'none';
+                        document.getElementById('res_npsha').style.color = '#4338ca';
+                    }
+
+                } catch (e) { console.error(e); }
+            },
+            getVaporHead: function (T) {
+                // Antoine Equation for water P(mmHg) -> convert to m head
+                // log10(P) = 8.07131 - 1730.63 / (233.426 + T)
+                const val = 8.07131 - 1730.63 / (233.426 + T);
+                const P_mmHg = Math.pow(10, val);
+                const P_atm = P_mmHg / 760;
+                return P_atm * 10.33;
+            },
+            val: function (id) { return parseFloat(document.getElementById(id).value) || 0; },
+            set: function (id, v) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = v;
             }
-            
-            if (temperature < temps[0]) return vaporPressureData[temps[0]];
-            return vaporPressureData[temps[temps.length - 1]];
-        }
+        };
 
-        function calculateNPSH() {
-            // Get input values
-            const temperature = parseFloat(document.getElementById('temperature').value);
-            const pipeMaterial = document.getElementById('pipeMaterial').value;
-            const pipeLength = parseFloat(document.getElementById('pipeLength').value);
-            const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value) / 1000; // Convert to meters
-            const suctionHeight = parseFloat(document.getElementById('suctionHeight').value);
-            const flowRate = parseFloat(document.getElementById('flowRate').value) / 3600; // Convert to m³/s
-            
-            // Calculate velocity
-            const area = Math.PI * Math.pow(pipeDiameter / 2, 2);
-            const velocity = flowRate / area;
-            
-            // Calculate friction loss using Hazen-Williams equation
-            const C = frictionFactors[pipeMaterial];
-            const frictionLoss = 10.67 * Math.pow(flowRate, 1.852) * pipeLength / 
-                                 (Math.pow(C, 1.852) * Math.pow(pipeDiameter, 4.871));
-            
-            // Calculate minor losses
-            let totalMinorLossCoeff = 0;
-            const fittings = ['elbow', 'reducer', 'footValve', 'tee'];
-            fittings.forEach(fitting => {
-                if (document.getElementById(fitting).checked) {
-                    totalMinorLossCoeff += minorLossCoefficients[fitting];
-                }
-            });
-            
-            const minorLosses = totalMinorLossCoeff * Math.pow(velocity, 2) / (2 * 9.81);
-            
-            // Total losses
-            const totalLosses = frictionLoss + minorLosses;
-            
-            // Get vapor pressure
-            const vaporPressure = interpolateVaporPressure(temperature);
-            
-            // Atmospheric pressure (assuming sea level)
-            const atmPressure = 10.33;
-            
-            // Calculate NPSHa
-            const npshAvailable = atmPressure - vaporPressure - suctionHeight - totalLosses;
-            
-            // Display results
-            document.getElementById('atmPressure').textContent = atmPressure.toFixed(2);
-            document.getElementById('vaporPressure').textContent = vaporPressure.toFixed(2);
-            document.getElementById('frictionLoss').textContent = totalLosses.toFixed(2);
-            document.getElementById('npshAvailable').textContent = npshAvailable.toFixed(2);
-            
-            // Show warning if NPSHa is low
-            const warning = document.getElementById('warning');
-            if (npshAvailable < 3) {
-                warning.style.display = 'block';
-            } else {
-                warning.style.display = 'none';
-            }
-            
-            // Show results
-            document.getElementById('results').style.display = 'block';
+        window.onload = function () {
+            NpshEngine.calculate();
+            document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', () => NpshEngine.calculate()));
         }
     </script>
 </body>
+
 </html>

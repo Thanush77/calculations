@@ -1,409 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NPSH Calculator with Flooded Suction</title>
+    <title>NPSH (Flooded) Design Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #059669;
+            /* Emerald-600 */
+            --primary-dark: #047857;
+            --secondary: #64748b;
+            --accent: #064e3b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #ecfdf5;
+            /* Emerald-50 */
+            --card-bg: #ffffff;
+            --border-color: #d1fae5;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f5f5f5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            color: var(--accent);
+            line-height: 1.5;
         }
 
-        .container {
-            background: white;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            max-width: 1000px;
+        .design-studio {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #333;
-            text-align: center;
+        @media (max-width: 1024px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .diagram {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
-            background-color: #f8f9fa;
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
 
-        .diagram svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .form-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .form-column {
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to right, #ecfdf5, #d1fae5);
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        input[type="number"], select {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            background-color: white;
-        }
-
-        input[type="number"]:focus, select:focus {
-            outline: none;
-            border-color: #4a90e2;
-        }
-
-        .checkbox-group {
-            margin-top: 20px;
-        }
-
-        .checkbox-group h3 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .checkbox-item {
+        .panel-title {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--primary-dark);
             display: flex;
             align-items: center;
+            gap: 8px;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
             margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #a7f3d0;
+            padding-bottom: 4px;
+            letter-spacing: 0.5px;
         }
 
-        .checkbox-item input[type="checkbox"] {
-            margin-right: 10px;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
+        .input-group {
+            margin-bottom: 12px;
         }
 
-        .checkbox-item label {
-            margin-bottom: 0;
-            cursor: pointer;
-            font-weight: normal;
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
         }
 
-        .calculate-btn {
-            background-color: #333;
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--accent);
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .result-block {
+            background: #f0fdf4;
+            /* Light Emerald */
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #a7f3d0;
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 4px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
-            margin: 20px auto 0;
-            display: block;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
-        .calculate-btn:hover {
-            background-color: #555;
+        .action-btn:hover {
+            background: var(--primary-dark);
         }
 
-        .results {
-            margin-top: 30px;
-            padding: 25px;
-            background-color: #e8f4fd;
-            border-radius: 8px;
-            border: 1px solid #b3d9f2;
+        .warning-box {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
             display: none;
         }
 
-        .result-item {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
+        .graphic-container {
+            text-align: center;
+            margin-bottom: 20px;
+            opacity: 0.9;
         }
 
-        .result-value {
-            font-weight: 600;
-            color: #1976d2;
-        }
-
-        .success {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .form-container {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
+        .graphic-container svg {
+            width: 100%;
+            height: auto;
+            max-height: 120px;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>NPSH Calculator with Flooded Suction</h1>
-        
-        <div class="diagram">
-            <svg viewBox="0 0 600 400" width="600" height="400">
-                <!-- Tank -->
-                <rect x="100" y="150" width="120" height="200" fill="none" stroke="black" stroke-width="2"/>
-                <rect x="100" y="150" width="120" height="150" fill="#e3f2fd" opacity="0.5"/>
-                <text x="160" y="375" text-anchor="middle" font-size="16">Tank</text>
-                
-                <!-- Pump (below tank) -->
-                <circle cx="450" cy="325" r="30" fill="none" stroke="black" stroke-width="2"/>
-                <text x="450" y="330" text-anchor="middle" font-size="14">M</text>
-                <text x="450" y="370" text-anchor="middle" font-size="16">Pump</text>
-                
-                <!-- Suction pipe (downward from tank) -->
-                <line x1="220" y1="300" x2="350" y2="300" stroke="black" stroke-width="2"/>
-                <line x1="350" y1="300" x2="350" y2="325" stroke="black" stroke-width="2"/>
-                <line x1="350" y1="325" x2="420" y2="325" stroke="black" stroke-width="2"/>
-                
-                <!-- Discharge pipe -->
-                <line x1="480" y1="325" x2="550" y2="325" stroke="black" stroke-width="2"/>
-                
-                <!-- Arrow showing flow -->
-                <polygon points="345,315 350,325 355,315" fill="black"/>
-                
-                <!-- Water column height arrow -->
-                <line x1="50" y1="300" x2="50" y2="325" stroke="black" stroke-width="1" stroke-dasharray="5,5"/>
-                <polygon points="45,305 50,300 55,305" fill="black"/>
-                <polygon points="45,320 50,325 55,320" fill="black"/>
-                <text x="30" y="315" text-anchor="middle" font-size="14" transform="rotate(-90 30 315)">Water Column</text>
-            </svg>
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-water"></i> Flooded Suction Params</div>
+            </div>
+            <div class="panel-body">
+
+                <!-- 1. Site Conditions -->
+                <div class="form-section">
+                    <div class="form-section-title">Site & Fluid</div>
+                    <div class="input-group">
+                        <label>Fluid Temperature</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="temp" value="35">
+                            <span class="unit-badge">°C</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Site Elevation (Altitude)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="altitude" value="0">
+                            <span class="unit-badge">m ASL</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Pump & Piping -->
+                <div class="form-section">
+                    <div class="form-section-title">Suction Line</div>
+                    <div class="input-group">
+                        <label>Flow Rate</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="flow" value="75">
+                            <span class="unit-badge">m³/hr</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Liquid Level (Above Centerline)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="static_head" value="2.5">
+                            <span class="unit-badge">m (+ve)</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Pipe ID</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="dia" value="150">
+                            <span class="unit-badge">mm</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Pipe Material</label>
+                        <div class="input-wrapper">
+                            <select id="material">
+                                <option value="0.05">Steel (Commercial)</option>
+                                <option value="0.005" selected>PVC / Plastic</option>
+                                <option value="0.26">Cast Iron</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Total Pipe Length</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="len" value="5">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Losses -->
+                <div class="form-section">
+                    <div class="form-section-title">Fittings & Margin</div>
+                    <div class="input-group">
+                        <label>Isolation Valve</label>
+                        <div class="input-wrapper">
+                            <select id="k_valve">
+                                <option value="0.3">Butterfly Valve</option>
+                                <option value="0.2" selected>Gate Valve</option>
+                                <option value="0.05">Ball Valve (Full Bore)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Elbows / Tees</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="n_fittings" value="1">
+                            <span class="unit-badge">Qty (K~0.9)</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Safety Margin Target</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="margin" value="1.0">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="NpshFloodedEngine.calculate()">
+                    <i class="fas fa-check-double"></i> Analyze System
+                </button>
+            </div>
         </div>
-        
-        <form id="npshForm">
-            <div class="form-container">
-                <div class="form-column">
-                    <div class="form-group">
-                        <label for="temperature">Liquid Temperature (°C):</label>
-                        <input type="number" id="temperature" value="30" step="1" required>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-chart-line"></i> Hydraulic Analysis</div>
+            </div>
+            <div class="panel-body">
+
+                <div class="graphic-container">
+                    <svg viewBox="0 0 400 120">
+                        <!-- Tank -->
+                        <rect x="50" y="20" width="100" height="80" fill="#ecfdf5" stroke="#047857" stroke-width="2" />
+                        <line x1="50" y1="40" x2="150" y2="40" stroke="#059669" stroke-width="2" />
+                        <text x="100" y="35" text-anchor="middle" font-size="10" fill="#047857">Liquid Level</text>
+
+                        <!-- Pump -->
+                        <circle cx="300" cy="90" r="15" stroke="#047857" fill="white" stroke-width="2" />
+                        <text x="300" y="95" text-anchor="middle" font-size="10" fill="#047857">Pump</text>
+
+                        <!-- Pipe -->
+                        <line x1="150" y1="90" x2="285" y2="90" stroke="#10b981" stroke-width="3" />
+
+                        <!-- Positive Head Arrow -->
+                        <line x1="170" y1="40" x2="170" y2="90" stroke="#f59e0b" stroke-width="1"
+                            stroke-dasharray="3" />
+                        <text x="180" y="70" font-size="10" fill="#f59e0b">+ve Head</text>
+                    </svg>
+                </div>
+
+                <div id="warnings" class="warning-box"></div>
+
+                <div class="result-grid">
+                    <!-- Pressures -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-compress-arrows-alt"></i> Absolute Head</h4>
+                        <div class="calc-row">
+                            <span>Atmospheric (Site)</span>
+                            <span class="calc-val" id="res_atm">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Static Head (+ve)</span>
+                            <span class="calc-val" style="color:#059669;" id="res_static">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Vapor Pressure</span>
+                            <span class="calc-val" id="res_vap">0 m</span>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="pipeMaterial">Pipe Material:</label>
-                        <select id="pipeMaterial" required>
-                            <option value="pvc">PVC</option>
-                            <option value="steel">Steel</option>
-                            <option value="cast-iron">Cast Iron</option>
-                            <option value="hdpe">HDPE</option>
-                        </select>
+
+                    <!-- Hydraulics -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-tint"></i> Flow Physics</h4>
+                        <div class="calc-row">
+                            <span>Suction Velocity</span>
+                            <span class="calc-val" id="res_vel">0 m/s</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Velocity Head</span>
+                            <span class="calc-val" id="res_hv">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Friction Loss</span>
+                            <span class="calc-val" id="res_h_frict">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Fitting Loss</span>
+                            <span class="calc-val" id="res_h_minor">0 m</span>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="pipeLength">Pipe Length (m):</label>
-                        <input type="number" id="pipeLength" value="4.7" step="0.1" required>
+
+                    <!-- NPSH Result -->
+                    <div class="result-block" style="grid-column: span 2; background:#d1fae5; border-color:#34d399;">
+                        <h4><i class="fas fa-clipboard-check"></i> NPSH Available</h4>
+                        <div class="calc-row">
+                            <span>Net Absolute Suction</span>
+                            <span class="calc-val" id="res_abs_suc">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>NPSHa</span>
+                            <span class="calc-val" style="font-size:24px; color:#064e3b;" id="res_npsha">0.00 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Max NPSHr Allowable</span>
+                            <span class="calc-val" id="res_npshr_lim">0.00 m</span>
+                        </div>
                     </div>
+
                 </div>
-                
-                <div class="form-column">
-                    <div class="form-group">
-                        <label for="pipeDiameter">Pipe Diameter (mm):</label>
-                        <input type="number" id="pipeDiameter" value="80" step="1" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="waterColumn">Water Column Height (m):</label>
-                        <input type="number" id="waterColumn" value="4.7" step="0.1" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="flowRate">Flow Rate (m³/hr):</label>
-                        <input type="number" id="flowRate" value="15" step="0.1" required>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="checkbox-group">
-                <h3>Select Pipe Fittings:</h3>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="ballValve" value="ballValve">
-                    <label for="ballValve">Ball Valve</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="butterflyValve" value="butterflyValve">
-                    <label for="butterflyValve">Butterfly Valve</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="gateValve" value="gateValve">
-                    <label for="gateValve">Gate Valve</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="elbow" value="elbow">
-                    <label for="elbow">Elbow (90°)</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="tee" value="tee">
-                    <label for="tee">Tee</label>
-                </div>
-            </div>
-            
-            <button type="button" class="calculate-btn" onclick="calculateNPSH()">Calculate NPSH</button>
-        </form>
-        
-        <div class="results" id="results">
-            <div class="result-item">
-                Atmospheric Pressure: <span class="result-value" id="atmPressure">10.33</span> m
-            </div>
-            <div class="result-item">
-                Vapor Pressure: <span class="result-value" id="vaporPressure">0.43</span> m
-            </div>
-            <div class="result-item">
-                Friction Loss: <span class="result-value" id="frictionLoss">0.25</span> m
-            </div>
-            <div class="result-item">
-                Water Column Height: <span class="result-value" id="waterColumnDisplay">4.70</span> m
-            </div>
-            <div class="result-item">
-                <strong>NPSHa (Available): <span class="result-value" id="npshAvailable">14.35</span> m</strong>
-            </div>
-            <div class="success" id="success">
-                Excellent! The system has flooded suction with high NPSHa.
             </div>
         </div>
     </div>
 
     <script>
-        // Vapor pressure data (temperature in °C, pressure in meters of water)
-        const vaporPressureData = {
-            0: 0.062,
-            10: 0.125,
-            20: 0.238,
-            30: 0.432,
-            40: 0.752,
-            50: 1.258,
-            60: 2.031,
-            70: 3.177,
-            80: 4.829,
-            90: 7.149,
-            100: 10.33
-        };
+        window.NpshFloodedEngine = {
+            calculate: function () {
+                try {
+                    // Inputs
+                    const Q_hr = this.val('flow');
+                    const Q_sec = Q_hr / 3600;
+                    const Z_static = this.val('static_head'); // Positive for flooded
+                    const D_mm = this.val('dia');
+                    const D_m = D_mm / 1000;
+                    const L = this.val('len');
+                    const Roughness = parseFloat(document.getElementById('material').value);
 
-        // Friction factors for different pipe materials (Hazen-Williams C values)
-        const frictionFactors = {
-            'pvc': 150,
-            'steel': 120,
-            'cast-iron': 100,
-            'hdpe': 140
-        };
+                    const Temp = this.val('temp');
+                    const Altitude = this.val('altitude');
 
-        // Minor loss coefficients
-        const minorLossCoefficients = {
-            'ballValve': 0.05,
-            'butterflyValve': 0.3,
-            'gateValve': 0.2,
-            'elbow': 0.9,
-            'tee': 1.8
-        };
+                    // 1. Atmospheric Pressure (Altitude Corrected)
+                    const H_atm = 10.33 * Math.pow((1 - Altitude / 44330), 5.255);
 
-        function interpolateVaporPressure(temperature) {
-            const temps = Object.keys(vaporPressureData).map(Number).sort((a, b) => a - b);
-            
-            for (let i = 0; i < temps.length - 1; i++) {
-                if (temperature >= temps[i] && temperature <= temps[i + 1]) {
-                    const t1 = temps[i];
-                    const t2 = temps[i + 1];
-                    const p1 = vaporPressureData[t1];
-                    const p2 = vaporPressureData[t2];
-                    return p1 + (p2 - p1) * (temperature - t1) / (t2 - t1);
-                }
+                    // 2. Vapor Pressure (Antoine)
+                    const H_vap = this.getVaporHead(Temp);
+
+                    // 3. Hydraulics
+                    const Area = (Math.PI / 4) * D_m * D_m;
+                    const V = Q_sec / Area;
+                    const V_head = (V * V) / (2 * 9.81);
+
+                    // Friction (Darcy-Weisbach)
+                    const Nu = 1.78e-6 / (1 + 0.0337 * Temp + 0.000221 * Temp * Temp);
+                    const Re = (V * D_m) / Nu;
+
+                    let f = 0.02;
+                    if (Re > 2000) {
+                        const rr = Roughness / D_mm;
+                        f = 0.25 / Math.pow(Math.log10(rr / 3.7 + 5.74 / Math.pow(Re, 0.9)), 2);
+                    }
+
+                    const H_frict = (f * L * V * V) / (D_m * 2 * 9.81);
+
+                    // Minor Losses
+                    const K_valve = parseFloat(document.getElementById('k_valve').value);
+                    const K_fit = this.val('n_fittings') * 0.9;
+                    const K_entrance = 0.5; // From tank to pipe
+                    const K_total = K_valve + K_fit + K_entrance;
+                    const H_minor = K_total * V_head;
+
+                    const Total_Loss_Pipe = H_frict + H_minor;
+
+                    // 4. NPSHa Calculation (Flooded)
+                    // H_static is ADDDED to Atm Pressure
+                    const H_abs_suction = H_atm + Z_static - Total_Loss_Pipe;
+                    const NPSHa = H_abs_suction - H_vap;
+
+                    const Margin = this.val('margin');
+                    const NPSHr_Limit = NPSHa - Margin;
+
+                    // --- OUTPUT ---
+                    this.set('res_atm', H_atm.toFixed(2) + ' m');
+                    this.set('res_vap', H_vap.toFixed(2) + ' m');
+                    this.set('res_static', '+ ' + Z_static.toFixed(2) + ' m');
+
+                    this.set('res_vel', V.toFixed(2) + ' m/s');
+                    this.set('res_hv', V_head.toFixed(3) + ' m');
+                    this.set('res_h_frict', H_frict.toFixed(2) + ' m');
+                    this.set('res_h_minor', H_minor.toFixed(2) + ' m');
+
+                    this.set('res_abs_suc', H_abs_suction.toFixed(2) + ' m');
+                    this.set('res_npsha', NPSHa.toFixed(2) + ' m');
+                    this.set('res_npshr_lim', NPSHr_Limit.toFixed(2) + ' m');
+
+                    // Warnings
+                    const warns = [];
+                    if (NPSHa < 1.0) warns.push("Calculated NPSHa is extremely low (< 1m). Verify inputs.");
+                    if (V > 1.5) warns.push("Suction Velocity High (> 1.5 m/s). Increase pipe size.");
+                    if (Total_Loss_Pipe > Z_static) warns.push("Friction losses exceed static head benefit.");
+                    if (Temp > 80 && Z_static < 3) warns.push("Hot liquid requires higher static head.");
+
+                    const el = document.getElementById('warnings');
+                    if (warns.length > 0) {
+                        el.style.display = 'block';
+                        el.innerHTML = warns.map(w => `<div><i class="fas fa-exclamation-triangle"></i> ${w}</div>`).join('');
+                        document.getElementById('res_npsha').style.color = '#ef4444';
+                    } else {
+                        el.style.display = 'none';
+                        document.getElementById('res_npsha').style.color = '#064e3b';
+                    }
+
+                } catch (e) { console.error(e); }
+            },
+            getVaporHead: function (T) {
+                const val = 8.07131 - 1730.63 / (233.426 + T);
+                const P_mmHg = Math.pow(10, val);
+                const P_atm = P_mmHg / 760;
+                return P_atm * 10.33;
+            },
+            val: function (id) { return parseFloat(document.getElementById(id).value) || 0; },
+            set: function (id, v) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = v;
             }
-            
-            if (temperature < temps[0]) return vaporPressureData[temps[0]];
-            return vaporPressureData[temps[temps.length - 1]];
-        }
+        };
 
-        function calculateNPSH() {
-            // Get input values
-            const temperature = parseFloat(document.getElementById('temperature').value);
-            const pipeMaterial = document.getElementById('pipeMaterial').value;
-            const pipeLength = parseFloat(document.getElementById('pipeLength').value);
-            const pipeDiameter = parseFloat(document.getElementById('pipeDiameter').value) / 1000; // Convert to meters
-            const waterColumn = parseFloat(document.getElementById('waterColumn').value);
-            const flowRate = parseFloat(document.getElementById('flowRate').value) / 3600; // Convert to m³/s
-            
-            // Calculate velocity
-            const area = Math.PI * Math.pow(pipeDiameter / 2, 2);
-            const velocity = flowRate / area;
-            
-            // Calculate friction loss using Hazen-Williams equation
-            const C = frictionFactors[pipeMaterial];
-            const frictionLoss = 10.67 * Math.pow(flowRate, 1.852) * pipeLength / 
-                                 (Math.pow(C, 1.852) * Math.pow(pipeDiameter, 4.871));
-            
-            // Calculate minor losses
-            let totalMinorLossCoeff = 0;
-            const fittings = ['ballValve', 'butterflyValve', 'gateValve', 'elbow', 'tee'];
-            fittings.forEach(fitting => {
-                if (document.getElementById(fitting).checked) {
-                    totalMinorLossCoeff += minorLossCoefficients[fitting];
-                }
-            });
-            
-            const minorLosses = totalMinorLossCoeff * Math.pow(velocity, 2) / (2 * 9.81);
-            
-            // Total losses
-            const totalLosses = frictionLoss + minorLosses;
-            
-            // Get vapor pressure
-            const vaporPressure = interpolateVaporPressure(temperature);
-            
-            // Atmospheric pressure (assuming sea level)
-            const atmPressure = 10.33;
-            
-            // Calculate NPSHa for flooded suction (positive head)
-            const npshAvailable = atmPressure - vaporPressure + waterColumn - totalLosses;
-            
-            // Display results
-            document.getElementById('atmPressure').textContent = atmPressure.toFixed(2);
-            document.getElementById('vaporPressure').textContent = vaporPressure.toFixed(2);
-            document.getElementById('frictionLoss').textContent = totalLosses.toFixed(2);
-            document.getElementById('waterColumnDisplay').textContent = waterColumn.toFixed(2);
-            document.getElementById('npshAvailable').textContent = npshAvailable.toFixed(2);
-            
-            // Show results
-            document.getElementById('results').style.display = 'block';
+        window.onload = function () {
+            NpshFloodedEngine.calculate();
+            document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', () => NpshFloodedEngine.calculate()));
         }
     </script>
 </body>
+
 </html>

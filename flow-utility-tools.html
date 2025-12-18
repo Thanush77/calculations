@@ -1,297 +1,480 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flow Rate Utility Tools</title>
+    <title>Degasser Design Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #0f766e;
+            --primary-dark: #115e59;
+            --secondary: #64748b;
+            --accent: #134e4a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f0fdfa;
+            --card-bg: #ffffff;
+            --border-color: #ccfbf1;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f5f5f5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            color: var(--accent);
+            line-height: 1.5;
         }
 
-        .container {
-            max-width: 800px;
+        .design-studio {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #333;
-            text-align: center;
+        @media (max-width: 1024px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .calculator {
-            background: white;
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
 
-        .calculator-header {
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: #e0f2fe;
+            /* Light Blue/Teal Mix */
+            background: linear-gradient(to right, #f0fdfa, #ccfbf1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--primary-dark);
             display: flex;
             align-items: center;
+            gap: 8px;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .form-section {
             margin-bottom: 25px;
         }
 
-        .calculator-number {
-            width: 30px;
-            height: 30px;
-            background-color: #007bff;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-right: 15px;
-        }
-
-        .calculator-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #007bff;
+        .form-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
+            letter-spacing: 0.5px;
         }
 
         .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
         }
 
-        label {
-            font-size: 16px;
-            color: #333;
-            font-weight: 500;
-            min-width: 180px;
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--accent);
         }
 
-        input[type="number"] {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="number"]:focus {
+        .input-wrapper input:focus {
+            border-color: var(--primary);
             outline: none;
-            border-color: #007bff;
         }
 
-        .calculate-btn {
-            background-color: #007bff;
+        .unit-badge {
+            position: absolute;
+            right: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .result-block {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: 500;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .calculate-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border-left: 4px solid #28a745;
-        }
-
-        .result-text {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .result-value {
-            font-weight: 600;
-            color: #28a745;
-        }
-
-        .result-subtext {
+            padding: 12px;
+            border-radius: 6px;
             font-size: 14px;
-            color: #6c757d;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
-        .degasser-calculator {
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .action-btn:hover {
+            background: var(--primary-dark);
         }
 
-        .degasser-number {
-            background-color: #6c757d;
-        }
-
-        .degasser-title {
-            color: #6c757d;
-        }
-
-        .degasser-btn {
-            background-color: #6c757d;
-        }
-
-        .degasser-btn:hover {
-            background-color: #5a6268;
-        }
-
-        @media (max-width: 768px) {
-            .input-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            label {
-                min-width: auto;
-                margin-bottom: 5px;
-            }
-
-            .calculator-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .calculator-number {
-                margin-right: 0;
-            }
+        .warning-box {
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            color: #c2410c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            display: none;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Flow Rate Utility Tools</h1>
-        
-        <!-- Water to Air Flow Calculator -->
-        <div class="calculator">
-            <div class="calculator-header">
-                <div class="calculator-number">1</div>
-                <div class="calculator-title">Water to Air Flow Calculator</div>
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-wind"></i> Design Parameters</div>
             </div>
-            
-            <div class="input-group">
-                <label for="waterFlow">Enter Water Flow (m³/hr):</label>
-                <input type="number" id="waterFlow" value="15" step="0.1">
-                <button class="calculate-btn" onclick="calculateAirRequirement()">Calculate Air Requirement</button>
-            </div>
-            
-            <div class="result" id="airResult">
-                <div class="result-text">
-                    <strong>Estimated Air Requirement:</strong>
+            <div class="panel-body">
+
+                <!-- 1. Process Data -->
+                <div class="form-section">
+                    <div class="form-section-title">Process Conditions</div>
+                    <div class="input-group">
+                        <label>Water Flow Rate</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="flow" value="100">
+                            <span class="unit-badge">m³/hr</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Inlet Alkalinity (as CaCO3)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="alk" value="300">
+                            <span class="unit-badge">ppm</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Water Temperature</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="temp" value="25">
+                            <span class="unit-badge">°C</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="result-value" id="airValue">336.00 m³/hr of compressed air</div>
-                <div class="result-subtext" id="airSubtext">≈ 336.00 M</div>
+
+                <!-- 2. Tower Design -->
+                <div class="form-section">
+                    <div class="form-section-title">Tower Sizing</div>
+                    <div class="input-group">
+                        <label>Hydraulic Loading Rate (HLR)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="hlr" value="50">
+                            <span class="unit-badge">m³/m²/h</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Air : Water Ratio</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="ratio" value="20">
+                            <span class="unit-badge">vol/vol</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Packing Height</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="h_pack" value="3.0">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Mechanical -->
+                <div class="form-section">
+                    <div class="form-section-title">Blower & Mechanical</div>
+                    <div class="input-group">
+                        <label>Blower Static Pressure</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="pressure" value="150">
+                            <span class="unit-badge">mmWC</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Blower Efficiency</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="eff" value="65">
+                            <span class="unit-badge">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="DegasserEngine.calculate()">
+                    <i class="fas fa-cog fa-spin-hover"></i> Run Design
+                </button>
             </div>
         </div>
-        
-        <!-- Degasser Tower Diameter Calculator -->
-        <div class="degasser-calculator">
-            <div class="calculator-header">
-                <div class="calculator-number degasser-number">2</div>
-                <div class="calculator-title degasser-title">Degasser Tower Diameter Calculator</div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-network-wired"></i> Engineering Analysis</div>
             </div>
-            
-            <div class="input-group">
-                <label for="degasserFlow">Enter Water Flow (m³/hr):</label>
-                <input type="number" id="degasserFlow" value="15" step="0.1">
-                <button class="calculate-btn degasser-btn" onclick="calculateTowerDiameter()">Calculate Tower Diameter</button>
-            </div>
-            
-            <div class="result" id="degasserResult">
-                <div class="result-text">
-                    <strong>Degasser Tower Diameter:</strong>
+            <div class="panel-body">
+
+                <div id="warnings" class="warning-box"></div>
+
+                <div class="result-grid">
+                    <!-- Mass Transfer -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-exchange-alt"></i> Mass Transfer</h4>
+                        <div class="calc-row">
+                            <span>CO₂ Load (Approx)</span>
+                            <span class="calc-val" id="res_co2_load">0 kg/hr</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Req. Air Flow</span>
+                            <span class="calc-val" id="res_air_flow">0 m³/hr</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Gas Flow (Actual)</span>
+                            <span class="calc-val" id="res_air_act">0 m³/hr</span>
+                        </div>
+                    </div>
+
+                    <!-- Tower Dimensions -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-ruler-vertical"></i> Tower Dimensions</h4>
+                        <div class="calc-row">
+                            <span>Diameter</span>
+                            <span class="calc-val" style="font-size:16px; color:#0f766e;" id="res_dia">0 m</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Cross Section Area</span>
+                            <span class="calc-val" id="res_area">0 m²</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Total Height (Est)</span>
+                            <span class="calc-val" id="res_h_total">0 m</span>
+                        </div>
+                    </div>
+
+                    <!-- Hydraulics -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-tachometer-alt"></i> Hydraulics</h4>
+                        <div class="calc-row">
+                            <span>Gas Velocity (Vg)</span>
+                            <span class="calc-val" id="res_vg">0 m/s</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Flooding Risk</span>
+                            <span class="calc-val" id="res_flood">Low</span>
+                        </div>
+                    </div>
+
+                    <!-- Mechanical -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-fan"></i> Blower Sizing</h4>
+                        <div class="calc-row">
+                            <span>Total Pressure</span>
+                            <span class="calc-val" id="res_press">0 Pa</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Motor Power</span>
+                            <span class="calc-val" style="font-size:16px; color:#b91c1c;" id="res_power">0 kW</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Rec. Motor Rating</span>
+                            <span class="calc-val" id="res_motor">0 kW</span>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="result-value" id="degasserValue">Diameter: 0.56 meters</div>
             </div>
         </div>
     </div>
 
     <script>
-        function calculateAirRequirement() {
-            const waterFlow = parseFloat(document.getElementById('waterFlow').value);
-            
-            if (!waterFlow || waterFlow <= 0) {
-                alert('Please enter a valid water flow rate.');
-                return;
-            }
-            
-            // Typical air-to-water ratio for aeration systems is 15-25:1
-            // Using 22.4:1 ratio (1 m³ of water requires ~22.4 m³ of air at standard conditions)
-            const airToWaterRatio = 22.4;
-            const airRequirement = waterFlow * airToWaterRatio;
-            
-            // Update display
-            document.getElementById('airValue').textContent = airRequirement.toFixed(2) + ' m³/hr of compressed air';
-            document.getElementById('airSubtext').textContent = '≈ ' + airRequirement.toFixed(2) + ' M';
-            
-            // Update input display
-            document.getElementById('waterFlow').value = waterFlow.toFixed(1);
-        }
+        window.DegasserEngine = {
+            calculate: function () {
+                try {
+                    // Inputs
+                    const Q = this.val('flow');
+                    const Alk = this.val('alk');
+                    const Temp = this.val('temp');
 
-        function calculateTowerDiameter() {
-            const waterFlow = parseFloat(document.getElementById('degasserFlow').value);
-            
-            if (!waterFlow || waterFlow <= 0) {
-                alert('Please enter a valid water flow rate.');
-                return;
-            }
-            
-            // Degasser tower sizing based on hydraulic loading rate
-            // Typical loading rate: 40-60 m³/m²/hr for packed tower degassers
-            // Using 50 m³/m²/hr as design parameter
-            const hydraulicLoadingRate = 50; // m³/m²/hr
-            
-            // Calculate required cross-sectional area
-            const requiredArea = waterFlow / hydraulicLoadingRate;
-            
-            // Calculate diameter from area (A = π × D² / 4)
-            const diameter = Math.sqrt((4 * requiredArea) / Math.PI);
-            
-            // Update display
-            document.getElementById('degasserValue').textContent = 'Diameter: ' + diameter.toFixed(2) + ' meters';
-            
-            // Update input display
-            document.getElementById('degasserFlow').value = waterFlow.toFixed(1);
-        }
+                    const HLR = this.val('hlr');
+                    const Ratio = this.val('ratio');
+                    const H_Pack = this.val('h_pack');
 
-        // Initial calculations on page load
-        window.onload = function() {
-            calculateAirRequirement();
-            calculateTowerDiameter();
+                    const Pressure_mmWC = this.val('pressure');
+                    const Eff = this.val('eff') / 100;
+
+                    // 1. Mass Transfer & CO2 Load
+                    // CO2 approx 0.88 * Alk (Stoichiometry of HCO3 -> CO2)
+                    // This assumes full conversion/stripping potential
+                    const CO2_Conc = 0.88 * Alk;
+                    const CO2_Load = (Q * CO2_Conc) / 1000; // kg/hr
+
+                    // Air Flow
+                    const Air_Flow_Std = Q * Ratio;
+
+                    // Temp Correction for Air
+                    // T_std = 293K (20C), T_act = 273 + Temp
+                    // V_act = V_std * (T_act / T_std)
+                    const T_act = 273.15 + Temp;
+                    const T_std = 293.15;
+                    const Air_Flow_Act = Air_Flow_Std * (T_act / T_std);
+
+                    // 2. Tower Sizing
+                    const Area = Q / HLR;
+                    const Dia = Math.sqrt((4 * Area) / Math.PI);
+
+                    // Total Height = Packing + Support(0.5) + Distribution(1.0) + Sump(1.0)
+                    const H_Total = H_Pack + 2.5;
+
+                    // 3. Hydraulics Checks
+                    const Vg = Air_Flow_Act / Area / 3600; // m/s
+
+                    // Flooding check (Approx rule of thumb for packed towers)
+                    // High risk > 2.5 m/s for plastic packing
+                    let FloodStatus = "Low (< 40%)";
+                    if (Vg > 1.5) FloodStatus = "Medium (40-70%)";
+                    if (Vg > 2.5) FloodStatus = "High (> 80%)";
+
+                    // 4. Blower Power
+                    // Power (kW) = (Q_act_m3s * dP_Pa) / (Eff * 1000)
+                    // dP in Pa = mmWC * 9.81
+                    const dP_Pa = Pressure_mmWC * 9.80665;
+                    const Q_act_sec = Air_Flow_Act / 3600;
+                    const Power_Shaft = (Q_act_sec * dP_Pa) / (Eff * 1000);
+
+                    // Motor Rating (Safety Factor 1.25)
+                    const Motor_Rating = Math.ceil(Power_Shaft * 1.25 * 10) / 10;
+
+                    // --- OUTPUT ---
+                    this.set('res_co2_load', CO2_Load.toFixed(1) + ' kg/hr');
+                    this.set('res_air_flow', Math.round(Air_Flow_Std).toLocaleString() + ' m³/hr');
+                    this.set('res_air_act', Math.round(Air_Flow_Act).toLocaleString() + ' m³/hr');
+
+                    this.set('res_dia', Dia.toFixed(2) + ' m');
+                    this.set('res_area', Area.toFixed(2) + ' m²');
+                    this.set('res_h_total', '~' + H_Total.toFixed(1) + ' m');
+
+                    this.set('res_vg', Vg.toFixed(2) + ' m/s');
+                    this.set('res_flood', FloodStatus);
+                    if (Vg > 2.5) document.getElementById('res_flood').style.color = 'red';
+                    else document.getElementById('res_flood').style.color = 'green';
+
+                    this.set('res_press', Math.round(dP_Pa) + ' Pa');
+                    this.set('res_power', Power_Shaft.toFixed(2) + ' kW');
+                    this.set('res_motor', Motor_Rating.toFixed(1) + ' kW');
+
+                    // Warnings
+                    const warns = [];
+                    if (Dia < 0.6) warns.push("Diameter < 0.6m. Risk of wall effects / maldistribution.");
+                    if (Vg > 2.5) warns.push("Gas Velocity > 2.5 m/s. Risk of Flooding!");
+                    if (Ratio < 15) warns.push("Air:Water Ratio < 15. Inefficient Stripping.");
+
+                    const el = document.getElementById('warnings');
+                    if (warns.length > 0) {
+                        el.style.display = 'block';
+                        el.innerHTML = warns.map(w => `<div><i class="fas fa-exclamation-triangle"></i> ${w}</div>`).join('');
+                    } else el.style.display = 'none';
+
+                } catch (e) { console.error(e); }
+            },
+            val: function (id) { return parseFloat(document.getElementById(id).value) || 0; },
+            set: function (id, v) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = v;
+            }
         };
 
-        // Add enter key support
-        document.getElementById('waterFlow').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                calculateAirRequirement();
-            }
-        });
-
-        document.getElementById('degasserFlow').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                calculateTowerDiameter();
-            }
-        });
+        window.onload = function () {
+            DegasserEngine.calculate();
+            document.querySelectorAll('input').forEach(i => i.addEventListener('input', () => DegasserEngine.calculate()));
+        }
     </script>
 </body>
+
 </html>

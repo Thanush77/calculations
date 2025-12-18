@@ -1,310 +1,502 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pump Equipment Foundation Calculator</title>
+    <title>Pump Foundation Design Engine (API 686)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #7c3aed;
+            /* Violet-600 */
+            --primary-dark: #6d28d9;
+            --secondary: #64748b;
+            --accent: #5b21b6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f5f3ff;
+            /* Violet-50 */
+            --card-bg: #ffffff;
+            --border-color: #ddd6fe;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
             padding: 20px;
+            color: var(--accent);
+            line-height: 1.5;
         }
 
-        .container {
-            max-width: 1000px;
+        .design-studio {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 1024px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             overflow: hidden;
         }
 
-        .header {
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
-            color: white;
-            text-align: center;
-            padding: 30px;
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to right, #f5f3ff, #ddd6fe);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .header h1 {
-            font-size: 32px;
+        .panel-title {
             font-weight: 700;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .calculator-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-            border-left: 4px solid #2c5aa0;
-        }
-
-        .section-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 25px;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--primary-dark);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        .panel-body {
+            padding: 20px;
+        }
+
+        .form-section {
             margin-bottom: 25px;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
+        .form-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #c4b5fd;
+            padding-bottom: 4px;
+            letter-spacing: 0.5px;
         }
 
-        .form-group.full-width {
-            grid-column: 1 / -1;
+        .input-group {
+            margin-bottom: 12px;
         }
 
-        label {
-            font-size: 16px;
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 4px;
             font-weight: 600;
-            color: #34495e;
-            margin-bottom: 8px;
         }
 
-        input[type="number"] {
-            padding: 12px 16px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background-color: #ffd700;
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
         }
 
-        input[type="number"]:focus {
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--accent);
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
             outline: none;
-            border-color: #2c5aa0;
-            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
         }
 
-        input[type="number"].result {
-            background-color: #90ee90;
-            font-weight: 600;
-            color: #2c3e50;
+        .unit-badge {
+            position: absolute;
+            right: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
         }
 
-        .checkbox-group {
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .result-block {
+            background: #f5f3ff;
+            /* Light Violet */
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .calc-row {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #c4b5fd;
         }
 
-        input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-
-        .checkbox-group label {
+        .calc-row:last-child {
+            border: none;
             margin: 0;
-            cursor: pointer;
+            padding: 0;
         }
 
-        .calculate-btn {
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 30px;
-            font-size: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
             font-weight: 600;
-            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
-        .calculate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.4);
+        .action-btn:hover {
+            background: var(--primary-dark);
         }
 
-        .icon {
-            font-size: 20px;
-            color: #2c5aa0;
-        }
-
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .content {
-                padding: 20px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .section-title {
-                font-size: 20px;
-            }
+        .warning-box {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            display: none;
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Pump Equipment Foundation Calculator</h1>
-        </div>
-
-        <div class="content">
-            <!-- Centrifugal Pump Section -->
-            <div class="calculator-section">
-                <h2 class="section-title">
-                    <i class="fas fa-sync-alt icon"></i>
-                    Centrifugal Pump Calculation
-                </h2>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="cent-puddle-height">Tank Bottom of the Puddle Height (mm):</label>
-                        <input type="number" id="cent-puddle-height" step="1" placeholder="Enter puddle height">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cent-puddle-size">Puddle Size (mm):</label>
-                        <input type="number" id="cent-puddle-size" step="1" placeholder="Enter puddle size">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cent-pump-height">Pump Height from Center to Base (mm):</label>
-                        <input type="number" id="cent-pump-height" step="1" placeholder="Enter pump height">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cent-foundation-height">Foundation Height (mm):</label>
-                        <input type="number" id="cent-foundation-height" class="result" readonly>
-                    </div>
-                </div>
-
-                <button class="calculate-btn" onclick="calculateCentrifugal()">
-                    <i class="fas fa-calculator"></i>
-                    Calculate Centrifugal
-                </button>
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-cubes"></i> Foundation Parameters</div>
             </div>
+            <div class="panel-body">
 
-            <!-- Screw Pump Section -->
-            <div class="calculator-section">
-                <h2 class="section-title">
-                    <i class="fas fa-cogs icon"></i>
-                    Screw Pump Calculation
-                </h2>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="screw-puddle-height">Tank Bottom of the Puddle Height (mm):</label>
-                        <input type="number" id="screw-puddle-height" step="1" placeholder="Enter puddle height">
+                <!-- 1. Equipment Data -->
+                <div class="form-section">
+                    <div class="form-section-title">Equipment Specification</div>
+                    <div class="input-group">
+                        <label>Pump Type</label>
+                        <div class="input-wrapper">
+                            <select id="pump_type">
+                                <option value="cent_small">Small Centrifugal (< 500kg)</option>
+                                <option value="cent_med" selected>Medium Process (500-2000kg)</option>
+                                <option value="cent_large">Large API / Boiler Feed (> 2t)</option>
+                                <option value="screw">Screw Pump (Positive Disp)</option>
+                            </select>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="screw-puddle-size">Puddle Size (mm):</label>
-                        <input type="number" id="screw-puddle-size" step="1" placeholder="Enter puddle size">
+                    <div class="input-group">
+                        <label>Total Equipment Weight</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="weight_eq" value="650">
+                            <span class="unit-badge">kg</span>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="screw-pump-height">Pump Height from Center to Base (mm):</label>
-                        <input type="number" id="screw-pump-height" step="1" placeholder="Enter pump height">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="screw-foundation-height">Foundation Height (mm):</label>
-                        <input type="number" id="screw-foundation-height" class="result" readonly>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="include-elbow" checked>
-                            <label for="include-elbow">Include Elbow?</label>
+                    <div class="input-group">
+                        <label>Baseplate Centerline Height</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="h_center" value="350">
+                            <span class="unit-badge">mm</span>
                         </div>
                     </div>
                 </div>
 
-                <button class="calculate-btn" onclick="calculateScrew()">
-                    <i class="fas fa-calculator"></i>
-                    Calculate Screw
+                <!-- 2. Vertical Layout -->
+                <div class="form-section">
+                    <div class="form-section-title">Vertical Stack-up</div>
+                    <div class="input-group">
+                        <label>Sump / Puddle Depth</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="h_sump" value="100">
+                            <span class="unit-badge">mm</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Clearances (Safety/Maint)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="h_margin" value="150">
+                            <span class="unit-badge">mm</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            <input type="checkbox" id="elbow_inc" checked> Include Elbow Clearance
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="number" id="h_elbow" value="200">
+                            <span class="unit-badge">mm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Foundation Geometry -->
+                <div class="form-section">
+                    <div class="form-section-title">Plinth Design</div>
+                    <div class="input-group">
+                        <label>Plan Length (L)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="dim_l" value="1.2">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Plan Width (B)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="dim_w" value="0.8">
+                            <span class="unit-badge">m</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Soil Bearing Capacity</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sbc" value="150">
+                            <span class="unit-badge">kN/m²</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="FoundEngine.calculate()">
+                    <i class="fas fa-layer-group"></i> Analyze Foundation
                 </button>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-clipboard-check"></i> Design Analysis</div>
+            </div>
+            <div class="panel-body">
+
+                <div id="warnings" class="warning-box"></div>
+
+                <div class="result-grid">
+                    <!-- Layout Height -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-arrows-alt-v"></i> Vertical Height</h4>
+                        <div class="calc-row">
+                            <span>Sump + Base + Margin</span>
+                            <span class="calc-val" id="res_stack">0 mm</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Piping Clearance</span>
+                            <span class="calc-val" id="res_pipe_clr">0 mm</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Min. Plinth Height</span>
+                            <span class="calc-val" style="font-size:16px; color:#6d28d9;" id="res_final_h">0 mm</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Rule Check</span>
+                            <span class="calc-val" id="res_rule">OK</span>
+                        </div>
+                    </div>
+
+                    <!-- Mass Validation -->
+                    <div class="result-block">
+                        <h4><i class="fas fa-weight-hanging"></i> Stability & Mass</h4>
+                        <div class="calc-row">
+                            <span>Foundation Weight</span>
+                            <span class="calc-val" id="res_w_found">0 kg</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Mass Ratio (F/E)</span>
+                            <span class="calc-val" style="font-size:16px;" id="res_ratio">0.0</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Target Ratio</span>
+                            <span class="calc-val" style="color:#10b981;">> 3.0</span>
+                        </div>
+                    </div>
+
+                    <!-- Geotech -->
+                    <div class="result-block" style="grid-column: span 2; background:#f5f3ff; border-color:#8b5cf6;">
+                        <h4><i class="fas fa-globe-americas"></i> Soil Bearing Check</h4>
+                        <div class="calc-row">
+                            <span>Total Load (F+E)</span>
+                            <span class="calc-val" id="res_load_total">0 kg</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>Contact Pressure</span>
+                            <span class="calc-val" id="res_pressure">0 kN/m²</span>
+                        </div>
+                        <div class="calc-row">
+                            <span>SBC Utilization</span>
+                            <span class="calc-val" style="font-size:20px; color:#5b21b6;" id="res_sbc_util">0%</span>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        function calculateCentrifugal() {
-            // Get input values
-            const puddleHeight = parseFloat(document.getElementById('cent-puddle-height').value) || 0;
-            const puddleSize = parseFloat(document.getElementById('cent-puddle-size').value) || 0;
-            const pumpHeight = parseFloat(document.getElementById('cent-pump-height').value) || 0;
+        window.FoundEngine = {
+            calculate: function () {
+                try {
+                    // Inputs
+                    const Type = document.getElementById('pump_type').value;
+                    const W_eq = this.val('weight_eq');
+                    const H_center = this.val('h_center');
 
-            // Calculate foundation height for centrifugal pump
-            // Formula: Foundation Height = Puddle Height + Puddle Size + Pump Height + Safety Factor
-            const safetyFactor = 100; // 100mm safety factor
-            const foundationHeight = puddleHeight + puddleSize + pumpHeight + safetyFactor;
+                    const H_sump = this.val('h_sump');
+                    const H_margin = this.val('h_margin');
+                    const IncElbow = document.getElementById('elbow_inc').checked;
+                    const H_elbow = IncElbow ? this.val('h_elbow') : 0;
 
-            // Display result
-            document.getElementById('cent-foundation-height').value = Math.round(foundationHeight);
-        }
+                    const L = this.val('dim_l');
+                    const W = this.val('dim_w');
+                    const SBC = this.val('sbc');
 
-        function calculateScrew() {
-            // Get input values
-            const puddleHeight = parseFloat(document.getElementById('screw-puddle-height').value) || 0;
-            const puddleSize = parseFloat(document.getElementById('screw-puddle-size').value) || 0;
-            const pumpHeight = parseFloat(document.getElementById('screw-pump-height').value) || 0;
-            const includeElbow = document.getElementById('include-elbow').checked;
+                    const Rho_conc = 2400; // kg/m3
 
-            // Calculate foundation height for screw pump
-            let foundationHeight = puddleHeight + puddleSize + pumpHeight;
-            
-            // Add elbow clearance if selected
-            if (includeElbow) {
-                foundationHeight += 150; // Additional 150mm for elbow clearance
+                    // 1. Vertical Stack-up
+                    // Logic: Plinth Height (above ground) needs to accommodate Sump depth, Puddle, Piping.
+                    // Usually: H_plinth = H_sump + H_puddle_slope + H_elbow - H_center + H_margin
+                    // Simplified user model: H_plinth = Sump + Margin + Elbow(if needed for suction from bottom)
+                    // Let's stick to the additive logic but refined:
+                    // H_plinth = SumpDepth (if we need to clear it) + Margin.
+                    // Wait, if sump is underground, plinth is above ground.
+                    // This is likely "Height of Plinth Top from Sump Bottom" or "Height of Plinth from FGL"?
+                    // User context suggests: "H_f = H_puddle + S_puddle + H_pump + Safety".
+                    // This implies calculating the ELEVATION of the pump base.
+                    // OK, let's treat Result as "Total Foundation Block Height" relative to a datum (likely sump bottom).
+
+                    const Stack = H_sump + H_margin;
+                    let PipeClr = 0;
+
+                    // Pump Rules (API 686 / 610)
+                    let MinHeight = 100; // General
+                    if (Type === 'cent_med') MinHeight = 300;
+                    if (Type === 'cent_large') MinHeight = 600;
+                    if (Type === 'screw') MinHeight = 150;
+
+                    // Calc Layout Requirement
+                    // If Screw pump with bottom suction, needs H_elbow clearance
+                    if (IncElbow) PipeClr = H_elbow;
+
+                    // Total Req Height
+                    // The simple additive model from user: Sump + PumpHeight?? No, PumpHeight is characteristic of pump.
+                    // If we want the Plinth Height:
+                    // Plinth Top = Max(Sump + Margin + PipeClr).
+                    // This makes sense.
+
+                    let H_calc = H_sump + H_margin + PipeClr;
+
+                    // Ensure Min Rule
+                    if (H_calc < MinHeight) H_calc = MinHeight;
+
+                    // 2. Mass Calculation
+                    // Volume = L * W * H (m)
+                    const H_m = H_calc / 1000;
+                    const Vol = L * W * H_m;
+                    const W_found = Vol * Rho_conc;
+
+                    const Ratio = W_found / W_eq;
+
+                    // 3. SBC Check
+                    const Load_Total_kg = W_found + W_eq;
+                    const Load_Total_kN = (Load_Total_kg * 9.81) / 1000;
+                    const Area = L * W;
+                    const Pressure_kPa = Load_Total_kN / Area; // kN/m2
+                    const Util = (Pressure_kPa / SBC) * 100;
+
+                    // --- OUTPUT ---
+                    this.set('res_stack', (H_sump + H_margin).toFixed(0) + ' mm');
+                    this.set('res_pipe_clr', PipeClr.toFixed(0) + ' mm');
+                    this.set('res_final_h', H_calc.toFixed(0) + ' mm');
+
+                    // Rule Check Text
+                    let ruleText = "Pass";
+                    if (H_calc < MinHeight) ruleText = `Min ${MinHeight}mm`;
+                    this.set('res_rule', ruleText);
+
+                    this.set('res_w_found', W_found.toFixed(0) + ' kg');
+                    this.set('res_ratio', Ratio.toFixed(2));
+
+                    this.set('res_load_total', Load_Total_kg.toFixed(0) + ' kg');
+                    this.set('res_pressure', Pressure_kPa.toFixed(1) + ' kN/m²');
+                    this.set('res_sbc_util', Util.toFixed(1) + '%');
+
+                    // Style Ratio
+                    const elRatio = document.getElementById('res_ratio');
+                    if (Ratio < 3.0) elRatio.style.color = '#ef4444'; // Red
+                    else elRatio.style.color = '#10b981'; // Green
+
+                    // Warnings
+                    const warns = [];
+                    if (Ratio < 3.0) warns.push(`Mass Ratio ${Ratio.toFixed(2)} (< 3.0). Unstable for vibration. Increase Volume.`);
+                    if (Util > 100) warns.push(`Ground Pressure exceeds SBC (${SBC} kN/m²). Unsafe. Increase L x B.`);
+                    if (Type === 'cent_large' && H_calc < 600) warns.push("Large pumps typically require >600mm plinth for stiffness.");
+
+                    const el = document.getElementById('warnings');
+                    if (warns.length > 0) {
+                        el.style.display = 'block';
+                        el.innerHTML = warns.map(w => `<div><i class="fas fa-exclamation-triangle"></i> ${w}</div>`).join('');
+                    } else el.style.display = 'none';
+
+                } catch (e) { console.error(e); }
+            },
+            val: function (id) { return parseFloat(document.getElementById(id).value) || 0; },
+            set: function (id, v) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = v;
             }
-            
-            // Add safety factor
-            const safetyFactor = 100; // 100mm safety factor
-            foundationHeight += safetyFactor;
+        };
 
-            // Display result
-            document.getElementById('screw-foundation-height').value = Math.round(foundationHeight);
+        window.onload = function () {
+            FoundEngine.calculate();
+            document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', () => FoundEngine.calculate()));
         }
-
-        // Auto-calculate when values change
-        document.addEventListener('input', function(e) {
-            if (e.target.type === 'number') {
-                const section = e.target.id.split('-')[0];
-                if (section === 'cent') {
-                    calculateCentrifugal();
-                } else if (section === 'screw') {
-                    calculateScrew();
-                }
-            }
-        });
-
-        // Auto-calculate when checkbox changes
-        document.getElementById('include-elbow').addEventListener('change', calculateScrew);
     </script>
 </body>
+
 </html>

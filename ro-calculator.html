@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -87,7 +88,8 @@
             margin-bottom: 8px;
         }
 
-        input[type="number"], select {
+        input[type="number"],
+        select {
             padding: 12px 16px;
             border: 2px solid #e9ecef;
             border-radius: 8px;
@@ -96,7 +98,8 @@
             background-color: #fff3cd;
         }
 
-        input[type="number"]:focus, select:focus {
+        input[type="number"]:focus,
+        select:focus {
             outline: none;
             border-color: #3498db;
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
@@ -243,15 +246,15 @@
             .content {
                 padding: 30px 20px;
             }
-            
+
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .water-quality {
                 grid-template-columns: 1fr;
             }
-            
+
             .header h1 {
                 font-size: 28px;
             }
@@ -259,6 +262,7 @@
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -273,33 +277,34 @@
                     <i class="fas fa-cog icon"></i>
                     System Requirements
                 </h2>
-                
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="feed-flow">Feed Flow Rate (m³/hr):</label>
                         <input type="number" id="feed-flow" placeholder="Enter feed flow rate" step="0.1">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="permeate-flow">Required Permeate Flow (m³/hr):</label>
                         <input type="number" id="permeate-flow" placeholder="Desired product water" step="0.1">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="recovery-rate">Target Recovery (%):</label>
                         <input type="number" id="recovery-rate" placeholder="Usually 70-85%" step="1" value="75">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="operating-pressure">Operating Pressure (bar):</label>
-                        <input type="number" id="operating-pressure" placeholder="Typical 15-70 bar" step="1" value="25">
+                        <input type="number" id="operating-pressure" placeholder="Typical 15-70 bar" step="1"
+                            value="25">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="temperature">Water Temperature (°C):</label>
                         <input type="number" id="temperature" placeholder="Operating temperature" step="1" value="25">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="membrane-type">Membrane Type:</label>
                         <select id="membrane-type">
@@ -318,39 +323,40 @@
                     <i class="fas fa-vial icon"></i>
                     Feed Water Quality
                 </h2>
-                
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="feed-tds">TDS (mg/L):</label>
                         <input type="number" id="feed-tds" placeholder="Total Dissolved Solids" step="1">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="feed-conductivity">Conductivity (µS/cm):</label>
                         <input type="number" id="feed-conductivity" placeholder="Water conductivity" step="1">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="feed-hardness">Hardness (mg/L as CaCO₃):</label>
                         <input type="number" id="feed-hardness" placeholder="Total hardness" step="1">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="feed-chloride">Chloride (mg/L):</label>
                         <input type="number" id="feed-chloride" placeholder="Cl⁻ concentration" step="1">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="feed-ph">pH:</label>
-                        <input type="number" id="feed-ph" placeholder="Feed water pH" step="0.1" min="1" max="14" value="7.0">
+                        <input type="number" id="feed-ph" placeholder="Feed water pH" step="0.1" min="1" max="14"
+                            value="7.0">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="sdi">Silt Density Index (SDI):</label>
                         <input type="number" id="sdi" placeholder="Usually < 5" step="0.1" value="3">
                     </div>
                 </div>
-                
+
                 <button class="calculate-btn" onclick="calculateRO()">
                     <i class="fas fa-calculator"></i>
                     Calculate RO System
@@ -363,37 +369,37 @@
                     <h3>Number of Membranes</h3>
                     <div class="result-value" id="membrane-count">0</div>
                 </div>
-                
+
                 <div class="result-card">
                     <h3>Concentrate Flow</h3>
                     <div class="result-value" id="concentrate-flow">0 m³/hr</div>
                 </div>
-                
+
                 <div class="result-card">
                     <h3>Actual Recovery</h3>
                     <div class="result-value" id="actual-recovery">0%</div>
                 </div>
-                
+
                 <div class="result-card">
                     <h3>Flux Rate</h3>
                     <div class="result-value" id="flux-rate">0 LMH</div>
                 </div>
-                
+
                 <div class="result-card">
                     <h3>Pressure Vessel Count</h3>
                     <div class="result-value" id="pressure-vessels">0</div>
                 </div>
-                
+
                 <div class="result-card">
                     <h3>Pump Power Required</h3>
                     <div class="result-value" id="pump-power">0 kW</div>
                 </div>
-                
+
                 <div class="result-card">
                     <h3>Specific Energy</h3>
                     <div class="result-value" id="specific-energy">0 kWh/m³</div>
                 </div>
-                
+
                 <div class="result-card">
                     <h3>Salt Rejection</h3>
                     <div class="result-value" id="salt-rejection">0%</div>
@@ -406,7 +412,7 @@
                     <i class="fas fa-layer-group icon"></i>
                     Membrane Specifications
                 </h2>
-                
+
                 <div class="membrane-specs">
                     <div class="spec-row">
                         <span class="spec-label">Membrane Model:</span>
@@ -441,7 +447,7 @@
                     <i class="fas fa-balance-scale icon"></i>
                     Water Quality Comparison
                 </h2>
-                
+
                 <div class="water-quality">
                     <div class="quality-column">
                         <h4>Feed Water</h4>
@@ -462,7 +468,7 @@
                             <span id="feed-cl-display">- mg/L</span>
                         </div>
                     </div>
-                    
+
                     <div class="quality-column">
                         <h4>Permeate Water</h4>
                         <div class="quality-item">
@@ -546,8 +552,9 @@
             const recoveryRate = parseFloat(document.getElementById('recovery-rate').value) || 75;
             const operatingPressure = parseFloat(document.getElementById('operating-pressure').value) || 25;
             const temperature = parseFloat(document.getElementById('temperature').value) || 25;
+            const pumpEfficiency = parseFloat(document.getElementById('pump-efficiency').value) || 65; // New input
             const membraneType = document.getElementById('membrane-type').value;
-            
+
             const feedTDS = parseFloat(document.getElementById('feed-tds').value) || 0;
             const feedConductivity = parseFloat(document.getElementById('feed-conductivity').value) || 0;
             const feedHardness = parseFloat(document.getElementById('feed-hardness').value) || 0;
@@ -562,7 +569,7 @@
 
             // Calculate flows based on input
             let actualFeedFlow, actualPermeateFlow, concentrateFlow, actualRecovery;
-            
+
             if (feedFlow > 0) {
                 actualFeedFlow = feedFlow;
                 actualPermeateFlow = feedFlow * (recoveryRate / 100);
@@ -577,38 +584,38 @@
 
             // Get membrane specifications
             const membrane = membranes[membraneType];
-            
+
             // Temperature correction factor
             const tempCorrectionFactor = Math.pow(1.03, temperature - 25);
             const correctedFlux = membrane.avgFlux * tempCorrectionFactor;
-            
+
             // Calculate membrane area required
             const requiredArea = (actualPermeateFlow * 1000) / correctedFlux; // m²
-            
+
             // Calculate number of membranes
             const membraneCount = Math.ceil(requiredArea / membrane.area);
-            
+
             // Calculate pressure vessels (typically 6-7 elements per vessel)
             const elementsPerVessel = 6;
             const pressureVessels = Math.ceil(membraneCount / elementsPerVessel);
-            
+
             // Calculate actual flux rate
             const actualFluxRate = (actualPermeateFlow * 1000) / (membraneCount * membrane.area);
-            
+
             // Calculate pump power (simplified calculation)
             const hydraulicPower = (actualFeedFlow * operatingPressure * 10) / (3600 * 0.75); // kW (75% efficiency)
             const pumpPower = hydraulicPower * 1.15; // Add 15% for motor efficiency
-            
+
             // Calculate specific energy consumption
             const specificEnergy = pumpPower / actualPermeateFlow; // kWh/m³
-            
+
             // Calculate salt rejection and permeate quality
             const saltRejection = membrane.rejection;
             const permeateTDS = feedTDS * (100 - saltRejection) / 100;
             const permeateConductivity = feedConductivity * (100 - saltRejection) / 100;
             const permeateHardness = feedHardness * (100 - saltRejection) / 100;
             const permeateChloride = feedChloride * (100 - saltRejection) / 100;
-            
+
             // Display results
             document.getElementById('membrane-count').textContent = membraneCount;
             document.getElementById('concentrate-flow').textContent = concentrateFlow.toFixed(1) + ' m³/hr';
@@ -618,7 +625,7 @@
             document.getElementById('pump-power').textContent = pumpPower.toFixed(0) + ' kW';
             document.getElementById('specific-energy').textContent = specificEnergy.toFixed(1) + ' kWh/m³';
             document.getElementById('salt-rejection').textContent = saltRejection.toFixed(1) + '%';
-            
+
             // Display membrane specifications
             document.getElementById('membrane-model').textContent = membrane.model;
             document.getElementById('membrane-area').textContent = membrane.area + ' m²';
@@ -626,59 +633,59 @@
             document.getElementById('max-temperature').textContent = membrane.maxTemp + ' °C';
             document.getElementById('ph-range').textContent = membrane.phRange;
             document.getElementById('total-area').textContent = (membraneCount * membrane.area).toFixed(0) + ' m²';
-            
+
             // Display water quality comparison
             document.getElementById('feed-tds-display').textContent = feedTDS + ' mg/L';
             document.getElementById('feed-cond-display').textContent = feedConductivity + ' µS/cm';
             document.getElementById('feed-hard-display').textContent = feedHardness + ' mg/L';
             document.getElementById('feed-cl-display').textContent = feedChloride + ' mg/L';
-            
+
             document.getElementById('permeate-tds-display').textContent = permeateTDS.toFixed(0) + ' mg/L';
             document.getElementById('permeate-cond-display').textContent = permeateConductivity.toFixed(0) + ' µS/cm';
             document.getElementById('permeate-hard-display').textContent = permeateHardness.toFixed(0) + ' mg/L';
             document.getElementById('permeate-cl-display').textContent = permeateChloride.toFixed(0) + ' mg/L';
-            
+
             // Generate recommendations
             generateRecommendations(actualFluxRate, operatingPressure, sdi, feedPH, temperature, membrane);
-            
+
             // Show results
             document.getElementById('results').style.display = 'grid';
             document.getElementById('membrane-section').style.display = 'block';
             document.getElementById('quality-section').style.display = 'block';
             document.getElementById('recommendations').style.display = 'block';
         }
-        
+
         function generateRecommendations(fluxRate, pressure, sdi, ph, temperature, membrane) {
             let recommendations = '<i class="fas fa-info-circle"></i><strong>System Recommendations:</strong><br><br>';
-            
+
             if (fluxRate > membrane.avgFlux * 1.2) {
                 recommendations += '⚠️ <strong>Warning:</strong> Flux rate is high. Consider adding more membranes to reduce fouling risk.<br>';
             }
-            
+
             if (pressure > membrane.maxPressure * 0.9) {
                 recommendations += '⚠️ <strong>Warning:</strong> Operating pressure is near membrane limit. Consider using high-pressure membranes.<br>';
             }
-            
+
             if (sdi > 5) {
                 recommendations += '💡 <strong>Recommendation:</strong> SDI is high. Install pre-filtration (UF/MF) to protect membranes.<br>';
             }
-            
+
             if (ph < 6.5 || ph > 8.5) {
                 recommendations += '💡 <strong>Recommendation:</strong> Consider pH adjustment for optimal membrane performance.<br>';
             }
-            
+
             if (temperature > 35) {
                 recommendations += '💡 <strong>Recommendation:</strong> High temperature may reduce membrane life. Consider cooling.<br>';
             }
-            
+
             recommendations += '✅ <strong>Maintenance:</strong> Replace membranes every 2-3 years depending on feed quality.<br>';
             recommendations += '✅ <strong>Cleaning:</strong> Perform CIP cleaning every 3-6 months or when flux drops 15%.<br>';
-            
+
             document.getElementById('recommendations-content').innerHTML = recommendations;
         }
 
         // Auto-calculate when values change
-        document.addEventListener('input', function(e) {
+        document.addEventListener('input', function (e) {
             if (e.target.type === 'number' || e.target.type === 'select-one') {
                 const results = document.getElementById('results');
                 if (results.style.display === 'grid') {
@@ -688,4 +695,5 @@
         });
     </script>
 </body>
+
 </html>

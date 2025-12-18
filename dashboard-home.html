@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Thanush</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --bg-page: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            margin: 0;
+            padding: 30px;
+            color: var(--text-dark);
+        }
+
+        /* Welcome Section */
+        .welcome-header {
+            margin-bottom: 30px;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            color: var(--text-gray);
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background: #eff6ff;
+            color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .stat-info .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .stat-info .label {
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        /* Section Title */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Calculators Grid - Compact */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .tool-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .tool-icon {
+            width: 36px;
+            height: 36px;
+            background: #f1f5f9;
+            color: #475569;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .tool-card:hover .tool-icon {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tool-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .tool-desc {
+            font-size: 13px;
+            color: var(--text-gray);
+            line-height: 1.4;
+            flex: 1;
+            /* Push footer down if we had one */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="welcome-header">
+        <h1 class="welcome-title">Welcome back, Engineer</h1>
+        <p class="welcome-subtitle">Access your specialized calculation tools for water treatment, equipment design, and
+            fluid dynamics.</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calculator"></i></div>
+            <div class="stat-info">
+                <div class="value">18</div>
+                <div class="label">Total Tools</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+            <div class="stat-info">
+                <div class="value">6</div>
+                <div class="label">Categories</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+            <div class="stat-info">
+                <div class="value">0.2s</div>
+                <div class="label">Avg Calc Time</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <i class="fas fa-wrench" style="color: var(--text-gray);"></i>
+        <h3>Available Calculators</h3>
+    </div>
+
+    <div class="tools-grid">
+        <!-- Water Treatment -->
+        <div class="tool-card" onclick="window.parent.location.href='hardness-calculator.html'"> <!-- Note: Using window.parent to navigate or keeping it in iframe? 
+             Wait, if we use window.location.href, it changes the iframe. 
+             If we use window.parent.location.href, it changes the SHELL URL. 
+             We want to change the IFRAME content. 
+             Standard <a href> or window.location inside iframe works fine. 
+             Wait, earlier I said sidebar links target content-frame. That's for sidebar.
+             For these cards, they are INSIDE the iframe.
+             So window.location.href = '...' will navigate the iframe. 
+             CORRECT.
+             -->
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-tint"></i></div>
+            </div>
+            <div class="tool-title">Water Softening</div>
+            <div class="tool-desc">Calculate lime/soda ash dosing and sludge production.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='salt-quantity-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-cube"></i></div>
+            </div>
+            <div class="tool-title">Salt Quantity</div>
+            <div class="tool-desc">Regeneration salt requirements for softeners.</div>
+        </div>
+
+        <!-- Equipment -->
+        <div class="tool-card" onclick="window.location.href='clarifier-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-circle"></i></div>
+            </div>
+            <div class="tool-title">Clarifier Design</div>
+            <div class="tool-desc">Calculate diameter and sludge removal rates.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='tank-size-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-database"></i></div>
+            </div>
+            <div class="tool-title">Tank Sizing</div>
+            <div class="tool-desc">Optimal dimensions from volume requirements.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='tank-tube-settler-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-layer-group"></i></div>
+            </div>
+            <div class="tool-title">Tube Settler</div>
+            <div class="tool-desc">Settling area and tube module calculations.</div>
+        </div>
+
+        <!-- Pumps -->
+        <div class="tool-card" onclick="window.location.href='npsh-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-arrow-up"></i></div>
+            </div>
+            <div class="tool-title">NPSH (Negative)</div>
+            <div class="tool-desc">Suction lift calculations for pump systems.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='npsh-flooded-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-water"></i></div>
+            </div>
+            <div class="tool-title">NPSH (Flooded)</div>
+            <div class="tool-desc">Positive head suction calculations.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='pump-head-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-chart-line"></i></div>
+            </div>
+            <div class="tool-title">Pump Head</div>
+            <div class="tool-desc">TDH calculation with friction and fitting losses.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='pump-foundation-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-hammer"></i></div>
+            </div>
+            <div class="tool-title">Pump Foundation</div>
+            <div class="tool-desc">Concrete foundation design for pumps.</div>
+        </div>
+
+        <!-- Piping -->
+        <div class="tool-card" onclick="window.location.href='pipe-size-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-pipe"></i></div>
+            </div>
+            <div class="tool-title">Pipe Sizing</div>
+            <div class="tool-desc">Diameter calculation based on flow velocity.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='pipe-thickness-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-ruler"></i></div>
+            </div>
+            <div class="tool-title">Pipe Thickness</div>
+            <div class="tool-desc">Wall thickness based on pressure rating.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='flow-utility-tools.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-wind"></i></div>
+            </div>
+            <div class="tool-title">Flow Tools</div>
+            <div class="tool-desc">Water-to-air ratios and velocity checks.</div>
+        </div>
+
+        <!-- Process -->
+        <div class="tool-card" onclick="window.location.href='etp-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-industry"></i></div>
+            </div>
+            <div class="tool-title">ETP Design</div>
+            <div class="tool-desc">Effluent treatment plant sizing.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='stp-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-home"></i></div>
+            </div>
+            <div class="tool-title">STP Design</div>
+            <div class="tool-desc">Sewage treatment plant sizing.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='ro-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-filter"></i></div>
+            </div>
+            <div class="tool-title">RO System</div>
+            <div class="tool-desc">Membrane projections and recovery rates.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='mvre-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-compress-alt"></i></div>
+            </div>
+            <div class="tool-title">MVRE Evaporator</div>
+            <div class="tool-desc">Energy consumption for evaporation.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='zld-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-recycle"></i></div>
+            </div>
+            <div class="tool-title">ZLD System</div>
+            <div class="tool-desc">Zero liquid discharge plant sizing.</div>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='sludge-processing-calculator.html'">
+            <div class="tool-header">
+                <div class="tool-icon"><i class="fas fa-trash-restore"></i></div>
+            </div>
+            <div class="tool-title">Sludge Process</div>
+            <div class="tool-desc">Filter press and centrifuge calculations.</div>
+        </div>
+    </div>
+
+</body>
+
+</html>
