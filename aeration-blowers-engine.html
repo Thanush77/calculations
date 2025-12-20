@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aeration & Blower Optimization Engine</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0ea5e9; /* Sky 500 */
+            --primary-dark: #0284c7;
+            --secondary: #64748b;
+            --accent: #8b5cf6; /* Violet */
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .header p { margin: 5px 0 0; opacity: 0.8; font-size: 14px; }
+        
+        .badge {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 24px;
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--secondary);
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+
+        /* Form Inputs */
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .input-wrapper { position: relative; }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: var(--bg);
+            box-sizing: border-box; /* Fix width overflow */
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        
+        .unit {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: var(--secondary);
+            pointer-events: none;
+        }
+
+        .info-tooltip {
+            font-size: 11px;
+            color: var(--secondary);
+            margin-top: 4px;
+        }
+
+        /* Results & KPIs */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 3px;
+            background: var(--primary);
+        }
+
+        .kpi-label { font-size: 11px; text-transform: uppercase; color: var(--secondary); font-weight: 600; }
+        .kpi-val { font-size: 24px; font-weight: 800; color: var(--text-main); margin-top: 4px; }
+        .kpi-sub { font-size: 12px; color: var(--success); margin-top: 4px; }
+
+        /* Comparison Table */
+        .comp-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .comp-table th, .comp-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comp-table th { background: #f1f5f9; font-weight: 600; color: var(--secondary); }
+        .comp-table tr:last-child td { border-bottom: none; }
+        
+        .tech-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .tech-roots { background: #fee2e2; color: #991b1b; } /* Red */
+        .tech-turbo { background: #dcfce7; color: #166534; } /* Green */
+
+        .calc-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .calc-btn:hover { background: var(--primary-dark); }
+
+        @media (max-width: 900px) {
+            .grid-layout { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1><i class="fas fa-wind" style="margin-right:12px;"></i>Aeration & Blower Application</h1>
+            <p>Advanced Oxygen Transfer Optimization (AOR → SOR) & Energy ROI Analysis</p>
+        </div>
+        <div class="badge">Energy Saver Mode</div>
+    </div>
+
+    <div class="grid-layout">
+        <!-- Sidebar Inputs -->
+        <div class="panel">
+            <div class="section-title">Process Load</div>
+            
+            <div class="form-group">
+                <label>Flow Rate (Q)</label>
+                <div class="input-wrapper"><input type="number" id="flow" value="5000" oninput="calculate()"><span class="unit">m³/day</span></div>
+            </div>
+
+            <div class="form-group">
+                <label>BOD Load</label>
+                <div class="input-wrapper"><input type="number" id="bod" value="250" oninput="calculate()"><span class="unit">mg/L</span></div>
+            </div>
+
+            <div class="form-group">
+                <label>TKN (Ammonia) Load</label>
+                <div class="input-wrapper"><input type="number" id="tkn" value="40" oninput="calculate()"><span class="unit">mg/L</span></div>
+            </div>
+
+            <div class="section-title" style="margin-top:24px;">Site & Diffuser Factors</div>
+
+            <div class="form-group">
+                <label>Site Altitude</label>
+                <div class="input-wrapper"><input type="number" id="altitude" value="0" oninput="calculate()"><span class="unit">m MSL</span></div>
+                <div class="info-tooltip">Affects air density & oxygen solubility</div>
+            </div>
+
+            <div class="form-group">
+                <label>Design Temperature</label>
+                <div class="input-wrapper"><input type="number" id="temp" value="30" oninput="calculate()"><span class="unit">°C</span></div>
+            </div>
+
+            <div class="form-group">
+                <label>Alpha Factor (α)</label>
+                <div class="input-wrapper"><input type="number" id="alpha" value="0.65" step="0.05" oninput="calculate()"></div>
+                <div class="info-tooltip">Ratio of transfer in waste vs clean water (0.4-0.8)</div>
+            </div>
+
+             <div class="form-group">
+                <label>Submergence Depth</label>
+                <div class="input-wrapper"><input type="number" id="depth" value="5.0" step="0.1" oninput="calculate()"><span class="unit">m</span></div>
+            </div>
+            
+            <button class="calc-btn" onclick="calculate()">Update Calculation</button>
+        </div>
+
+        <!-- Main Content -->
+        <div>
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Oxygen Demand (AOR)</div>
+                    <div class="kpi-val" id="res_aor">--</div>
+                    <div class="kpi-sub">Total biological demand</div>
+                </div>
+                <div class="kpi-card" style="border-color:var(--primary);">
+                    <div class="kpi-label">Standard Requirement (SOR)</div>
+                    <div class="kpi-val" id="res_sor" style="color:var(--primary);">--</div>
+                    <div class="kpi-sub">Corrected for field conditions</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Required Airflow</div>
+                    <div class="kpi-val" id="res_air">--</div>
+                    <div class="kpi-sub">Nm³/hr (Free Air Delivery)</div>
+                </div>
+            </div>
+
+            <!-- Technology Comparison -->
+            <div class="panel">
+                <div class="section-title">Blower Technology Comparison</div>
+                <table class="comp-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th style="color:#d97706;">Values</th> <!-- Amber for Params -->
+                            <th>Twin Lobe (Roots)</th>
+                            <th>Turbo / Screw</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Efficiency</strong></td>
+                            <td>-</td>
+                            <td class="tech-roots">~58% (Standard)</td>
+                            <td class="tech-turbo">~78% (Premium)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Shaft Power</strong></td>
+                            <td><span id="discharge_press">0.5</span> bar(g)</td>
+                            <td id="pwr_roots" style="font-weight:700;">-- kW</td>
+                            <td id="pwr_turbo" style="font-weight:700; color:var(--success);">-- kW</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Energy consumption</strong></td>
+                            <td>24 hrs/day</td>
+                            <td id="kwh_roots">-- kWh</td>
+                            <td id="kwh_turbo">-- kWh</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Annual Cost</strong></td>
+                            <td>@ ₹8.0 / kWh</td>
+                            <td id="cost_roots">₹ --</td>
+                            <td id="cost_turbo">₹ --</td>
+                        </tr>
+                         <tr>
+                            <td><strong>Annual Savings</strong></td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td id="savings_annual" style="font-weight:800; color:var(--success); background:#f0fdf4;">₹ --</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Chart -->
+            <div class="panel">
+                <div class="section-title">Energy Cost Projection (5 Years)</div>
+                <div style="height:300px;">
+                    <canvas id="costChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let costChart = null;
+
+    function calculate() {
+        // Inputs
+        const Q = parseFloat(document.getElementById('flow').value) || 0;
+        const BOD = parseFloat(document.getElementById('bod').value) || 0;
+        const TKN = parseFloat(document.getElementById('tkn').value) || 0;
+        const Alt = parseFloat(document.getElementById('altitude').value) || 0;
+        const Temp = parseFloat(document.getElementById('temp').value) || 30;
+        const Alpha = parseFloat(document.getElementById('alpha').value) || 0.65;
+        const Depth = parseFloat(document.getElementById('depth').value) || 5.0;
+
+        // 1. AOR Calculation (kgO2/day)
+        // AOR = (Q * BOD * 1.1) + (Q * TKN * 4.6) / 1000
+        // Use 1.2 for BOD safety factor sometimes, 1.1 standard.
+        // TKN: 4.57 theoretical, use 4.6.
+        const kg_BOD = (Q * BOD) / 1000;
+        const kg_TKN = (Q * TKN) / 1000;
+        const AOR = (kg_BOD * 1.1) + (kg_TKN * 4.6);
+
+        // 2. SOTE Calculation (%)
+        // SOTE approx 6% per meter for Fine Bubble Membrane
+        // SOTE = 6.0 * Depth
+        const SOTE_pct = 6.5 * Depth; // Using 6.5% per metre as average for fine bubble
+        const SOTE_fraction = SOTE_pct / 100;
+
+        // 3. SOR Calculation (kgO2/day)
+        // SOR = AOR / [ (Beta * Css_T_H - CL) / Cs_20 * Alpha * Theta^(T-20) ]
+        // Cs_20 correction? Usually: SOR = AOR * Cs_20 / (Alpha * (Beta*CsT - CL) * Theta)
+        
+        const Cs_20 = 9.09; // Saturation at 20C sea level
+        const Beta = 0.95; // Salts factor
+        const Theta = 1.024;
+        const CL = 2.0; // Maintain 2mg/L DO
+        
+        // Cs_T_H (Saturation at Temp T and Altitude H)
+        // Simple approx: Cs_T = 14.652 - 0.41*T + ... or look up table.
+        // Approx formula: Cs_T = 468 / (31.6 + T)
+        let Cs_T = 468 / (31.6 + Temp);
+        
+        // Altitude Correction Factor (Pressure ratio)
+        // P_atm = (1 - H/44330)^5.255
+        // Or approx (1 - 0.0001*H)
+        const P_ratio = Math.pow( (1 - (Alt/44330)), 5.255 );
+        const Cs_T_H = Cs_T * P_ratio;
+
+        // Field Transfer Factor
+        const transfer_factor = (Alpha * (Beta * Cs_T_H - CL) * Math.pow(Theta, Temp - 20)) / Cs_20;
+        
+        const SOR = AOR / transfer_factor;
+
+        // 4. Airflow (Nm3/hr)
+        // Density of O2 in air = 0.28 kg/m3 (approx) at STP
+        // Weight of O2 in 1 Nm3 air = 1.293 * 0.232 = 0.3 kg O2
+        const density_air_stp = 1.293;
+        const o2_fraction = 0.232;
+        const kgO2_per_m3 = density_air_stp * o2_fraction; // ~0.3
+        
+        // Required O2 Supply (kg/day) = SOR
+        // But transfer efficiency SOTE applies here.
+        // SOR is amount to DISSOLVE strictly? 
+        // Wait, Formula: Airflow = SOR / (SOTE * 0.3) ?
+        // Yes, because SOR is "Standard Oxygen Requirement" representing the O2 MASS SUPPLY needed to standard conditions.
+        // Actually, USUALLY:
+        // SOR is KgO2/hr to be transferred in CLEAN WATER.
+        // So Airflow = SOR / (SOTE * kgO2_per_m3).
+        
+        const airflow_Nm3_day = SOR / (SOTE_fraction * kgO2_per_m3);
+        const airflow_Nm3_hr = airflow_Nm3_day / 24;
+
+        // 5. Power Sizing
+        // Pressure required (bar). Static head + Losses (0.5m)
+        const static_head_m = Depth; 
+        const losses_m = 0.5;
+        const total_head_m = static_head_m + losses_m;
+        // Convert water head to bar (approx / 10.2)
+        const press_bar = total_head_m / 10.2; // Gauge pressure
+        const P_abs_ratio = (press_bar + 1.013) / 1.013; // Compression Ratio
+
+        // AdobePower (kW) = (MassFlow * R * T / 29.7 / n / eff) ...
+        // Quick formula: kW = (Q_m3_hr * dP_bar * 100) / (36 * eff) ? No.
+        // Isentropic Power (kW) = 2.76e-3 * Q_cfm * P1 * k/(k-1) * (r^...)
+        // Metric Approx: kW = Q(Nm3/hr) * Pressure(bar) / (36 * Eff)? No approx.
+        // Let's use: Power (kW) = (Airflow_Nm3_hr * total_head_m * 9810) / (3600 * 1000 * eff) ?
+        // This is hydraulic power. Compressors use adiabatic.
+        // Adiabatic Power P_ad (kW) = (Q_Nm3_min * 100 * P_inlet * 0.283) * ( (P_out/P_in)^0.283 - 1 )
+        // Using Q_m3_min.
+        const Q_min = airflow_Nm3_hr / 60;
+        const P1 = 1.013; // bar abs
+        const k_exp = 0.283; // (k-1)/k for air
+        
+        const P_adiabatic_kW = (Q_min * 100 * P1 / k_exp) * ( Math.pow(P_abs_ratio, k_exp) - 1 );
+        
+        // Shaft Power (apply efficiency)
+        const eff_roots = 0.58;
+        const eff_turbo = 0.78;
+        
+        const kW_roots = P_adiabatic_kW / eff_roots;
+        const kW_turbo = P_adiabatic_kW / eff_turbo;
+        
+        // 6. Costs
+        const cost_kwh = 8.0;
+        const annual_kwh_roots = kW_roots * 24 * 365;
+        const annual_kwh_turbo = kW_turbo * 24 * 365;
+        
+        const annual_cost_roots = annual_kwh_roots * cost_kwh;
+        const annual_cost_turbo = annual_kwh_turbo * cost_kwh;
+        const annual_saving = annual_cost_roots - annual_cost_turbo;
+
+        // Updates UI
+        document.getElementById('res_aor').innerText = AOR.toFixed(0) + " kg/d";
+        document.getElementById('res_sor').innerText = SOR.toFixed(0) + " kg/d";
+        document.getElementById('res_air').innerText = airflow_Nm3_hr.toFixed(0);
+        
+        document.getElementById('discharge_press').innerText = press_bar.toFixed(2);
+        document.getElementById('pwr_roots').innerText = kW_roots.toFixed(1) + " kW";
+        document.getElementById('pwr_turbo').innerText = kW_turbo.toFixed(1) + " kW";
+        
+        document.getElementById('kwh_roots').innerText = (annual_kwh_roots/1000).toFixed(1) + " MWh";
+        document.getElementById('kwh_turbo').innerText = (annual_kwh_turbo/1000).toFixed(1) + " MWh";
+        
+        document.getElementById('cost_roots').innerText = "₹" + (annual_cost_roots/100000).toFixed(2) + " L";
+        document.getElementById('cost_turbo').innerText = "₹" + (annual_cost_turbo/100000).toFixed(2) + " L";
+        document.getElementById('savings_annual').innerText = "₹" + (annual_saving/100000).toFixed(2) + " Lakhs";
+
+        updateChart(annual_cost_roots, annual_cost_turbo);
+    }
+
+    function updateChart(cost1, cost2) {
+        if(!costChart) {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            costChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Year 1', 'Year 3', 'Year 5'],
+                    datasets: [
+                        {
+                            label: 'Twin Lobe Blower (Roots)',
+                            data: [cost1, cost1*3, cost1*5],
+                            backgroundColor: '#fee2e2',
+                            borderColor: '#991b1b',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Turbo Blower (Premium)',
+                            data: [cost2, cost2*3, cost2*5],
+                            backgroundColor: '#dcfce7',
+                            borderColor: '#166534',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => '₹ ' + (ctx.raw/100000).toFixed(1) + ' Lakhs'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Cumulative Cost (₹)' },
+                            ticks: { callback: (val) => (val/100000) + ' L' }
+                        }
+                    }
+                }
+            });
+        } else {
+            costChart.data.datasets[0].data = [cost1, cost1*3, cost1*5];
+            costChart.data.datasets[1].data = [cost2, cost2*3, cost2*5];
+            costChart.update();
+        }
+    }
+
+    window.onload = calculate;
+
+</script>
+
+</body>
+</html>

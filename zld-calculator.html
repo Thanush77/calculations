@@ -3,568 +3,646 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZLD Calculator</title>
+    <title>ZLD Design Engine Class A</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #0ea5e9; /* Sky Blue */
+            --primary-dark: #0284c7;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-light: #64748b;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #e8f4f8 0%, #d6eaf8 100%);
-            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
             padding: 20px;
+            line-height: 1.5;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .header p { margin: 5px 0 0; opacity: 0.8; font-size: 14px; }
+        .badge-enterprise {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 12px;
             border-radius: 20px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .tab-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: var(--text-light);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover { background: #f1f5f9; }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2);
+        }
+
+        /* Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 24px;
+        }
+
+        .input-panel {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Forms */
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--secondary);
+            margin-bottom: 6px;
+        }
+        
+        .input-row { display: flex; gap: 10px; }
+        .input-wrapper { position: relative; flex: 1; }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.2s;
+            background: var(--bg);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+            background: white;
+        }
+        
+        .unit {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: var(--secondary);
+            pointer-events: none;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        
+        .action-btn:hover { background: var(--primary-dark); }
+        
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            position: relative;
             overflow: hidden;
         }
 
-        .header {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            text-align: center;
-            padding: 40px 30px;
-        }
-
-        .header h1 {
-            font-size: 36px;
-            font-weight: 700;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .header p {
-            font-size: 18px;
-            margin-top: 10px;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 50px 40px;
-        }
-
-        .calculator-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            border-left: 5px solid #e74c3c;
-        }
-
-        .section-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 16px;
-            font-weight: 600;
-            color: #34495e;
-            margin-bottom: 8px;
-        }
-
-        input[type="number"], select {
-            padding: 12px 16px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background-color: #fff3cd;
-        }
-
-        input[type="number"]:focus, select:focus {
-            outline: none;
-            border-color: #e74c3c;
-            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
-        }
-
-        input[type="number"].result {
-            background-color: #d4edda;
-            font-weight: 600;
-            color: #155724;
-            cursor: not-allowed;
-        }
-
-        .calculate-btn {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .calculate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-        }
-
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .result-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #e74c3c;
-        }
-
-        .result-card h3 {
-            color: #2c3e50;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-
-        .result-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #e74c3c;
-        }
-
-        .icon {
-            font-size: 20px;
-            color: #e74c3c;
-        }
-
-        .zld-diagram {
-            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border: 1px solid #ffcccc;
-        }
-
-        .process-block {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            margin: 10px;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.1);
-            border: 2px solid #e74c3c;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .arrow {
-            text-align: center;
-            color: #e74c3c;
-            font-size: 24px;
-            margin: 10px 0;
-        }
-
-        .cost-breakdown {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .cost-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .cost-item:last-child {
-            border-bottom: none;
-            font-weight: 700;
-            font-size: 18px;
-            color: #e74c3c;
-        }
-
-        @media (max-width: 768px) {
-            .content {
-                padding: 30px 20px;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 28px;
-            }
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-recycle"></i> ZLD Calculator</h1>
-            <p>Zero Liquid Discharge System Design & Cost Estimation</p>
-        </div>
-
-        <div class="content">
-            <!-- Feed Water Parameters -->
-            <div class="calculator-section">
-                <h2 class="section-title">
-                    <i class="fas fa-tint icon"></i>
-                    Feed Water Characteristics
-                </h2>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="feed-flow">Feed Flow Rate (m³/day):</label>
-                        <input type="number" id="feed-flow" placeholder="Enter feed flow rate" step="0.1">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tds">Total Dissolved Solids (mg/L):</label>
-                        <input type="number" id="tds" placeholder="TDS concentration" step="1">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="conductivity">Conductivity (µS/cm):</label>
-                        <input type="number" id="conductivity" placeholder="Water conductivity" step="1">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="hardness">Total Hardness (mg/L as CaCO₃):</label>
-                        <input type="number" id="hardness" placeholder="Water hardness" step="1">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="silica">Silica (mg/L):</label>
-                        <input type="number" id="silica" placeholder="Silica content" step="1">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="operating-hours">Operating Hours/Day:</label>
-                        <input type="number" id="operating-hours" placeholder="Typically 20-24" step="1" value="24">
-                    </div>
-                </div>
-            </div>
-
-            <!-- System Configuration -->
-            <div class="calculator-section">
-                <h2 class="section-title">
-                    <i class="fas fa-cogs icon"></i>
-                    System Configuration
-                </h2>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="evaporator-type">Evaporator Type:</label>
-                        <select id="evaporator-type">
-                            <option value="mee">Multi-Effect Evaporator (MEE)</option>
-                            <option value="mvre">Mechanical Vapor Recompression (MVRE)</option>
-                            <option value="thermal">Thermal Evaporator</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="pretreatment">Pre-treatment Required:</label>
-                        <select id="pretreatment">
-                            <option value="basic">Basic (Softening + UF)</option>
-                            <option value="advanced">Advanced (RO + Ion Exchange)</option>
-                            <option value="minimal">Minimal (Filtration only)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="recovery-target">Recovery Target (%):</label>
-                        <input type="number" id="recovery-target" placeholder="Usually 95-99%" step="1" value="98">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="steam-pressure">Steam Pressure (bar):</label>
-                        <input type="number" id="steam-pressure" placeholder="Operating pressure" step="0.1" value="3.5">
-                    </div>
-                </div>
-                
-                <button class="calculate-btn" onclick="calculateZLD()">
-                    <i class="fas fa-calculator"></i>
-                    Calculate ZLD System
-                </button>
-            </div>
-
-            <!-- Results -->
-            <div class="results-grid" id="results" style="display: none;">
-                <div class="result-card">
-                    <h3>Distillate Production</h3>
-                    <div class="result-value" id="distillate-flow">0 m³/day</div>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Brine Flow to Crystallizer</h3>
-                    <div class="result-value" id="brine-flow">0 m³/day</div>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Salt Production</h3>
-                    <div class="result-value" id="salt-production">0 kg/day</div>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Evaporator Capacity</h3>
-                    <div class="result-value" id="evaporator-capacity">0 m³/hr</div>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Steam Consumption</h3>
-                    <div class="result-value" id="steam-consumption">0 kg/hr</div>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Power Consumption</h3>
-                    <div class="result-value" id="power-consumption">0 kW</div>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Crystallizer Size</h3>
-                    <div class="result-value" id="crystallizer-size">0 m³</div>
-                </div>
-                
-                <div class="result-card">
-                    <h3>Capital Cost Estimate</h3>
-                    <div class="result-value" id="capital-cost">$0</div>
-                </div>
-            </div>
-
-            <!-- Process Flow Diagram -->
-            <div class="calculator-section" id="process-section" style="display: none;">
-                <h2 class="section-title">
-                    <i class="fas fa-project-diagram icon"></i>
-                    ZLD Process Flow
-                </h2>
-                
-                <div class="zld-diagram">
-                    <div class="process-block">Raw Wastewater Feed</div>
-                    <div class="arrow">↓</div>
-                    <div class="process-block" id="pretreatment-block">Pre-treatment</div>
-                    <div class="arrow">↓</div>
-                    <div class="process-block">RO/UF System</div>
-                    <div class="arrow">↓</div>
-                    <div class="process-block" id="evaporator-block">Evaporator</div>
-                    <div class="arrow">↓</div>
-                    <div class="process-block">Crystallizer</div>
-                    <div class="arrow">↓</div>
-                    <div class="process-block">Centrifuge/Dryer</div>
-                    <div class="arrow">↓</div>
-                    <div class="process-block">Solid Salt Disposal</div>
-                </div>
-            </div>
-
-            <!-- Cost Breakdown -->
-            <div class="calculator-section" id="cost-section" style="display: none;">
-                <h2 class="section-title">
-                    <i class="fas fa-dollar-sign icon"></i>
-                    Cost Breakdown
-                </h2>
-                
-                <div class="cost-breakdown">
-                    <div class="cost-item">
-                        <span>Pre-treatment System:</span>
-                        <span id="pretreatment-cost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span>Evaporator System:</span>
-                        <span id="evaporator-cost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span>Crystallizer & Dryer:</span>
-                        <span id="crystallizer-cost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span>Utilities & Piping:</span>
-                        <span id="utilities-cost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span>Installation & Commissioning:</span>
-                        <span id="installation-cost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span>Total Project Cost:</span>
-                        <span id="total-cost">$0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function calculateZLD() {
-            // Get input values
-            const feedFlow = parseFloat(document.getElementById('feed-flow').value) || 0;
-            const tds = parseFloat(document.getElementById('tds').value) || 0;
-            const conductivity = parseFloat(document.getElementById('conductivity').value) || 0;
-            const hardness = parseFloat(document.getElementById('hardness').value) || 0;
-            const silica = parseFloat(document.getElementById('silica').value) || 0;
-            const operatingHours = parseFloat(document.getElementById('operating-hours').value) || 24;
-            const evaporatorType = document.getElementById('evaporator-type').value;
-            const pretreatment = document.getElementById('pretreatment').value;
-            const recoveryTarget = parseFloat(document.getElementById('recovery-target').value) || 98;
-            const steamPressure = parseFloat(document.getElementById('steam-pressure').value) || 3.5;
-
-            if (!feedFlow || !tds) {
-                alert('Please enter at least Feed Flow Rate and TDS');
-                return;
-            }
-
-            // Calculate mass balance
-            const recoveryFraction = recoveryTarget / 100;
-            const distillateFlow = feedFlow * recoveryFraction;
-            const brineFlow = feedFlow - distillateFlow;
-            
-            // Calculate salt production (kg/day)
-            const saltProduction = feedFlow * tds * 0.001 * (1 - recoveryFraction);
-            
-            // Calculate equipment sizing
-            const evaporatorCapacity = feedFlow / operatingHours; // m³/hr
-            const crystallizerSize = brineFlow * 2; // m³ (2-day retention)
-            
-            // Calculate steam consumption based on evaporator type
-            let steamConsumption = 0; // kg/hr
-            let powerConsumption = 0; // kW
-            let evaporatorCostMultiplier = 1;
-            
-            switch(evaporatorType) {
-                case 'mee':
-                    steamConsumption = distillateFlow * 0.4 / operatingHours; // 0.4 kg steam per kg distillate
-                    powerConsumption = feedFlow * 15; // 15 kW per m³/day
-                    evaporatorCostMultiplier = 1.0;
-                    break;
-                case 'mvre':
-                    steamConsumption = distillateFlow * 0.15 / operatingHours; // Lower steam consumption
-                    powerConsumption = feedFlow * 25; // Higher power consumption
-                    evaporatorCostMultiplier = 1.3;
-                    break;
-                case 'thermal':
-                    steamConsumption = distillateFlow * 0.6 / operatingHours; // Higher steam consumption
-                    powerConsumption = feedFlow * 10; // Lower power consumption
-                    evaporatorCostMultiplier = 0.8;
-                    break;
-            }
-            
-            // Calculate costs (USD)
-            let pretreatmentCost = 0;
-            switch(pretreatment) {
-                case 'basic':
-                    pretreatmentCost = feedFlow * 150000; // $150k per m³/day
-                    break;
-                case 'advanced':
-                    pretreatmentCost = feedFlow * 250000; // $250k per m³/day
-                    break;
-                case 'minimal':
-                    pretreatmentCost = feedFlow * 80000; // $80k per m³/day
-                    break;
-            }
-            
-            const evaporatorCost = feedFlow * 400000 * evaporatorCostMultiplier; // Base $400k per m³/day
-            const crystallizerCost = saltProduction * 15000; // $15k per kg/day salt production
-            const utilitiesCost = (pretreatmentCost + evaporatorCost + crystallizerCost) * 0.25;
-            const installationCost = (pretreatmentCost + evaporatorCost + crystallizerCost + utilitiesCost) * 0.3;
-            const totalCost = pretreatmentCost + evaporatorCost + crystallizerCost + utilitiesCost + installationCost;
-            
-            // Display results
-            document.getElementById('distillate-flow').textContent = distillateFlow.toFixed(1) + ' m³/day';
-            document.getElementById('brine-flow').textContent = brineFlow.toFixed(1) + ' m³/day';
-            document.getElementById('salt-production').textContent = saltProduction.toFixed(0) + ' kg/day';
-            document.getElementById('evaporator-capacity').textContent = evaporatorCapacity.toFixed(1) + ' m³/hr';
-            document.getElementById('steam-consumption').textContent = steamConsumption.toFixed(0) + ' kg/hr';
-            document.getElementById('power-consumption').textContent = powerConsumption.toFixed(0) + ' kW';
-            document.getElementById('crystallizer-size').textContent = crystallizerSize.toFixed(1) + ' m³';
-            document.getElementById('capital-cost').textContent = '$' + (totalCost/1000000).toFixed(1) + 'M';
-            
-            // Display cost breakdown
-            document.getElementById('pretreatment-cost').textContent = '$' + (pretreatmentCost/1000000).toFixed(1) + 'M';
-            document.getElementById('evaporator-cost').textContent = '$' + (evaporatorCost/1000000).toFixed(1) + 'M';
-            document.getElementById('crystallizer-cost').textContent = '$' + (crystallizerCost/1000000).toFixed(1) + 'M';
-            document.getElementById('utilities-cost').textContent = '$' + (utilitiesCost/1000000).toFixed(1) + 'M';
-            document.getElementById('installation-cost').textContent = '$' + (installationCost/1000000).toFixed(1) + 'M';
-            document.getElementById('total-cost').textContent = '$' + (totalCost/1000000).toFixed(1) + 'M';
-            
-            // Update process flow diagram
-            updateProcessFlow(evaporatorType, pretreatment);
-            
-            // Show results
-            document.getElementById('results').style.display = 'grid';
-            document.getElementById('process-section').style.display = 'block';
-            document.getElementById('cost-section').style.display = 'block';
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--primary);
         }
         
-        function updateProcessFlow(evaporatorType, pretreatment) {
-            const evaporatorBlock = document.getElementById('evaporator-block');
-            const pretreatmentBlock = document.getElementById('pretreatment-block');
-            
-            // Update evaporator type
-            switch(evaporatorType) {
-                case 'mee':
-                    evaporatorBlock.textContent = 'Multi-Effect Evaporator (MEE)';
-                    break;
-                case 'mvre':
-                    evaporatorBlock.textContent = 'Mechanical Vapor Recompression (MVRE)';
-                    break;
-                case 'thermal':
-                    evaporatorBlock.textContent = 'Thermal Evaporator';
-                    break;
-            }
-            
-            // Update pretreatment
-            switch(pretreatment) {
-                case 'basic':
-                    pretreatmentBlock.textContent = 'Softening + Ultrafiltration';
-                    break;
-                case 'advanced':
-                    pretreatmentBlock.textContent = 'RO + Ion Exchange';
-                    break;
-                case 'minimal':
-                    pretreatmentBlock.textContent = 'Filtration Only';
-                    break;
-            }
+        .kpi-label { font-size: 12px; color: var(--secondary); margin-bottom: 4px; font-weight: 500;}
+        .kpi-value { font-size: 24px; font-weight: 700; color: var(--text-main); }
+        .kpi-sub { font-size: 11px; color: var(--success); margin-top: 4px; display: flex; align-items: center; gap: 4px;}
+
+        /* Charts & Detailed Results */
+        .chart-container {
+            background: var(--card);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            height: 350px;
+            position: relative;
         }
 
-        // Auto-calculate when values change
-        document.addEventListener('input', function(e) {
-            if (e.target.type === 'number' || e.target.type === 'select-one') {
-                const results = document.getElementById('results');
-                if (results.style.display === 'grid') {
-                    calculateZLD();
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .details-table th, .details-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .details-table th { color: var(--secondary); font-weight: 600; }
+        .details-table tr:last-child td { border-bottom: none; }
+        
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Tooltip Helper */
+        .info-icon {
+            color: var(--secondary);
+            font-size: 12px;
+            cursor: help;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1><i class="fas fa-recycle" style="margin-right: 10px;"></i>ZLD Design Engine Class A</h1>
+            <p>Advanced Thermodynamic Simulation & Mass Balance</p>
+        </div>
+        <div class="badge-enterprise">Enterprise Edition</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchMode('MEE')"><i class="fas fa-layer-group"></i> Multi-Effect (MEE)</button>
+        <button class="tab-btn" onclick="switchMode('MVR')"><i class="fas fa-compress-arrows-alt"></i> MVR System</button>
+        <button class="tab-btn" onclick="switchMode('CHEM')"><i class="fas fa-flask"></i> Chemical Balance</button>
+    </div>
+
+    <div class="main-grid">
+        <!-- Sidebar Inputs -->
+        <div class="input-panel">
+            
+            <!-- Feed Parameters -->
+            <div class="section-title">Feed Characteristics <i class="fas fa-info-circle info-icon" title="Inputs defining the wastewater profile"></i></div>
+            <div class="form-group">
+                <label>Flow Rate</label>
+                <div class="input-wrapper">
+                    <input type="number" id="feedFlow" value="100" oninput="calculate()">
+                    <span class="unit">m³/d</span>
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="form-group">
+                    <label>TDS</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="feedTDS" value="35000" oninput="calculate()">
+                        <span class="unit">mg/L</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Temp</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="feedTemp" value="30" oninput="calculate()">
+                        <span class="unit">°C</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chemical Parameters (Hidden unless Chem mode) -->
+            <div id="chemInputs" style="display:none;">
+                <div class="section-title" style="margin-top:20px;">Detailed Chemistry</div>
+                <div class="form-group">
+                    <label>Total Hardness (as CaCO₃)</label>
+                    <div class="input-wrapper"><input type="number" id="hardness" value="500" oninput="calculate()"><span class="unit">mg/L</span></div>
+                </div>
+                <div class="form-group">
+                    <label>Alkalinity (as CaCO₃)</label>
+                    <div class="input-wrapper"><input type="number" id="alkalinity" value="300" oninput="calculate()"><span class="unit">mg/L</span></div>
+                </div>
+            </div>
+
+            <!-- Operating Parameters -->
+            <div class="section-title" style="margin-top:20px;">System Configuration</div>
+            <div class="form-group">
+                <label>Recovery Target</label>
+                <div class="input-wrapper">
+                    <input type="number" id="recovery" value="98" max="99.5" oninput="calculate()">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+            
+            <div id="meeInputs">
+                <div class="form-group">
+                    <label>Number of Effects (Stages)</label>
+                    <select id="stages" onchange="calculate()">
+                        <option value="1">1 Stage</option>
+                        <option value="2">2 Stages</option>
+                        <option value="3">3 Stages</option>
+                        <option value="4" selected>4 Stages</option>
+                        <option value="5">5 Stages</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Steam Pressure (Utility)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="steamPress" value="3.5" oninput="calculate()">
+                        <span class="unit">bar(g)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mvrInputs" style="display:none;">
+                <div class="form-group">
+                    <label>Compressor Efficiency</label>
+                    <div class="input-wrapper"><input type="number" id="compEff" value="75" oninput="calculate()"><span class="unit">%</span></div>
+                </div>
+                <div class="form-group">
+                    <label>Temp Rise (ΔT)</label>
+                    <div class="input-wrapper"><input type="number" id="deltaT" value="12" oninput="calculate()"><span class="unit">°C</span></div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top:20px;">Economic Factors</div>
+             <div class="form-group">
+                <label>Steam Cost</label>
+                <div class="input-wrapper"><input type="number" id="costSteam" value="20" oninput="calculate()"><span class="unit">$/ton</span></div>
+            </div>
+             <div class="form-group">
+                <label>Power Cost</label>
+                <div class="input-wrapper"><input type="number" id="costPower" value="0.12" oninput="calculate()"><span class="unit">$/kWh</span></div>
+            </div>
+
+            <button class="action-btn" onclick="calculate()">Run Design Engine</button>
+        </div>
+
+        <!-- Main Results -->
+        <div class="results-panel">
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Specific Energy</div>
+                    <div class="kpi-value" id="kpiEnergy">--</div>
+                    <div class="kpi-sub" id="kpiEnergySub">kWh/m³ equivalent</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Daily OPEX</div>
+                    <div class="kpi-value" id="kpiCost">--</div>
+                    <div class="kpi-sub"><i class="fas fa-dollar-sign"></i> includes Chems</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Salt Recovery</div>
+                    <div class="kpi-value" id="kpiSalt">--</div>
+                    <div class="kpi-sub">kg/day Dry Solids</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Carbon Footprint</div>
+                    <div class="kpi-value" id="kpiCarbon">--</div>
+                    <div class="kpi-sub">kg CO₂e/day</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="chart-container">
+                    <div class="section-title">Mass Balance Visual</div>
+                    <canvas id="massBalanceChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="section-title">Cost Breakdown (Daily)</div>
+                    <canvas id="costChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Technical Detail Table -->
+            <div class="chart-container" style="height: auto;">
+                <div class="section-title">Detailed Process Parameters</div>
+                <table class="details-table" id="detailsTable">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                            <th>Unit</th>
+                            <th>Engineering Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentMode = 'MEE';
+    let massChart = null;
+    let costChart = null;
+
+    // --- Engineering Constants ---
+    const LATENT_HEAT_WATER_100C = 2256; // kJ/kg
+    const SPECIFIC_HEAT_WATER = 4.18; // kJ/kg.C
+    const LIME_PURITY = 0.90; // Typical Ind. Grade
+    const SODA_PURITY = 0.98;
+
+    function switchMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.target.closest('.tab-btn').classList.add('active');
+
+        // Toggle Inputs
+        document.getElementById('meeInputs').style.display = mode === 'MEE' ? 'block' : 'none';
+        document.getElementById('mvrInputs').style.display = mode === 'MVR' ? 'block' : 'none';
+        document.getElementById('chemInputs').style.display = mode === 'CHEM' ? 'block' : 'none';
+
+        calculate();
+    }
+
+    function calculate() {
+        // --- 1. Inputs ---
+        const Q_m3d = parseFloat(document.getElementById('feedFlow').value) || 0;
+        const tds = parseFloat(document.getElementById('feedTDS').value) || 0;
+        const temp = parseFloat(document.getElementById('feedTemp').value) || 30;
+        const recPct = parseFloat(document.getElementById('recovery').value) || 95;
+        const hours = 24;
+        
+        // --- 2. Mass Balance ---
+        const Q_kg_hr = (Q_m3d * 1000) / hours; // Simple density 1000
+        const recFrac = recPct / 100;
+        
+        const m_distillate = Q_m3d * recFrac;
+        const m_brine = Q_m3d * (1 - recFrac);
+        
+        // Salt - Simple TDS Balance (assuming dry salt removal at end)
+        // In reality, ZLD produces wet cake. Assuming 80% solids cake for mass
+        const solids_kg_d = (Q_m3d * 1000) * (tds / 1e6); // Pure dry solids
+        const cake_moisture = 0.2; // 20% moisture
+        const cake_mass_kg_d = solids_kg_d / (1 - cake_moisture);
+
+        // --- 3. Energy Physics ---
+        // Heat to bring feed to boiling (approx 100C for simplicity, though BPE exists)
+        const q_sensible_kj_hr = Q_kg_hr * SPECIFIC_HEAT_WATER * (100 - temp);
+        // Latent heat for evaporation portion
+        const evap_kg_hr = (m_distillate * 1000) / hours;
+        const q_latent_kj_hr = evap_kg_hr * LATENT_HEAT_WATER_100C;
+
+        let power_kw = 0;
+        let steam_kg_hr = 0;
+        let note_energy = "";
+
+        if (currentMode === 'MEE') {
+            const stages = parseInt(document.getElementById('stages').value);
+            // Steam Economy (N effects). Rule of thumb: Economy ~ 0.85 * N
+            // But strict physics: 1 kg steam evaporates ~N kg water minus losses
+            const steam_economy = 0.85 * stages; 
+            steam_kg_hr = evap_kg_hr / steam_economy;
+            
+            // Add sensible heating steam
+            // Steam Latent Heat at 3.5 bar (~147C) is ~2120 kJ/kg
+            const steam_enthalpy = 2120;
+            const steam_sensible = q_sensible_kj_hr / steam_enthalpy;
+            steam_kg_hr += steam_sensible;
+
+            // MEE Pump Power (circulation pumps) approx 15 kWh/m3
+            power_kw = (Q_m3d * 0.7) / hours; // Rough estimate
+            note_energy = `MEE (${stages}-Effect) GOR: ${steam_economy.toFixed(2)}`;
+        } 
+        
+        else if (currentMode === 'MVR' || currentMode === 'CHEM') {
+            const dT = parseFloat(document.getElementById('deltaT').value);
+            const eff = parseFloat(document.getElementById('compEff').value) / 100;
+            
+            // Compressor Work: W = m * Cp_vapor * dT / eff (Simplified)
+            // Or COP approach: COP_theor = T / dT. T~373K.
+            const T_sat = 373; 
+            const COP_carnot = T_sat / dT;
+            const COP_real = COP_carnot * eff; // ~0.55 Carnot eff usually
+            
+            // Energy Input = Q_latent / COP
+            const energy_kj_hr = q_latent_kj_hr / COP_real;
+            power_kw = energy_kj_hr / 3600; // kJ/hr to kW
+            
+            // Add sensible heat (usually needed as steam start-up or trim heater)
+            // MVR is mostly power.
+            power_kw += (Q_m3d * 2.0) / hours; // Aux pumps
+            steam_kg_hr = 0; // Assuming electric heater for startup or ignored in steady state
+            note_energy = `MVR (ΔT ${dT}°C) COP: ${COP_real.toFixed(1)}`;
+        }
+
+        // --- 4. Chemical Dosing (Stoichiometry) ---
+        // Ca(HCO3)2 + Ca(OH)2 -> 2CaCO3 + 2H2O
+        // Hardness removal. Simplified: 1.2 kg Lime per kg Hardness, 1.1 kg Soda per kg Non-Carb Hardness
+        // User inputs total hardness. Let's assume 50/50 split carb/non-carb for demo
+        const hardness = parseFloat(document.getElementById('hardness').value) || 0;
+        const lime_dose_mg = hardness * 0.74 / LIME_PURITY; // Stoichiometry approx
+        const soda_dose_mg = hardness * 0.5 * 1.06 / SODA_PURITY; 
+        
+        const lime_kg_d = (Q_m3d * lime_dose_mg) / 1000;
+        const soda_kg_d = (Q_m3d * soda_dose_mg) / 1000;
+        
+        // --- 5. Economics ---
+        const price_steam = parseFloat(document.getElementById('costSteam').value); // $/ton
+        const price_power = parseFloat(document.getElementById('costPower').value); // $/kWh
+        
+        const daily_steam_cost = (steam_kg_hr * 24 / 1000) * price_steam;
+        const daily_power_cost = (power_kw * 24) * price_power;
+        const daily_chem_cost = (lime_kg_d * 0.15) + (soda_kg_d * 0.35) + (Q_m3d * 0.05); // Generic acid/anti-scalant
+        
+        const total_opex = daily_steam_cost + daily_power_cost + daily_chem_cost;
+        const specific_energy_kwh = (power_kw * 24 + (steam_kg_hr * 24 / 1000)*700) / Q_m3d; // Converting steam to kWh eq (approx 700 kWh/ton)
+        
+        const co2_scope2 = (power_kw * 24 * 0.5) + (steam_kg_hr * 24 / 1000 * 180); // 0.5 kg/kWh, 180 kg/ton steam (gas boiler)
+
+        // --- 6. Updates ---
+        
+        // KPIs
+        document.getElementById('kpiEnergy').innerHTML = specific_energy_kwh.toFixed(1);
+        document.getElementById('kpiCost').innerHTML = '$' + total_opex.toLocaleString(undefined, {maximumFractionDigits:0});
+        document.getElementById('kpiSalt').innerHTML = solids_kg_d.toFixed(0);
+        document.getElementById('kpiCarbon').innerHTML = co2_scope2.toFixed(0);
+
+        // Chart 1: Mass Balance
+        updateMassChart([m_distillate, cake_mass_kg_d/1000, 0]); // Distillate, Solids, Losses (negligible)
+        
+        // Chart 2: Cost
+        updateCostChart([daily_power_cost, daily_steam_cost, daily_chem_cost]);
+
+        // Detail Table
+        const tbody = document.querySelector('#detailsTable tbody');
+        tbody.innerHTML = `
+            <tr>
+                <td>Evaporation Rate</td>
+                <td>${evap_kg_hr.toFixed(0)}</td>
+                <td>kg/hr</td>
+                <td>@ ${recPct}% Recovery</td>
+            </tr>
+            <tr>
+                <td>Steam Demand</td>
+                <td>${steam_kg_hr.toFixed(0)}</td>
+                <td>kg/hr</td>
+                <td>${note_energy}</td>
+            </tr>
+            <tr>
+                <td>Compressor/Pump Power</td>
+                <td>${power_kw.toFixed(1)}</td>
+                <td>kW</td>
+                <td>Absorbed Power</td>
+            </tr>
+            <tr>
+                <td>Chemical Consump (Lime)</td>
+                <td>${lime_kg_d.toFixed(1)}</td>
+                <td>kg/day</td>
+                <td>Based on ${hardness} ppm Hardness</td>
+            </tr>
+            <tr>
+                <td>Calculated GOR/COP</td>
+                <td>${currentMode === 'MEE' ? (evap_kg_hr/steam_kg_hr).toFixed(2) : (q_latent_kj_hr/(power_kw*3600)).toFixed(1)}</td>
+                <td>-</td>
+                <td>Thermodynamic Eff.</td>
+            </tr>
+        `;
+    }
+
+    // --- Chart Logic ---
+    function updateMassChart(dataArr) {
+        if (!massChart) {
+            const ctx = document.getElementById('massBalanceChart').getContext('2d');
+            massChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Distillate Water', 'Dry Solids Output', 'Brine/Losses'],
+                    datasets: [{
+                        data: dataArr,
+                        backgroundColor: ['#0ea5e9', '#f59e0b', '#64748b']
+                    }]
+                },
+                options: { maintainAspectRatio: false }
+            });
+        } else {
+            massChart.data.datasets[0].data = dataArr;
+            massChart.update();
+        }
+    }
+
+    function updateCostChart(dataArr) {
+        if (!costChart) {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            costChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Power', 'Steam', 'Chemicals'],
+                    datasets: [{
+                        label: 'Daily Cost ($)',
+                        data: dataArr,
+                        backgroundColor: ['#0ea5e9', '#ef4444', '#10b981'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
                 }
-            }
-        });
-    </script>
+            });
+        } else {
+            costChart.data.datasets[0].data = dataArr;
+            costChart.update();
+        }
+    }
+
+    // Init
+    window.onload = function() {
+        calculate();
+    }
+</script>
+
 </body>
 </html>

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified ZLD Optimization Engine</title>
+    <!-- Using Chart.js 3.9.1 and Sankey 0.5.0 for known compatibility -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.5.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- styles remain same -->
+    <style>
+        :root {
+            --primary: #0891b2; /* Cyan 600 */
+            --primary-dark: #0e7490;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1400px; /* Wide for Sankey */
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .header p { margin: 5px 0 0; opacity: 0.8; font-size: 14px; }
+        
+        .badge {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+        }
+
+        .panel {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
+        /* Inputs */
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--secondary);
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+        
+        .input-wrapper { position: relative; }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: var(--bg);
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+        }
+        
+        .unit {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: var(--secondary);
+        }
+
+        /* Sliders */
+        .slider-group { margin-bottom: 20px; }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .optimize-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(8, 145, 178, 0.3);
+            transition: all 0.2s;
+        }
+        .optimize-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 12px -1px rgba(8, 145, 178, 0.4); }
+
+        /* KPIs */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 3px;
+            background: var(--primary);
+        }
+        
+        .kpi-label { font-size: 11px; text-transform: uppercase; color: var(--secondary); font-weight: 600; margin-bottom: 4px; }
+        .kpi-value { font-size: 24px; font-weight: 800; color: var(--text-main); }
+        .kpi-sub { font-size: 12px; display: flex; align-items: center; gap: 4px; margin-top: 5px; }
+        
+        /* Sankey Panel */
+        .viz-panel {
+            height: 500px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cost Table */
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .cost-table th, .cost-table td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .cost-table th { background: #f8fafc; color: var(--secondary); font-weight: 600; }
+        .cost-table tr:last-child td { border-bottom: none; font-weight: 700; }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1><i class="fas fa-network-wired" style="margin-right:12px;"></i>Unified ZLD Optimization Engine</h1>
+            <p>Integrated RO-1 → RO-2 → MEE → ATFD Framework with Dynamic Recovery Optimization</p>
+        </div>
+        <div class="badge">Enterprise Class</div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Control Panel -->
+        <div class="panel">
+            <div class="section-title">Global Feed <i class="fas fa-tint"></i></div>
+            <div class="form-group">
+                <label>Feed Flow (Q<sub>f</sub>)</label>
+                <div class="input-wrapper"><input type="number" id="feedFlow" value="1000" oninput="simulationUpdated()"><span class="unit">m³/day</span></div>
+            </div>
+            
+            <div class="section-title" style="margin-top:24px;">Optimization Variables <i class="fas fa-sliders-h"></i></div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>RO-1 Recovery</span>
+                    <span id="dispR1" style="color:var(--primary); font-weight:700;">75%</span>
+                </div>
+                <input type="range" id="rangeR1" min="65" max="80" value="75" step="0.5" oninput="simulationUpdated()">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>RO-2 Recovery</span>
+                    <span id="dispR2" style="color:var(--primary); font-weight:700;">85%</span>
+                </div>
+                <input type="range" id="rangeR2" min="80" max="92" value="85" step="0.5" oninput="simulationUpdated()">
+            </div>
+            
+            <button class="optimize-btn" onclick="runOptimizer()">
+                <i class="fas fa-magic"></i> Auto-Optimize Minimize MEE
+            </button>
+
+            <div class="section-title" style="margin-top:24px;">Cost Factors <i class="fas fa-coins"></i></div>
+            <div class="form-group">
+                <label>Power Cost</label>
+                <div class="input-wrapper"><input type="number" id="costPower" value="8.0" oninput="simulationUpdated()"><span class="unit">₹/kWh</span></div>
+            </div>
+            <div class="form-group">
+                <label>Steam Cost</label>
+                <div class="input-wrapper"><input type="number" id="costSteam" value="2500" oninput="simulationUpdated()"><span class="unit">₹/ton</span></div>
+            </div>
+            <div class="form-group">
+                <label>Antiscalant Dose</label>
+                <div class="input-wrapper"><input type="number" id="doseAS" value="5" oninput="simulationUpdated()"><span class="unit">mg/L</span></div>
+            </div>
+        </div>
+
+        <!-- Visuals & Results -->
+        <div>
+            <!-- KPIs -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total ZLD OPEX</div>
+                    <div class="kpi-value" id="kpiOpex">--</div>
+                    <div class="kpi-sub" style="color:var(--danger)">₹/kL Treated</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Recovery</div>
+                    <div class="kpi-value" id="kpiRecovery">--</div>
+                    <div class="kpi-sub" style="color:var(--success)">Global Efficiency</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">MEE Feed Flow</div>
+                    <div class="kpi-value" id="kpiMeeFeed">--</div>
+                    <div class="kpi-sub">Minimization Target</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Carbon Footprint</div>
+                    <div class="kpi-value" id="kpiCarbon">--</div>
+                    <div class="kpi-sub">kg CO₂/kL</div>
+                </div>
+            </div>
+
+            <!-- Sankey Diagram -->
+            <div class="panel viz-panel">
+                <div class="section-title" style="border:none;">Live Mass Flow Sankey (m³/day)</div>
+                <canvas id="sankeyChart"></canvas>
+            </div>
+
+            <!-- Cost Breakdown -->
+            <div class="panel">
+                <div class="section-title">Detailed Financial & Energy Audit</div>
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                            <th>Cost Impact (₹/day)</th>
+                            <th>Specific Energy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="costTableBody">
+                        <!-- JS Populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let sankeyChart = null;
+    let chartContext = null;
+
+    // --- Core Logic ---
+    function calculateSystem() {
+        try {
+            // --- 1. Inputs ---
+            const Q_f = parseFloat(document.getElementById('feedFlow').value) || 1000;
+            const R1_pct = parseFloat(document.getElementById('rangeR1').value);
+            const R2_pct = parseFloat(document.getElementById('rangeR2').value);
+            
+            // Update display
+            document.getElementById('dispR1').innerText = R1_pct + '%';
+            document.getElementById('dispR2').innerText = R2_pct + '%';
+    
+            const R1 = R1_pct / 100;
+            const R2 = R2_pct / 100;
+    
+            // --- 2. RO-1 Mass Balance ---
+            const Q_p1 = Q_f * R1;
+            const Q_c1 = Q_f - Q_p1;
+    
+            // --- 3. RO-2 Mass Balance (Permeate Polishing Logic per user spec) ---
+            const Q_f2 = Q_p1; // Feed to RO2 is RO1 Permeate
+            const Q_p2 = Q_f2 * R2;
+            const Q_c2 = Q_f2 - Q_p2;
+    
+            // --- 4. MEE Mass Balance ---
+            const Q_MEE_in = Q_c1 + Q_c2;
+            const R_MEE = 0.95; // 95% recovery from MEE
+            const Q_distillate = Q_MEE_in * R_MEE;
+            const Q_brine = Q_MEE_in - Q_distillate; // To ATFD
+    
+            // --- 5. ATFD ---
+            const Q_ATFD_in = Q_brine;
+    
+            // --- 6. Costs ---
+            const cost_power_unit = parseFloat(document.getElementById('costPower').value) || 8;
+            const cost_steam_unit = parseFloat(document.getElementById('costSteam').value) || 2500;
+            const dose_AS = parseFloat(document.getElementById('doseAS').value) || 5;
+            const cost_AS_kg = 300; // ₹/kg
+    
+            // Chemical
+            const kg_AS_day = (Q_f * dose_AS) / 1000;
+            const cost_chem_day = kg_AS_day * cost_AS_kg;
+    
+            // Power
+            const kwh_RO1 = 1.2 * Q_p1;
+            const kwh_RO2 = 0.8 * Q_p2;
+            
+            // MEE Steam & Power
+            const steam_economy = 4.5;
+            const steam_kg_hr = (Q_distillate * 1000) / 24 / steam_economy;
+            const steam_ton_day = (steam_kg_hr * 24) / 1000;
+            const cost_steam_day = steam_ton_day * cost_steam_unit;
+            const kwh_MEE = 6 * Q_MEE_in;
+    
+            // ATFD Power
+            const kwh_ATFD = 30 * Q_ATFD_in;
+    
+            const total_kwh_day = kwh_RO1 + kwh_RO2 + kwh_MEE + kwh_ATFD;
+            const cost_power_day = total_kwh_day * cost_power_unit;
+    
+            const total_opex_day = cost_chem_day + cost_power_day + cost_steam_day;
+            const specific_cost = total_opex_day / Q_f; // ₹/kL Feed Treated
+    
+            // --- 7. Carbon ---
+            const EF_grid = 0.7; // kgCO2/kWh
+            const EF_steam = 200; // kgCO2/ton (Coal)
+            
+            const co2_power = total_kwh_day * EF_grid;
+            const co2_steam = steam_ton_day * EF_steam;
+            const total_co2_day = co2_power + co2_steam;
+            const specific_co2 = total_co2_day / Q_f;
+    
+            // --- 8. Updates (DOM) ---
+            
+            // KPIs
+            const kpiOpex = document.getElementById('kpiOpex');
+            if(kpiOpex) kpiOpex.innerText = '₹' + specific_cost.toFixed(1);
+            
+            const kpiRecovery = document.getElementById('kpiRecovery');
+            if(kpiRecovery) kpiRecovery.innerText = ( ((Q_p2 + Q_distillate)/Q_f)*100 ).toFixed(1) + '%';
+            
+            const kpiMeeFeed = document.getElementById('kpiMeeFeed');
+            if(kpiMeeFeed) kpiMeeFeed.innerText = Q_MEE_in.toFixed(1) + ' m³/d';
+            
+            const kpiCarbon = document.getElementById('kpiCarbon');
+            if(kpiCarbon) kpiCarbon.innerText = specific_co2.toFixed(1);
+    
+            // Sankey Dataset
+            const sankeyData = [
+                { from: 'Feed', to: 'RO-1', flow: Q_f },
+                { from: 'RO-1', to: 'RO-2', flow: Q_p1 }, 
+                { from: 'RO-1', to: 'MEE', flow: Q_c1 },  
+                { from: 'RO-2', to: 'Reuse', flow: Q_p2 }, 
+                { from: 'RO-2', to: 'MEE', flow: Q_c2 },   
+                { from: 'MEE', to: 'Distillate', flow: Q_distillate },
+                { from: 'MEE', to: 'ATFD', flow: Q_brine },
+                { from: 'Distillate', to: 'Reuse', flow: Q_distillate },
+                { from: 'ATFD', to: 'Salt', flow: Q_ATFD_in }
+            ];
+    
+            // Update Visuals (Try/Catch wrapper to avoid breaking calculations if chart fails)
+            try {
+                updateSankey(sankeyData);
+            } catch (err) {
+                console.warn("Sankey visualization failed:", err);
+            }
+    
+            // Cost Table
+            const tbody = document.getElementById('costTableBody');
+            if(tbody) {
+                tbody.innerHTML = `
+                <tr>
+                    <td>RO-1 Power</td>
+                    <td>${kwh_RO1.toFixed(0)} kWh</td>
+                    <td>₹${(kwh_RO1 * cost_power_unit).toFixed(0)}</td>
+                    <td>1.2 kWh/m³ perm</td>
+                </tr>
+                <tr>
+                    <td>RO-2 Power</td>
+                    <td>${kwh_RO2.toFixed(0)} kWh</td>
+                    <td>₹${(kwh_RO2 * cost_power_unit).toFixed(0)}</td>
+                    <td>0.8 kWh/m³ perm</td>
+                </tr>
+                <tr>
+                    <td>Antiscalant</td>
+                    <td>${kg_AS_day.toFixed(1)} kg</td>
+                    <td>₹${cost_chem_day.toFixed(0)}</td>
+                    <td>${dose_AS} mg/L</td>
+                </tr>
+                <tr>
+                    <td>MEE Operations (Steam)</td>
+                    <td>${steam_ton_day.toFixed(1)} tons</td>
+                    <td>₹${cost_steam_day.toFixed(0)}</td>
+                    <td>Eco: ${steam_economy}</td>
+                </tr>
+                 <tr>
+                    <td>ATFD Power</td>
+                    <td>${kwh_ATFD.toFixed(0)} kWh</td>
+                    <td>₹${(kwh_ATFD * cost_power_unit).toFixed(0)}</td>
+                    <td>30 kWh/m³</td>
+                </tr>
+                <tr>
+                    <td><strong>TOTAL DAILY</strong></td>
+                    <td>-</td>
+                    <td><strong>₹${total_opex_day.toLocaleString(undefined, {maximumFractionDigits:0})}</strong></td>
+                    <td><strong>₹${specific_cost.toFixed(1)} / kL</strong></td>
+                </tr>
+                `;
+            }
+
+        } catch (e) {
+            console.error("Calculation Error:", e);
+        }
+    }
+
+    function initChart() {
+        const canvas = document.getElementById('sankeyChart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        if (typeof Chart === 'undefined') {
+            console.error("Chart.js library not loaded.");
+            return;
+        }
+
+        sankeyChart = new Chart(ctx, {
+            type: 'sankey',
+            data: {
+                datasets: [{
+                    label: 'Fluid Mass Flow',
+                    data: [],
+                    colorFrom: '#64748b',
+                    colorTo: '#64748b',
+                    colorMode: 'gradient',
+                    size: 'max',
+                    nodeWidth: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.raw.from} → ${ctx.raw.to}: ${ctx.raw.flow.toFixed(1)} m³/d`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateSankey(data) {
+        if(!sankeyChart) initChart();
+        if(sankeyChart) {
+            sankeyChart.data.datasets[0].data = data;
+            sankeyChart.update();
+        }
+    }
+
+    function simulationUpdated() {
+        calculateSystem();
+    }
+
+    function runOptimizer() {
+        document.getElementById('rangeR1').value = 80;
+        document.getElementById('rangeR2').value = 90;
+        simulationUpdated();
+        alert("Optimization Complete: Maximized recovery to safe limits (R1=80%, R2=90%). MEE Load Minimized.");
+    }
+
+    // Init
+    window.onload = function() {
+        // Run Calculation FIRST to ensure numbers show up even if Chart fails
+        calculateSystem();
+        
+        // Then try chart
+        try {
+            initChart();
+            // Re-run to populate chart
+            calculateSystem();
+        } catch(e) {
+            console.warn("Chart Initialization failed", e);
+        }
+    };
+</script>
+</body>
+</html>
+

@@ -1,264 +1,372 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tank Size Calculator</title>
+    <title>Industrial Tank Sizer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --success: #10b981;
+            --highlight: #f0f9ff;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f5f5f5;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            line-height: 1.5;
         }
 
         .container {
-            background: white;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
         }
 
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
             margin-bottom: 30px;
-            color: #333;
-            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .tabs {
-            display: flex;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #e2e8f0;
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .header p { margin: 5px 0 0; opacity: 0.9; font-size: 14px; }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
         }
 
-        .tab {
-            padding: 12px 20px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #718096;
-            margin-bottom: -2px;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s;
+        .panel {
+            background: var(--card);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .tab.active {
-            color: #007bff;
-            border-bottom-color: #007bff;
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--secondary);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
 
-        label {
+        .form-group label {
             display: block;
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #333;
+            font-size: 13px;
             font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text);
         }
 
-        input[type="number"] {
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group input {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
         }
 
-        input[type="number"]:focus {
+        .input-group input:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        .calculate-btn {
-            background-color: #007bff;
+        .unit {
+            position: absolute;
+            right: 12px;
+            font-size: 12px;
+            color: var(--secondary);
+            pointer-events: none;
+        }
+
+        .calc-btn {
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
             width: 100%;
-            transition: background-color 0.3s;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
         }
 
-        .calculate-btn:hover {
-            background-color: #0056b3;
-        }
+        .calc-btn:hover { background: #1d4ed8; }
 
-        .results {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border: 1px solid #e9ecef;
-            display: none;
-        }
-
-        .result-item {
+        .result-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #e9ecef;
-            font-size: 16px;
-            color: #333;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        .result-row:last-child { border-bottom: none; }
+        .result-label { color: var(--secondary); }
+        .result-val { font-weight: 600; color: var(--text); }
+        
+        .final-result {
+            background: var(--highlight);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            border: 1px solid #bae6fd;
         }
 
-        .result-item:last-child {
-            border-bottom: none;
+        .final-val {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
         }
 
-        .result-value {
+        .step-badge {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
             font-weight: 600;
-            color: #28a745;
         }
 
-        /* Hide logic for tabs */
-        .calculator-mode {
-            display: none;
+        /* Tooltip help */
+        .help-text {
+            font-size: 11px;
+            color: var(--secondary);
+            margin-top: 4px;
         }
 
-        .calculator-mode.active {
-            display: block;
+        @media (max-width: 768px) {
+            .grid-layout { grid-template-columns: 1fr; }
         }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <h1>Tank Size Calculator</h1>
 
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('dims')">Find Dimensions</div>
-            <div class="tab" onclick="switchTab('vol')">Find Volume</div>
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-database"></i> Industrial Tank Sizer</h1>
+        <p>Step-by-step engineering design based on retention time and geometric constraints.</p>
+    </div>
+
+    <div class="grid-layout">
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="section-title">Process Parameters</div>
+            
+            <div class="form-group">
+                <label>Flow Rate (Q)</label>
+                <div class="input-group">
+                    <input type="number" id="flow" value="50" step="0.1" oninput="calculate()">
+                    <span class="unit">m³/hr</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Retention Time (HRT)</label>
+                <div class="input-group">
+                    <input type="number" id="hrt" value="4" step="0.1" oninput="calculate()">
+                    <span class="unit">hours</span>
+                </div>
+                <div class="help-text">e.g. EQ Tank: 6-12h, Neutralization: 0.5-2h</div>
+            </div>
+
+            <div class="section-title" style="margin-top: 24px;">Design Factors</div>
+
+            <div class="form-group">
+                <label><span class="step-badge">Step 2</span>Design Margin (M)</label>
+                <div class="input-group">
+                    <input type="number" id="margin" value="20" step="1" oninput="calculate()">
+                    <span class="unit">%</span>
+                </div>
+                <div class="help-text">Safety for upset conditions (Default: 20%)</div>
+            </div>
+
+            <div class="form-group">
+                <label><span class="step-badge">Step 3</span>Usable Volume Efficiency (η)</label>
+                <div class="input-group">
+                    <input type="number" id="efficiency" value="90" step="1" oninput="calculate()">
+                    <span class="unit">%</span>
+                </div>
+                <div class="help-text">Accounts for dead zones (Default: 90%)</div>
+            </div>
+
+            <div class="form-group">
+                <label><span class="step-badge">Step 4</span>Aspect Ratio (H/D)</label>
+                <div class="input-group">
+                    <input type="number" id="aspect" value="1.0" step="0.1" oninput="calculate()">
+                    <span class="unit">ratio</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><span class="step-badge">Step 5</span>Freeboard (F)</label>
+                <div class="input-group">
+                    <input type="number" id="freeboard" value="15" step="1" oninput="calculate()">
+                    <span class="unit">%</span>
+                </div>
+                <div class="help-text">Min 300-500mm allowance</div>
+            </div>
+
+            <button class="calc-btn" onclick="calculate()">Recalculate Size</button>
         </div>
 
-        <!-- Mode 1: Known Volume, Find Dimensions -->
-        <div id="mode-dims" class="calculator-mode active">
-            <div class="form-group">
-                <label for="targetVolume">Target Volume (Liters):</label>
-                <input type="number" id="targetVolume" placeholder="e.g., 5000">
+        <!-- Result Panel -->
+        <div class="panel">
+            <div class="section-title">Step-by-Step Calculation</div>
+            
+            <div class="result-row">
+                <span class="result-label"><span class="step-badge">Step 1</span> Base Process Volume (Q × HRT)</span>
+                <span class="result-val" id="res_v_process">0 m³</span>
             </div>
-            <div class="form-group">
-                <label for="aspectRatio">Aspect Ratio (Height / Diameter) - Optional:</label>
-                <input type="number" id="aspectRatio" placeholder="Default 1.0" value="1.0" step="0.1">
+            
+            <div class="result-row">
+                <span class="result-label"><span class="step-badge">Step 2</span> Design Volume (+Margin)</span>
+                <span class="result-val" id="res_v_design">0 m³</span>
             </div>
-            <button class="calculate-btn" onclick="calculateDims()">Calculate Dimensions</button>
 
-            <div class="results" id="results-dims">
-                <div class="result-item">
-                    <span>Suggested Diameter:</span>
-                    <span class="result-value" id="calcDiameter">0.00 m</span>
-                </div>
-                <div class="result-item">
-                    <span>Suggested Height:</span>
-                    <span class="result-value" id="calcHeight">0.00 m</span>
-                </div>
+            <div class="result-row">
+                <span class="result-label"><span class="step-badge">Step 3</span> Geometric Volume (Required)</span>
+                <span class="result-val" id="res_v_geo">0 m³</span>
             </div>
-        </div>
 
-        <!-- Mode 2: Known Dimensions, Find Volume -->
-        <div id="mode-vol" class="calculator-mode">
-            <div class="form-group">
-                <label for="inputDiameter">Diameter (m):</label>
-                <input type="number" id="inputDiameter" placeholder="e.g., 2.5" step="0.01">
+            <div class="result-row">
+                <span class="result-label"><span class="step-badge">Step 4</span> Calc. Diameter (Raw)</span>
+                <span class="result-val" id="res_d_calc">0.00 m</span>
             </div>
-            <div class="form-group">
-                <label for="inputHeight">Height (m):</label>
-                <input type="number" id="inputHeight" placeholder="e.g., 3.0" step="0.01">
-            </div>
-            <button class="calculate-btn" onclick="calculateVol()">Calculate Volume</button>
 
-            <div class="results" id="results-vol">
-                <div class="result-item">
-                    <span>Total Volume:</span>
-                    <span class="result-value" id="calcVolume">0.00 m³</span>
+            <div class="result-row">
+                <span class="result-label"><span class="step-badge">Step 4</span> Liquid Height (Raw)</span>
+                <span class="result-val" id="res_h_liq">0.00 m</span>
+            </div>
+
+            <div class="result-row">
+                <span class="result-label"><span class="step-badge">Step 5</span> Total Height (w/ Freeboard)</span>
+                <span class="result-val" id="res_h_tank">0.00 m</span>
+            </div>
+
+            <div class="final-result">
+                <div class="section-title" style="border:none; margin-bottom:10px;">Step 6: Final Dimensions (Rounded)</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:12px; color:var(--secondary);">Diameter</div>
+                        <div class="final-val" id="final_d">0.00 m</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:12px; color:var(--secondary);">Total Height</div>
+                        <div class="final-val" id="final_h">0.00 m</div>
+                    </div>
                 </div>
-                <div class="result-item">
-                    <span>Volume in Liters:</span>
-                    <span class="result-value" id="calcLiters">0 L</span>
+                <div style="text-align:center; font-size:12px; color:var(--success); background:#dcfce7; padding:4px; border-radius:4px;">
+                    Rounded to nearest 0.25m
                 </div>
+            </div>
+            
+            <div style="margin-top:20px; padding:15px; background:#f1f5f9; border-radius:8px; font-size:13px;">
+                <strong>Actual Capacity:</strong> <span id="actual_vol">0</span> m³<br>
+                <strong>Effective HRT:</strong> <span id="actual_hrt">0</span> hours
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        function switchTab(mode) {
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            // Hide all modes
-            document.querySelectorAll('.calculator-mode').forEach(m => m.classList.remove('active'));
+<script>
+    function calculate() {
+        // Inputs
+        const Q = parseFloat(document.getElementById('flow').value) || 0;
+        const HRT = parseFloat(document.getElementById('hrt').value) || 0;
+        const M = (parseFloat(document.getElementById('margin').value) || 0) / 100;
+        const eff = (parseFloat(document.getElementById('efficiency').value) || 100) / 100;
+        const R = parseFloat(document.getElementById('aspect').value) || 1.0;
+        const F = (parseFloat(document.getElementById('freeboard').value) || 0) / 100;
 
-            // Activate select
-            if (mode === 'dims') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
-                document.getElementById('mode-dims').classList.add('active');
-            } else {
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                document.getElementById('mode-vol').classList.add('active');
-            }
-        }
+        // Step 1: Base Volume
+        const V_process = Q * HRT;
 
-        function calculateDims() {
-            const volLiters = parseFloat(document.getElementById('targetVolume').value);
-            let ratio = parseFloat(document.getElementById('aspectRatio').value) || 1.0;
+        // Step 2: Design Volume
+        const V_design = V_process * (1 + M);
 
-            if (!volLiters) {
-                alert('Please enter a target volume.');
-                return;
-            }
+        // Step 3: Geometric Volume
+        const V_geo = V_design / eff;
 
-            const volM3 = volLiters / 1000;
+        // Step 4: Geometry
+        // D = cuberoot( (4 * V_geo) / (pi * R) )
+        // Because V = (pi * D^2 / 4) * H  and H = D*R  => V = pi*D^3*R/4
+        const D_calc = Math.cbrt( (4 * V_geo) / (Math.PI * R) );
+        const H_liq = D_calc * R;
 
-            // V = pi * r^2 * h
-            // h = D * ratio
-            // V = pi * (D/2)^2 * (D * ratio)
-            // V = pi * D^2/4 * D * ratio = (pi * ratio * D^3) / 4
-            // D^3 = (4 * V) / (pi * ratio)
+        // Step 5: Freeboard
+        // Check min freeboard 300mm = 0.3m
+        let freeboard_height = H_liq * F;
+        if(freeboard_height < 0.3) freeboard_height = 0.3; // Minimum rule
+        
+        const H_tank = H_liq + freeboard_height;
 
-            const diameter = Math.cbrt((4 * volM3) / (Math.PI * ratio));
-            const height = diameter * ratio;
+        // Step 6: Rounding (nearest 0.25m)
+        const roundTo = (num, step) => Math.ceil(num / step) * step; // Using Ceiling for safety to ensuring volume matches
+        // User said "round(D, 0.25)", usually implies nearest, but for tanks, rounding UP is safer for capacity. 
+        // I will use nearest but ensure it doesn't drop below required volume significantly? 
+        // Actually standard practice is usually nearest or ceil. Let's stick to simple round to nearest as per prompt "round()".
+        // Actually prompt says "Fabricated in standard increments", usually implies availability. 
+        // Let's us Math.round * 4 / 4.
+        
+        const D_final = Math.round(D_calc * 4) / 4;
+        const H_final = Math.round(H_tank * 4) / 4;
 
-            document.getElementById('calcDiameter').textContent = diameter.toFixed(3) + ' m';
-            document.getElementById('calcHeight').textContent = height.toFixed(3) + ' m';
-            document.getElementById('results-dims').style.display = 'block';
-        }
+        // Update UI
+        document.getElementById('res_v_process').innerText = V_process.toFixed(1) + ' m³';
+        document.getElementById('res_v_design').innerText = V_design.toFixed(1) + ' m³';
+        document.getElementById('res_v_geo').innerText = V_geo.toFixed(1) + ' m³';
+        
+        document.getElementById('res_d_calc').innerText = D_calc.toFixed(3) + ' m';
+        document.getElementById('res_h_liq').innerText = H_liq.toFixed(3) + ' m';
+        document.getElementById('res_h_tank').innerText = H_tank.toFixed(3) + ' m';
 
-        function calculateVol() {
-            const d = parseFloat(document.getElementById('inputDiameter').value);
-            const h = parseFloat(document.getElementById('inputHeight').value);
+        document.getElementById('final_d').innerText = D_final.toFixed(2) + ' m';
+        document.getElementById('final_h').innerText = H_final.toFixed(2) + ' m';
 
-            if (!d || !h) {
-                alert('Please enter diameter and height.');
-                return;
-            }
+        // Check verification (reverse calc)
+        const V_actual = (Math.PI / 4) * Math.pow(D_final, 2) * H_final;
+        const HRT_actual = (V_actual * eff) / Q; // Usable volume / Flow
+        
+        document.getElementById('actual_vol').innerText = V_actual.toFixed(1);
+        document.getElementById('actual_hrt').innerText = HRT_actual.toFixed(1);
+    }
 
-            const radius = d / 2;
-            const volumeM3 = Math.PI * Math.pow(radius, 2) * h;
-            const volumeLiters = volumeM3 * 1000;
+    // Init
+    window.onload = calculate;
+</script>
 
-            document.getElementById('calcVolume').textContent = volumeM3.toFixed(3) + ' m³';
-            document.getElementById('calcLiters').textContent = volumeLiters.toFixed(0) + ' L';
-            document.getElementById('results-vol').style.display = 'block';
-        }
-    </script>
 </body>
-
 </html>
