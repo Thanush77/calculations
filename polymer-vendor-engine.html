@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polymer Vendor Benchmarking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --radius: 8px;
+            --gold: #eab308;
+            --silver: #94a3b8;
+            --bronze: #b45309;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 25px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle { color: var(--text-light); font-size: 14px; }
+
+        .main-content {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+        
+        .section-header {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        .section-header:first-child { margin-top: 0; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .btn-run {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-run:hover { background: var(--primary-hover); }
+
+        /* Dashboard Area */
+        .dashboard-area {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+        }
+
+        /* Results Table */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .results-table th, .results-table td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .results-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .results-table td:first-child, .results-table th:first-child {
+            text-align: left;
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        
+        .input-cell input {
+            width: 80%;
+            padding: 5px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .val-best { font-weight: 700; color: #10b981; }
+        .row-total td { font-weight: 700; background: #eff6ff; }
+        
+        /* Chart Grid */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .chart-container {
+            background: #fff;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 350px;
+        }
+        
+        /* Verdict */
+        .verdict-box {
+            grid-column: 1 / -1;
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            border-radius: 8px;
+            padding: 20px;
+            color: #115e59;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-top: 5px;
+            display: none;
+        }
+
+        @media (max-width: 1100px) {
+            .main-content { grid-template-columns: 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-flask"></i> Polymer Vendor Benchmarking</h1>
+            <p class="subtitle">Evidence-Based Selection: True Cost of Ownership Analysis</p>
+        </div>
+
+        <div class="main-content">
+            <div class="controls-panel">
+                <div class="section-header">Global Parameters</div>
+                <div class="form-group">
+                    <label>Annual Sludge (Ton DS/vr)</label>
+                    <input type="number" id="annualDS" value="2000">
+                </div>
+                <div class="form-group">
+                    <label>Disposal Cost (₹/Wet Ton)</label>
+                    <input type="number" id="dispCost" value="800">
+                </div>
+                 <div class="form-group">
+                    <label>Energy Cost (₹/kWh)</label>
+                    <input type="number" id="energyCost" value="8">
+                </div>
+
+                <div class="section-header">Evaluation Weights</div>
+                <div class="form-group">
+                    <label>TCO Weight (%)</label>
+                    <input type="number" id="wCost" value="50">
+                </div>
+                <div class="form-group">
+                    <label>Stability Weight (%)</label>
+                    <input type="number" id="wStab" value="30">
+                </div>
+                <div class="form-group">
+                    <label>Service Weight (%)</label>
+                    <input type="number" id="wServ" value="20">
+                </div>
+
+                <button class="btn-run" onclick="calculate()">
+                    <i class="fas fa-balance-scale"></i> Compare Vendors
+                </button>
+            </div>
+
+            <div class="dashboard-area">
+                <div style="overflow-x:auto;">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th style="width:200px;">Metric</th>
+                                <th>Vendor A (Incumbent)</th>
+                                <th>Vendor B (Challenger)</th>
+                                <th>Vendor C (Premium)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Polymer Price (₹/kg)</td>
+                                <td class="input-cell"><input type="number" id="p0_price" value="220"></td>
+                                <td class="input-cell"><input type="number" id="p1_price" value="260"></td>
+                                <td class="input-cell"><input type="number" id="p2_price" value="350"></td>
+                            </tr>
+                            <tr>
+                                <td>Average Dose (kg/tDS)</td>
+                                <td class="input-cell"><input type="number" id="p0_dose" value="6.5"></td>
+                                <td class="input-cell"><input type="number" id="p1_dose" value="5.8"></td>
+                                <td class="input-cell"><input type="number" id="p2_dose" value="4.5"></td>
+                            </tr>
+                            <tr>
+                                <td>Cake Dryness (%)</td>
+                                <td class="input-cell"><input type="number" id="p0_cake" value="21"></td>
+                                <td class="input-cell"><input type="number" id="p1_cake" value="23"></td>
+                                <td class="input-cell"><input type="number" id="p2_cake" value="25.5"></td>
+                            </tr>
+                            <tr>
+                                <td>Process Stability (1-10)</td>
+                                <td class="input-cell"><input type="number" id="p0_stab" value="7"></td>
+                                <td class="input-cell"><input type="number" id="p1_stab" value="8"></td>
+                                <td class="input-cell"><input type="number" id="p2_stab" value="9.5"></td>
+                            </tr>
+                            
+                             <!-- Calculated -->
+                            <tr class="row-calc">
+                                <td>Annual Polymer Cost</td>
+                                <td id="res_p0_chem">-</td>
+                                <td id="res_p1_chem">-</td>
+                                <td id="res_p2_chem">-</td>
+                            </tr>
+                             <tr class="row-calc">
+                                <td>Total Wet Disposal (Tons)</td>
+                                <td id="res_p0_wet">-</td>
+                                <td id="res_p1_wet">-</td>
+                                <td id="res_p2_wet">-</td>
+                            </tr>
+                            <tr class="row-calc">
+                                <td>Annual Disposal Cost</td>
+                                <td id="res_p0_disp">-</td>
+                                <td id="res_p1_disp">-</td>
+                                <td id="res_p2_disp">-</td>
+                            </tr>
+                            
+                             <tr class="row-total">
+                                <td>True Cost of Ownership (TCO)</td>
+                                <td id="res_p0_total">-</td>
+                                <td id="res_p1_total">-</td>
+                                <td id="res_p2_total">-</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Vendor Score (0-100)</td>
+                                <td id="score_p0" style="font-size:16px; font-weight:700;">-</td>
+                                <td id="score_p1" style="font-size:16px; font-weight:700;">-</td>
+                                <td id="score_p2" style="font-size:16px; font-weight:700;">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="verdict-box" id="verdictBox">
+                    <strong><i class="fas fa-trophy"></i> Procurement Recommendation:</strong>
+                    <span id="verdictText"></span>
+                </div>
+                
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                         <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let costChart = null;
+        let radarChart = null;
+
+        function calculate() {
+            // Globals
+            const annualDS = parseFloat(document.getElementById('annualDS').value) || 0;
+            const dispRate = parseFloat(document.getElementById('dispCost').value) || 0;
+            
+            // Weights
+            const wCost = parseFloat(document.getElementById('wCost').value) || 50;
+            const wStab = parseFloat(document.getElementById('wStab').value) || 30;
+            // Service weight unused explicitly in data entry
+            
+            const vendors = [];
+            
+            for(let i=0; i<3; i++) {
+                const price = parseFloat(document.getElementById(`p${i}_price`).value) || 0;
+                const dose = parseFloat(document.getElementById(`p${i}_dose`).value) || 0;
+                const cake = parseFloat(document.getElementById(`p${i}_cake`).value) || 20;
+                const stab = parseFloat(document.getElementById(`p${i}_stab`).value) || 0;
+                
+                // Calcs
+                // 1. Chem Cost
+                const annualPolyKg = annualDS * dose; // Tons * kg/Ton = kg
+                const costChem = annualPolyKg * price;
+                
+                // 2. Disposal
+                // Wet Cake Mass = Dry Mass / (Cake% / 100)
+                const wetTons = annualDS / (cake/100);
+                const costDisp = wetTons * dispRate;
+                
+                // 3. TCO
+                const costTotal = costChem + costDisp;
+                
+                // Score Factors (Normalized)
+                // For Cost, Lower is Better. Invert.
+                // For Stab, Higher is Better.
+                // We'll normalize later relative to best/worst in set.
+                
+                vendors.push({
+                    id: i,
+                    name: "Vendor " + String.fromCharCode(65+i),
+                    price, dose, cake, stab,
+                    costChem, costDisp, costTotal, wetTons
+                });
+                
+                // Display
+                document.getElementById(`res_p${i}_chem`).textContent = "₹" + (costChem/100000).toFixed(2) + " L";
+                document.getElementById(`res_p${i}_wet`).textContent = wetTons.toFixed(0);
+                document.getElementById(`res_p${i}_disp`).textContent = "₹" + (costDisp/100000).toFixed(2) + " L";
+                document.getElementById(`res_p${i}_total`).textContent = "₹" + (costTotal/100000).toFixed(2) + " L";
+            }
+            
+            // Scoring
+            // Find Min/Max TCO
+            const minTCO = Math.min(...vendors.map(v => v.costTotal));
+            const maxTCO = Math.max(...vendors.map(v => v.costTotal));
+            const rangeTCO = maxTCO - minTCO || 1;
+            
+            // Find Min/Max Stab
+            const maxStab = Math.max(...vendors.map(v => v.stab));
+            
+            let bestVendor = vendors[0];
+            let maxScore = -1;
+            
+            vendors.forEach(v => {
+                // Cost Score: 100 if Min, 0 if Max. Linear.
+                // S_cost = 100 * (Max - Val) / (Max - Min)
+                let sCost = 100 * (maxTCO - v.costTotal) / rangeTCO;
+                if(rangeTCO === 0) sCost = 100; // All same
+                
+                // Stab Score: Val / 10 * 100
+                let sStab = (v.stab / 10) * 100;
+                
+                // Composite
+                // Norm weights
+                const wTot = wCost + wStab; 
+                const finalScore = (sCost * wCost + sStab * wStab) / wTot;
+                
+                v.finalScore = finalScore;
+                if(finalScore > maxScore) { maxScore = finalScore; bestVendor = v; }
+                
+                const el = document.getElementById(`score_p${v.id}`);
+                el.textContent = finalScore.toFixed(0);
+                if(finalScore >= maxScore) { el.style.color = '#10b981'; }
+                else { el.style.color = '#334155'; }
+            });
+            
+            // Verdict
+            const box = document.getElementById('verdictBox');
+            box.style.display = "block";
+            const diff = vendors[0].costTotal - bestVendor.costTotal; // Baseline - Best
+            
+            let msg = `The recommended supplier is <strong>${bestVendor.name}</strong> (Score: ${bestVendor.finalScore.toFixed(0)}). `;
+            if(bestVendor.id !== 0) {
+                 msg += `Compared to Incumbent A, ${bestVendor.name} offers a TCO saving of <strong>₹${((vendors[0].costTotal - bestVendor.costTotal)/100000).toFixed(2)} Lakhs/yr</strong>. `;
+                 if(bestVendor.price > vendors[0].price) {
+                     msg += `Do not be deterred by the higher unit price (₹${bestVendor.price}/kg vs ₹${vendors[0].price}/kg)—the disposal savings justify the premium.`;
+                 }
+            } else {
+                 msg += `The incumbent Vendor A remains the best option based on current metrics.`;
+            }
+            document.getElementById('verdictText').innerHTML = msg;
+
+            renderCharts(vendors);
+        }
+
+        function renderCharts(vendors) {
+            // Bar Chart: Cost Breakdown
+            const ctx1 = document.getElementById('costChart').getContext('2d');
+            if(costChart) costChart.destroy();
+            
+            costChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: vendors.map(v => v.name),
+                    datasets: [
+                        { label: 'Chemical Cost', data: vendors.map(v => v.costChem), backgroundColor: '#3b82f6' },
+                        { label: 'Disposal Cost', data: vendors.map(v => v.costDisp), backgroundColor: '#f97316' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'Annual Cost Breakdown' } },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, title: {display:true, text:'Annual Cost (₹)'} }
+                    }
+                }
+            });
+            
+            // Radar Chart: Performance
+            const ctx2 = document.getElementById('radarChart').getContext('2d');
+            if(radarChart) radarChart.destroy();
+            
+            radarChart = new Chart(ctx2, {
+                type: 'radar',
+                data: {
+                    labels: ['Cost Efficiency', 'Cake Dryness', 'Process Stability', 'Dose Efficiency'],
+                    datasets: vendors.map((v, i) => {
+                        const colors = ['#3b82f6', '#10b981', '#f59e0b'];
+                        // Normalize metrics to 0-100 scales for Radar
+                        // Cost Eff: Inverse of Cost. 
+                        const costScore = 100 * (1 - (v.costTotal / Math.max(...vendors.map(x=>x.costTotal)))); // Relative
+                        const dryScore = (v.cake / 30) * 100; // max expected 30?
+                        const stabScore = (v.stab / 10) * 100;
+                        const doseScore = (1 - (v.dose / 10)) * 100; // Lower dose better
+                        
+                        return {
+                            label: v.name,
+                            data: [costScore, dryScore, stabScore, doseScore],
+                            borderColor: colors[i],
+                            backgroundColor: colors[i] + '33',
+                            borderWidth: 2
+                        };
+                    })
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+        
+        // window.onload = calculate;
+    </script>
+</body>
+</html>

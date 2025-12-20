@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polymer Dosing Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 40px 20px;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            border: 1px solid var(--border-color);
+        }
+
+        .header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        h1 i {
+            color: var(--primary-color);
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .grid-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 5px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            color: var(--text-main);
+            transition: all 0.2s;
+            background: #fff;
+            height: 42px; /* Ensure consistency */
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        input::placeholder {
+            color: #cbd5e1;
+        }
+
+        .unit {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        /* Adjust padding for input with unit */
+        .input-wrapper input {
+            padding-right: 40px;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .calculate-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .results {
+            margin-top: 30px;
+            background-color: #f1f5f9;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            display: none;
+        }
+
+        .results-header {
+            padding: 15px 20px;
+            background: #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
+            font-weight: 600;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
+        .result-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        /* Grid border handling - simplified */
+        .result-item {
+             border: 1px solid var(--border-color);
+             border-top: none;
+             border-left: none;
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .result-unit {
+            font-size: 12px;
+            color: var(--text-light);
+            font-weight: 400;
+            margin-left: 2px;
+        }
+        
+        .warning-box {
+            background-color: #fffbeb;
+            border: 1px solid #fcd34d;
+            color: #92400e;
+            padding: 15px;
+            border-radius: var(--radius);
+            margin-top: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .warning-box ul {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-form {
+                grid-template-columns: 1fr;
+            }
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-vial"></i> Polymer Dosing Calculator</h1>
+            <p class="subtitle">Estimate consumption, solution preparation, and storage for sludge dewatering</p>
+        </div>
+        
+        <form id="polymerForm">
+            <!-- 1. Sludge Input -->
+            <div class="section-title">1. Sludge Characteristics</div>
+            <div class="grid-form">
+                <div class="form-group">
+                    <label for="sludgeFlow">Sludge Feed Flow</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="sludgeFlow" placeholder="e.g. 100" step="0.1" required>
+                        <span class="unit">m³/day</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="sludgeTSS">Sludge TSS</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="sludgeTSS" placeholder="e.g. 30000" step="100" required>
+                        <span class="unit">mg/L</span>
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="sludgeType">Sludge Type</label>
+                     <select id="sludgeType">
+                         <option value="WAS">WAS (Waste Activated)</option>
+                         <option value="PS">Primary Sludge</option>
+                         <option value="Mixed">Mixed</option>
+                         <option value="Chemical">Chemical / Inorganic</option>
+                     </select>
+                </div>
+            </div>
+
+            <!-- 2. Polymer Input -->
+            <div class="section-title">2. Polymer Properties</div>
+            <div class="grid-form">
+                <div class="form-group">
+                    <label for="polyType">Polymer Type</label>
+                     <select id="polyType">
+                         <option value="Cationic">Cationic</option>
+                         <option value="Anionic">Anionic</option>
+                         <option value="Non-ionic">Non-ionic</option>
+                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="polyForm">Form</label>
+                     <select id="polyForm" onchange="toggleDensityInput()">
+                         <option value="Powder">Powder</option>
+                         <option value="Emulsion">Emulsion</option>
+                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="polyActivity">Activity</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="polyActivity" placeholder="e.g. 100" value="100" step="1" max="100">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="solStrength">Solution Strength</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="solStrength" placeholder="e.g. 0.2" value="0.2" step="0.05">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                 <div class="form-group" id="densityGroup" style="display:none;">
+                    <label for="polyDensity">Polymer Density</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="polyDensity" placeholder="e.g. 1.05" value="1.05" step="0.01">
+                        <span class="unit">kg/L</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Dosing Params -->
+            <div class="section-title">3. Dosing Parameters</div>
+            <div class="grid-form">
+                <div class="form-group">
+                    <label for="polyDose">Dose Rate</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="polyDose" placeholder="e.g. 5" step="0.1" required>
+                        <span class="unit">g/kg DS</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="safetyFactor">Safety Factor</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="safetyFactor" placeholder="e.g. 10" value="10" step="5">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="opHours">Operating Hours</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="opHours" placeholder="e.g. 24" value="24" step="1" max="24">
+                        <span class="unit">hr/day</span>
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="storageDays">Storage Period</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="storageDays" placeholder="e.g. 15" value="15" step="1">
+                        <span class="unit">days</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" class="calculate-btn" onclick="calculate()">
+                <i class="fas fa-calculator"></i> Calculate Consumption
+            </button>
+        </form>
+        
+        <div id="warningBox" class="warning-box">
+            <strong><i class="fas fa-exclamation-triangle"></i> Engineering Warnings:</strong>
+            <ul id="warningList"></ul>
+        </div>
+        
+        <div class="results" id="results">
+            <!-- Result Set 1: Consumption -->
+            <div class="results-header">
+                <span><i class="fas fa-chart-bar"></i> Consumption Summary</span>
+            </div>
+            <div class="results-grid">
+                 <div class="result-item">
+                    <span class="result-label">Dry Solids Load</span>
+                    <div>
+                        <span class="result-value" id="resDSLoad">0</span>
+                        <span class="result-unit">kg/day</span>
+                    </div>
+                </div>
+                 <div class="result-item">
+                    <span class="result-label">Active Polymer Req.</span>
+                    <div>
+                        <span class="result-value" id="resActivePoly">0.00</span>
+                        <span class="result-unit">kg/day</span>
+                    </div>
+                </div>
+                 <div class="result-item">
+                    <span class="result-label">Actual Polymer Req.</span>
+                    <div>
+                        <span class="result-value" id="resActualPoly">0.00</span>
+                        <span class="result-unit">kg/day</span>
+                    </div>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Hourly Consumption</span>
+                    <div>
+                        <span class="result-value" id="resHourlyPoly">0.00</span>
+                        <span class="result-unit">kg/hr</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Set 2: Solution & Storage -->
+            <div class="results-header" style="border-top:1px solid #cbd5e1;">
+                <span><i class="fas fa-flask"></i> Solution & Storage</span>
+            </div>
+            <div class="results-grid">
+                 <div class="result-item">
+                    <span class="result-label">Solution Flow Rate</span>
+                    <div>
+                        <span class="result-value" id="resSolFlow">0</span>
+                        <span class="result-unit">L/hr</span>
+                    </div>
+                </div>
+                 <div class="result-item">
+                    <span class="result-label">Make-up Water</span>
+                    <div>
+                        <span class="result-value" id="resWaterFlow">0</span>
+                        <span class="result-unit">L/hr</span>
+                    </div>
+                </div>
+                 <div class="result-item">
+                    <span class="result-label">Polymer Storage Vol</span>
+                    <div>
+                        <span class="result-value" id="resStorageVol">0.00</span>
+                        <span class="result-unit">m³</span>
+                    </div>
+                </div>
+                 <div class="result-item">
+                    <span class="result-label">Aging Tank Vol (1hr)</span>
+                    <div>
+                        <span class="result-value" id="resAgingTank">0.00</span>
+                        <span class="result-unit">m³</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDensityInput() {
+            const form = document.getElementById('polyForm').value;
+            const densityGroup = document.getElementById('densityGroup');
+            if (form === 'Emulsion') {
+                densityGroup.style.display = 'block';
+            } else {
+                densityGroup.style.display = 'none';
+            }
+        }
+
+        function calculate() {
+            // Inputs
+            const Q = parseFloat(document.getElementById('sludgeFlow').value) || 0;
+            const TSS = parseFloat(document.getElementById('sludgeTSS').value) || 0;
+            const activity = (parseFloat(document.getElementById('polyActivity').value) || 100) / 100;
+            const strength = (parseFloat(document.getElementById('solStrength').value) || 0.1) / 100;
+            const dose = parseFloat(document.getElementById('polyDose').value) || 0;
+            const safety = (parseFloat(document.getElementById('safetyFactor').value) || 0) / 100;
+            const hours = parseFloat(document.getElementById('opHours').value) || 24;
+            const storageDays = parseFloat(document.getElementById('storageDays').value) || 7;
+            const isEmulsion = document.getElementById('polyForm').value === 'Emulsion';
+            const density = isEmulsion ? (parseFloat(document.getElementById('polyDensity').value) || 1.05) : 0;
+
+            // Validation
+            let warnings = [];
+            if (Q <= 0 || TSS <= 0 || dose <= 0) {
+                alert("Please enter valid Sludge Flow, TSS, and Dose.");
+                return;
+            }
+            if (dose < 1) warnings.push("Polymer dose < 1 g/kg DS is unusually low.");
+            if (dose > 10) warnings.push("Polymer dose > 10 g/kg DS is unusually high.");
+            if (strength > 0.005) warnings.push("Solution strength > 0.5% may cause viscosity issues.");
+            if (hours > 24) {
+                 alert("Operating hours cannot exceed 24.");
+                 return;
+            }
+
+            // 1. Dry Solids Load (kg/day)
+            const dsLoad = (Q * TSS) / 1000;
+
+            // 2. Effective Dose (g/kg)
+            const effDose = dose * (1 + safety);
+
+            // 3. Daily Active Polymer (kg/day)
+            const activePolyDay = (dsLoad * effDose) / 1000; // g to kg
+
+            // 4. Actual Polymer Required (kg/day) - corrected for activity
+            const actualPolyDay = activePolyDay / activity;
+
+            // 5. Hourly Consumption (kg/hr)
+            const actualPolyHour = actualPolyDay / hours;
+
+            // 6. Solution Flow Rate (L/hr)
+            // Polymer kg/hr / strength fraction = Solution kg/hr. Approx density ~ 1 kg/L for dilute solution
+            const solutionFlow = actualPolyHour / strength; 
+
+            // 7. Make-up Water (L/hr)
+            // If powder, volume is negligible (simplified). If emulsion, subtract dry part?
+            // Standard approach: Solution Flow - Polymer Vol. 
+            // For powder: Polymer vol approx 0 in solution (dissolved). 
+            // For emulsion: Polymer vol = mass / density.
+            let polymerVolRate = 0;
+            if (isEmulsion) {
+                polymerVolRate = actualPolyHour / density; 
+            } else {
+                 // Powder bulk density ~0.7, but dissolved volume is different. 
+                 // Usually Water = Solution - Product for straightforward logic
+                 polymerVolRate = actualPolyHour / 1.0; // Assume ~1 SG for solid displacement if specific gravity unknown, often ignored for powder
+            }
+            const waterFlow = solutionFlow - polymerVolRate;
+
+            // 8. Storage (m³)
+            // Storage of RAW polymer product
+            // Actual Poly Kg/Day * Days. 
+            // If Emulsion: Convert to Volume. If Powder: Keep as Mass or Bulk Vol? 
+            // Request says "Polymer Storage Volume m³".
+            // Powder density (bulk) ~ 600-800 kg/m³. Let's assume 700 for conversion if powder.
+            const bulkDensity = isEmulsion ? (density * 1000) : 700; // kg/m³
+            const storageVol = (actualPolyDay * storageDays) / bulkDensity;
+
+            // 9. Aging Tank (m³)
+            // Usually 1 hour retention of SOLUTION flow
+            const agingVol = solutionFlow / 1000; // L to m³
+
+            // Display Results
+            document.getElementById('resDSLoad').textContent = dsLoad.toFixed(0);
+            document.getElementById('resActivePoly').textContent = activePolyDay.toFixed(2);
+            document.getElementById('resActualPoly').textContent = actualPolyDay.toFixed(2);
+            document.getElementById('resHourlyPoly').textContent = actualPolyHour.toFixed(3);
+            
+            document.getElementById('resSolFlow').textContent = solutionFlow.toFixed(1);
+            document.getElementById('resWaterFlow').textContent = waterFlow.toFixed(1);
+            
+            document.getElementById('resStorageVol').textContent = storageVol.toFixed(2);
+            document.getElementById('resAgingTank').textContent = agingVol.toFixed(2);
+
+            // Show results
+            document.getElementById('results').style.display = 'block';
+
+            // Show warnings
+            const warningBox = document.getElementById('warningBox');
+            const warningList = document.getElementById('warningList');
+            warningList.innerHTML = '';
+            if (warnings.length > 0) {
+                warnings.forEach(w => {
+                    const li = document.createElement('li');
+                    li.textContent = w;
+                    warningList.appendChild(li);
+                });
+                warningBox.style.display = 'block';
+            } else {
+                warningBox.style.display = 'none';
+            }
+        }
+        
+        // Add enter key support
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                calculate();
+            }
+        });
+    </script>
+</body>
+</html>

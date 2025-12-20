@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redundancy & Reliability Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --color-ok: #10b981;
+            --color-warn: #f59e0b;
+            --color-fail: #ef4444;
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 25px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle { color: var(--text-light); font-size: 14px; }
+
+        .main-content {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 25px;
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+        
+        .section-header {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        .section-header:first-child { margin-top: 0; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .btn-run {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-run:hover { background: var(--primary-hover); }
+
+        /* Dashboard Area */
+        .dashboard-area {
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            gap: 20px;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .kpi-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .kpi-val { font-size: 22px; font-weight: 800; color: #0f172a; margin: 5px 0; }
+        .kpi-label { font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+        .kpi-sub { font-size: 11px; color: #64748b; }
+
+        .val-ok { color: var(--color-ok); }
+        .val-bad { color: var(--color-fail); }
+
+        /* Chart Container */
+        .chart-container {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 350px;
+            position: relative;
+        }
+        
+        /* Analysis Box */
+        .analysis-box {
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            border-radius: 8px;
+            padding: 20px;
+            color: #115e59;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .analysis-icon { font-size: 20px; margin-right: 10px; vertical-align: middle; }
+
+        @media (max-width: 1100px) {
+            .main-content { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-shield-alt"></i> Redundancy & Availability Engine</h1>
+            <p class="subtitle">Probabilistic Reliability Simulation & Risk Quantification</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Inputs -->
+            <div class="controls-panel">
+                <div class="section-header">Process Demand</div>
+                <div class="form-group">
+                    <label>Required Throughput (m³/hr)</label>
+                    <input type="number" id="demand" value="40">
+                </div>
+                <div class="form-group grid-2">
+                    <div>
+                        <label>Buffer Limit (hrs)</label>
+                        <input type="number" id="bufferHrs" value="6">
+                    </div>
+                    <div>
+                        <label>Emerg Cost (₹/m³)</label>
+                        <input type="number" id="emerCost" value="1500">
+                    </div>
+                </div>
+
+                <div class="section-header">Configuration</div>
+                <div class="form-group grid-2">
+                    <div>
+                        <label>Unit Cap (m³/hr)</label>
+                        <input type="number" id="unitCap" value="45">
+                    </div>
+                    <div>
+                        <label>Total Units (N)</label>
+                        <input type="number" id="numUnits" value="2">
+                    </div>
+                </div>
+                
+                <div class="section-header">Reliability Data (Est)</div>
+                 <div class="form-group grid-2">
+                    <div>
+                        <label>MTBF (Hours)</label>
+                         <input type="number" id="mtbf" value="2000">
+                    </div>
+                    <div>
+                        <label>MTTR (Hours)</label>
+                        <input type="number" id="mttr" value="48">
+                    </div>
+                </div>
+
+                <button class="btn-run" onclick="runSimulation()">
+                    <i class="fas fa-random"></i> Run Monte Carlo (5 Yr)
+                </button>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="dashboard-area">
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">System Availability</div>
+                        <div class="kpi-val" id="resAvail">-</div>
+                        <div class="kpi-sub">Target > 99.5%</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Wait / Backlog Events</div>
+                        <div class="kpi-val" id="resEvents">-</div>
+                        <div class="kpi-sub">Capacity < Demand</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Emergency Overflow</div>
+                        <div class="kpi-val" id="resOverflow">-</div>
+                        <div class="kpi-sub">m³/Year</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Annual Risk Cost</div>
+                        <div class="kpi-val" id="resCost">-</div>
+                        <div class="kpi-sub">Due to Unavailability</div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-container">
+                    <canvas id="simChart"></canvas>
+                </div>
+
+                <!-- Analysis -->
+                <div class="analysis-box" id="analysisBox" style="display:none;">
+                    <strong><i class="fas fa-poll-h analysis-icon"></i> Reliability Verdict:</strong><br>
+                    <span id="analysisText"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+
+        function runSimulation() {
+            // Inputs
+            const demand = parseFloat(document.getElementById('demand').value) || 0;
+            const bufferLimit = parseFloat(document.getElementById('bufferHrs').value) || 0; // Hours of demand storage
+            const emergRate = parseFloat(document.getElementById('emerCost').value) || 0;
+            
+            const unitCap = parseFloat(document.getElementById('unitCap').value) || 0;
+            const nUnits = parseInt(document.getElementById('numUnits').value) || 1;
+            
+            const mtbf = parseFloat(document.getElementById('mtbf').value) || 1000;
+            const mttr = parseFloat(document.getElementById('mttr').value) || 24;
+
+            // Simulation Params
+            const simYears = 5;
+            const hours = simYears * 8760;
+            
+            // State
+            // machines[i] > 0 : Time until FAILURE
+            // machines[i] <= 0 : Time until REPAIR (negative)
+            let machines = Array(nUnits).fill(0).map(() => generateExp(mtbf));
+            
+            let failures = 0;
+            let backlogVol = 0; // m3
+            
+            let totalShortfallHours = 0;
+            let totalOverflowVol = 0;
+            let emergencyEvents = 0;
+            
+            // Stats for chart (Histogram of Available Capacity)
+            // Bins: 0 units, 1 unit, 2 units... N units
+            let capHistogram = Array(nUnits + 1).fill(0);
+            
+            for(let h=0; h<hours; h++) {
+                // Update Machines
+                let availableCap = 0;
+                let activeUnits = 0;
+                
+                for(let i=0; i<nUnits; i++) {
+                    if (machines[i] > 0) {
+                        // Running
+                        machines[i]--;
+                        if (machines[i] <= 0) {
+                            // FAILED just now
+                            machines[i] = -generateExp(mttr); // Set repair time
+                        } else {
+                            activeUnits++;
+                        }
+                    } else {
+                        // Repairing
+                        machines[i]++; // Move towards 0
+                        if (machines[i] >= 0) {
+                            // REPAIRED just now
+                            machines[i] = generateExp(mtbf);
+                        }
+                    }
+                }
+                
+                availableCap = activeUnits * unitCap;
+                capHistogram[activeUnits]++;
+                
+                // Process Logic
+                // Demand comes in
+                // Processed = min(Demand + Backlog, AvailableCap) -- simplistic
+                // Or simplified: Net = Available - Demand.
+                let net = availableCap - demand;
+                
+                if (net < 0) {
+                    // Shortfall
+                    backlogVol += (-net);
+                    totalShortfallHours++;
+                } else {
+                    // Catch up
+                    backlogVol -= net;
+                    if (backlogVol < 0) backlogVol = 0;
+                }
+                
+                // Buffer Check
+                const maxBufferVol = demand * bufferLimit;
+                if (backlogVol > maxBufferVol) {
+                    const spill = backlogVol - maxBufferVol;
+                    totalOverflowVol += spill;
+                    backlogVol = maxBufferVol; // Assume spilled is hauled away instantly
+                    // If we spill, it's an event
+                    // We count events later maybe? Just sum volume for now.
+                }
+            }
+            
+            // Results
+            const totalOverflowAnnual = totalOverflowVol / simYears;
+            const totalRiskCost = totalOverflowAnnual * emergRate;
+            
+            // Availability: % of time we could meet demand WITHOUT buffer? 
+            // Or % of time System Capacity >= Demand?
+            // "System Availability" usually means "Is the system functionally UP?"
+            // i.e. Capacity >= Demand.
+            // Let's count hours where Cap < Demand
+            // Wait this is captured in 'totalShortfallHours'.
+            // Unavailability = ShortfallHours / TotalHours
+            // Availability = 1 - Unavailability
+            // Wait, Shortfall includes N=1 events if N=1 < Demand.
+            
+            // Let's verify config capability first.
+            // If N_all * UnitCap < Demand, Availability is 0% by definition for full capacity.
+            // Assuming Intent is N-1 redundancy usually.
+            
+            // Let's use % Time Capacity >= Demand
+            const hoursMet = hours - totalShortfallHours;
+            const availability = (hoursMet / hours) * 100;
+            
+            const eventsPerYear = (totalOverflowAnnual > 0) ? (totalOverflowAnnual / (demand*4)) : 0; // Approx heuristic events
+            
+            // Render
+            const availEl = document.getElementById('resAvail');
+            availEl.textContent = availability.toFixed(2) + "%";
+            availEl.className = (availability > 99.5) ? 'kpi-val val-ok' : 'kpi-val val-bad';
+            
+            document.getElementById('resEvents').textContent = (totalShortfallHours/simYears).toFixed(0) + " hrs/yr";
+            
+            const overEl = document.getElementById('resOverflow');
+            overEl.textContent = totalOverflowAnnual.toFixed(0);
+            overEl.className = (totalOverflowAnnual === 0) ? 'kpi-val val-ok' : 'kpi-val val-bad';
+
+            document.getElementById('resCost').textContent = "₹" + (totalRiskCost/100000).toFixed(1) + " L";
+            
+            renderChart(capHistogram, hours, nUnits, unitCap, demand);
+            
+            // Analysis
+            const box = document.getElementById('analysisBox');
+            const txt = document.getElementById('analysisText');
+            box.style.display = 'block';
+            
+            let analysis = "";
+            if(availability > 99.9 && totalRiskCost === 0) {
+                analysis = `EXCELLENT RELIABILITY: Configuration results in <strong style="color:#10b981">${availability.toFixed(3)}%</strong> availability. ` +
+                `Zero emergency overflow events predicted over 5 years. This setup effectively includes full redundancy.`;
+                box.style.borderColor = '#10b981';
+                box.style.background = '#f0fdf4';
+                box.style.color = '#065f46';
+            } else if(totalRiskCost > 0) {
+                analysis = `RISK DETECTED: System Availability is <strong>${availability.toFixed(2)}%</strong>. ` +
+                `Projected to incur <strong>₹${(totalRiskCost/100000).toFixed(1)} Lakhs/yr</strong> in emergency disposal costs due to overflows. ` +
+                `Consider increasing buffer size to >${(bufferLimit*1.5).toFixed(0)}h or adding a standby unit.`;
+                 box.style.borderColor = '#ef4444';
+                 box.style.background = '#fef2f2';
+                 box.style.color = '#991b1b';
+            } else {
+                analysis = `ACCEPTABLE: Availability is ${availability.toFixed(2)}%. High reliability achieved, though minor backlogs occur (managed by buffer). No critical overflows predicted.`;
+                 box.style.borderColor = '#f59e0b';
+                 box.style.color = '#92400e';
+            }
+            txt.innerHTML = analysis;
+        }
+
+        function generateExp(mean) {
+            // Inverse transform sampling for Exponential distribution
+            // P(X < x) = 1 - exp(-x/mean)
+            // U = exp(-x/mean) -> ln(U) = -x/mean -> x = -mean * ln(U)
+            return -mean * Math.log(Math.random()); 
+        }
+
+        function renderChart(hist, totalHours, n, unitCap, demand) {
+            const ctx = document.getElementById('simChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            
+            const labels = hist.map((_, i) => `${i} Units Online`);
+            const dataPerc = hist.map(v => (v/totalHours)*100);
+            
+            const bgColors = hist.map((_, i) => {
+                const cap = i * unitCap;
+                return (cap >= demand) ? '#10b981' : '#ef4444';
+            });
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Time in State (%)',
+                        data: dataPerc,
+                        backgroundColor: bgColors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.raw.toFixed(2)}% of time`
+                            }
+                        },
+                        annotation: {
+                            // Simple annotation is hard in basic Chart.js without plugin, skipping line drawing
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Probability (%)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Init
+        // window.onload = runSimulation;
+    </script>
+</body>
+</html>

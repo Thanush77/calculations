@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEC Nexus Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --water-color: #0ea5e9;
+            --energy-color: #eab308;
+            --carbon-color: #10b981;
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 30px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle { color: var(--text-light); font-size: 14px; }
+
+        .main-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+
+        /* Side Panel (Global Inputs) */
+        .global-panel {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+        
+        .section-header {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        .section-header:first-child { margin-top: 0; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        /* Main Table Area */
+        .table-area { overflow-x: auto; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .data-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: var(--text-main);
+            width: 180px;
+        }
+        
+        .data-table th:first-child {
+            width: 220px;
+            text-align: left;
+            background: #fff;
+            border-top: none;
+            border-left: none;
+        }
+        
+        .cat-row {
+            background: #f8fafc;
+            font-weight: 700;
+            text-align: left !important;
+            color: var(--text-light);
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        
+        .cat-water { color: var(--water-color); background: #f0f9ff; }
+        .cat-energy { color: var(--energy-color); background: #fefce8; }
+        .cat-carbon { color: var(--carbon-color); background: #ecfdf5; }
+
+        .input-cell input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .total-row td {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .action-bar {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { background: var(--primary-hover); }
+        
+        .verdict-box {
+            grid-column: 1 / -1;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+            border-left: 5px solid var(--primary-color);
+        }
+        
+        .verdict-title { font-weight: 700; margin-bottom: 10px; font-size: 16px; color: #0f172a; }
+        .nexus-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .nexus-card {
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .nc-water { background: #f0f9ff; color: #0369a1; }
+        .nc-energy { background: #fefce8; color: #854d0e; }
+        .nc-carbon { background: #ecfdf5; color: #065f46; }
+        .nc-val { font-size: 20px; font-weight: 700; margin-top: 5px; }
+        .nc-label { font-size: 12px; font-weight: 600; opacity: 0.8; }
+
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+            .nexus-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-network-wired"></i> WEC Nexus Engine</h1>
+            <p class="subtitle">Water-Energy-Carbon Integrated Decision Support</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Global Settings -->
+            <div class="global-panel">
+                <div class="section-header">Economic Rates</div>
+                <div class="form-group">
+                    <label>Carbon Price (₹/tCO₂)</label>
+                    <input type="number" id="costCarbon" value="2000">
+                </div>
+                <div class="form-group">
+                    <label>Energy Price (₹/kWh)</label>
+                    <input type="number" id="costEnergy" value="8">
+                </div>
+                <div class="form-group">
+                    <label>Raw Water (₹/m³)</label>
+                    <input type="number" id="costWaterRaw" value="45">
+                </div>
+                 <div class="form-group">
+                    <label>Reject Disposal (₹/m³)</label>
+                    <input type="number" id="costReject" value="100">
+                </div>
+
+                <div class="section-header">Environment</div>
+                <div class="form-group">
+                    <label>Grid Factor (kg CO₂/kWh)</label>
+                    <input type="number" id="gridFactor" value="0.82" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Op. Days / Year</label>
+                    <input type="number" id="opDays" value="330">
+                </div>
+            </div>
+
+            <!-- Main Table -->
+            <div class="table-area">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nexus Parameter</th>
+                            <th>Scenario A (Baseline)</th>
+                            <th>Scenario B (Efficient)</th>
+                            <th>Scenario C (Green)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                         <tr>
+                            <td style="text-align:left; font-weight:600;">Description</td>
+                            <td class="input-cell"><input type="text" id="name_0" value="Baseline"></td>
+                            <td class="input-cell"><input type="text" id="name_1" value="High Recovery"></td>
+                            <td class="input-cell"><input type="text" id="name_2" value="Optimized ZLD"></td>
+                        </tr>
+
+                        <!-- Water Layer -->
+                        <tr class="cat-row cat-water"><td colspan="4"><i class="fas fa-tint"></i> Water Layer</td></tr>
+                        <tr>
+                            <td style="text-align:left;">Intake Flow (m³/day)</td>
+                            <td class="input-cell"><input type="number" id="flow_0" value="1000"></td>
+                            <td class="input-cell"><input type="number" id="flow_1" value="1000"></td>
+                            <td class="input-cell"><input type="number" id="flow_2" value="1000"></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Recovery Rate (%)</td>
+                            <td class="input-cell"><input type="number" id="rec_0" value="0"></td>
+                            <td class="input-cell"><input type="number" id="rec_1" value="85"></td>
+                            <td class="input-cell"><input type="number" id="rec_2" value="95"></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Product Reuse (m³/day)</td>
+                            <td id="res_prod_0">-</td>
+                            <td id="res_prod_1">-</td>
+                            <td id="res_prod_2">-</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Reject Disposed (m³/day)</td>
+                            <td id="res_rej_0">-</td>
+                            <td id="res_rej_1">-</td>
+                            <td id="res_rej_2">-</td>
+                        </tr>
+
+                        <!-- Energy Layer -->
+                        <tr class="cat-row cat-energy"><td colspan="4"><i class="fas fa-bolt"></i> Energy Layer</td></tr>
+                        <tr>
+                            <td style="text-align:left;">Specific Energy (kWh/m³)</td>
+                            <td class="input-cell"><input type="number" id="sec_0" value="0.2"></td>
+                            <td class="input-cell"><input type="number" id="sec_1" value="1.5"></td>
+                            <td class="input-cell"><input type="number" id="sec_2" value="4.0"></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Total Energy (kWh/day)</td>
+                            <td id="res_kwh_0">-</td>
+                            <td id="res_kwh_1">-</td>
+                            <td id="res_kwh_2">-</td>
+                        </tr>
+
+                        <!-- Carbon Layer -->
+                        <tr class="cat-row cat-carbon"><td colspan="4"><i class="fas fa-smog"></i> Carbon Layer</td></tr>
+                        <tr>
+                            <td style="text-align:left;">Daily Emissions (tCO₂)</td>
+                            <td id="res_co2_0">-</td>
+                            <td id="res_co2_1">-</td>
+                            <td id="res_co2_2">-</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Nexus Index (kg CO₂/m³ Recycle)</td>
+                            <td id="res_nexus_0">-</td>
+                            <td id="res_nexus_1">-</td>
+                            <td id="res_nexus_2">-</td>
+                        </tr>
+
+                        <!-- Financials -->
+                        <tr class="cat-row"><td colspan="4">Annual Financial Impact (₹ Lakhs)</td></tr>
+                        <tr>
+                            <td style="text-align:left;">Water Bill (Raw + Reject)</td>
+                            <td id="cost_w_0">-</td>
+                            <td id="cost_w_1">-</td>
+                            <td id="cost_w_2">-</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Energy Bill</td>
+                            <td id="cost_e_0">-</td>
+                            <td id="cost_e_1">-</td>
+                            <td id="cost_e_2">-</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Carbon Cost (Risk)</td>
+                            <td id="cost_c_0">-</td>
+                            <td id="cost_c_1">-</td>
+                            <td id="cost_c_2">-</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td style="text-align:left;">Total Annual Cost</td>
+                            <td id="cost_total_0">-</td>
+                            <td id="cost_total_1">-</td>
+                            <td id="cost_total_2">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="action-bar">
+                 <button class="btn" onclick="calculate()">
+                    <i class="fas fa-sync-alt"></i> Run WEC Nexus Logic
+                </button>
+            </div>
+            
+            <div class="verdict-box" id="verdictBox">
+                <div class="verdict-title"><i class="fas fa-check-circle"></i> Strategic Recommendation</div>
+                <div class="recommendation" id="recText"></div>
+                
+                <div class="nexus-grid">
+                    <div class="nexus-card nc-water">
+                        <div class="nc-label">Best Water Efficiency</div>
+                        <div class="nc-val" id="bestWater">-</div>
+                    </div>
+                    <div class="nexus-card nc-energy">
+                        <div class="nc-label">Lowest Energy Footprint</div>
+                        <div class="nc-val" id="bestEnergy">-</div>
+                    </div>
+                    <div class="nexus-card nc-carbon">
+                        <div class="nc-label">Lowest Carbon Impact</div>
+                        <div class="nc-val" id="bestCarbon">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const costC = parseFloat(document.getElementById('costCarbon').value) || 0;
+            const costE = parseFloat(document.getElementById('costEnergy').value) || 0;
+            const costWra = parseFloat(document.getElementById('costWaterRaw').value) || 0;
+            const costRej = parseFloat(document.getElementById('costReject').value) || 0;
+            
+            const ef = parseFloat(document.getElementById('gridFactor').value) || 0;
+            const days = parseFloat(document.getElementById('opDays').value) || 330;
+
+            let options = [];
+
+            for(let i=0; i<3; i++) {
+                const name = document.getElementById(`name_${i}`).value;
+                const flow = parseFloat(document.getElementById(`flow_${i}`).value) || 0;
+                const rec = parseFloat(document.getElementById(`rec_${i}`).value) || 0;
+                const sec = parseFloat(document.getElementById(`sec_${i}`).value) || 0;
+
+                // WATER
+                const product = flow * (rec/100);
+                const reject = flow - product;
+                
+                // We assume Product Water OFFSETS fresh water purchase somewhere else, or is simply 'Available'.
+                // Ideally, a reuse system REDUCES Intake requirement. 
+                // But typically, calculator logic: Intake is what enters usage. Product is Recycle. 
+                // Cost Logic: 
+                // You pay for Raw Intake (if open loop) OR You pay Raw Intake - Recycle (if closed loop).
+                // Let's assume Intake = Total Demand. Net Raw Water = Intake - Product.
+                
+                const netRawReq = Math.max(0, flow - product); 
+                // Or simplified: Cost is Raw Cost of (Flow - Product) + Reject Cost.
+                // Let's stick to: We treat 'Product' as valuable.
+                // Total Water Cost = (Net Fresh Water Intake * Rate) + (Reject Discharge * Rate).
+                // Assuming Flow is total system demand, Net Fresh Intake = Flow - Product.
+                
+                const wBillDay = ((flow - product) * costWra) + (reject * costRej);
+                
+                // ENERGY
+                const kwhDay = flow * sec;
+                
+                // CARBON
+                const co2Day = (kwhDay * ef) / 1000; // tonnes
+                
+                // ANNUALS
+                const annW = wBillDay * days;
+                const annE = kwhDay * costE * days;
+                const annC = co2Day * costC * days;
+                const annTotal = annW + annE + annC;
+                
+                // NEXUS INDEX: kgCO2 per m3 water recovered/reused
+                // If rec=0, index is NA or High.
+                const nexusIndex = (product > 0) ? ((co2Day * 1000) / product) : 0;
+
+                options.push({
+                    id: i,
+                    name,
+                    product, reject,
+                    kwhDay, co2Day,
+                    annW, annE, annC, annTotal,
+                    nexusIndex
+                });
+            }
+
+            // Render
+            let bestW = options[0];
+            let bestE = options[0];
+            let bestC = options[0];
+            let bestFin = options[0]; // Financial
+
+            options.forEach(opt => {
+                if(opt.product > bestW.product) bestW = opt;
+                if(opt.kwhDay < bestE.kwhDay) bestE = opt;
+                if(opt.co2Day < bestC.co2Day) bestC = opt;
+                if(opt.annTotal < bestFin.annTotal) bestFin = opt;
+                
+                const toLakh = v => (v/100000).toFixed(1);
+                
+                document.getElementById(`res_prod_${opt.id}`).textContent = opt.product.toFixed(0);
+                document.getElementById(`res_rej_${opt.id}`).textContent = opt.reject.toFixed(0);
+                
+                document.getElementById(`res_kwh_${opt.id}`).textContent = opt.kwhDay.toFixed(0);
+                document.getElementById(`res_co2_${opt.id}`).textContent = opt.co2Day.toFixed(2);
+                document.getElementById(`res_nexus_${opt.id}`).textContent = (opt.nexusIndex > 0) ? opt.nexusIndex.toFixed(2) : '-';
+                
+                document.getElementById(`cost_w_${opt.id}`).textContent = toLakh(opt.annW);
+                document.getElementById(`cost_e_${opt.id}`).textContent = toLakh(opt.annE);
+                document.getElementById(`cost_c_${opt.id}`).textContent = toLakh(opt.annC);
+                document.getElementById(`cost_total_${opt.id}`).textContent = toLakh(opt.annTotal);
+            });
+            
+            // Verdict
+            document.getElementById('verdictBox').style.display = 'block';
+            document.getElementById('bestWater').textContent = bestW.name;
+            document.getElementById('bestEnergy').textContent = bestE.name;
+            document.getElementById('bestCarbon').textContent = bestC.name;
+            
+            document.getElementById('recText').innerHTML = 
+                `Based on WEC Logic: <strong>${bestFin.name}</strong> offers the best Economic & Nexus balance (Total Cost ₹${(bestFin.annTotal/100000).toFixed(1)} Lakh/yr).<br>` +
+                `Trade-off: To achieve maximum water recovery (${bestW.name}), you accept a carbon penalty of ${((bestW.co2Day - bestC.co2Day)*days).toFixed(0)} tCO₂/yr vs the lowest carbon option.`;
+        }
+    </script>
+</body>
+</html>

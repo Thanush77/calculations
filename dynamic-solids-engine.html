@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Solids Simulation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --accent-purple: #8b5cf6;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 25px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle { color: var(--text-light); font-size: 14px; }
+
+        .main-content {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 25px;
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+        
+        .section-header {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        .section-header:first-child { margin-top: 0; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .btn-run {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-run:hover { background: var(--primary-hover); }
+
+        /* Dashboard Area */
+        .dashboard-area {
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            gap: 20px;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .kpi-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .kpi-val { font-size: 24px; font-weight: 800; color: #0f172a; margin: 5px 0; }
+        .kpi-label { font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+        .kpi-sub { font-size: 12px; }
+
+        .risk-high { color: var(--danger-color); }
+        .risk-ok { color: var(--success-color); }
+
+        /* Chart Container */
+        .chart-container {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 400px;
+            position: relative;
+        }
+        
+        /* Analysis Box */
+        .analysis-box {
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            border-radius: 8px;
+            padding: 20px;
+            color: #115e59;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .analysis-icon { font-size: 20px; margin-right: 10px; vertical-align: middle; }
+
+        @media (max-width: 1100px) {
+            .main-content { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-wave-square"></i> Dynamic Solids Simulations</h1>
+            <p class="subtitle">Time-Resolved Equipment Stress & Failure Prediction</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Inputs -->
+            <div class="controls-panel">
+                <div class="section-header">Baseline Conditions (Avg)</div>
+                <div class="form-group grid-2">
+                    <div>
+                        <label>Avg Flow (m³/hr)</label>
+                        <input type="number" id="baseFlow" value="40">
+                    </div>
+                    <div>
+                        <label>Avg TSS (mg/L)</label>
+                        <input type="number" id="baseTSS" value="30000">
+                    </div>
+                </div>
+
+                <div class="section-header">Dynamic Profile</div>
+                <div class="form-group">
+                    <label>Profile Type</label>
+                    <select id="profileType">
+                        <option value="diurnal">Municipal Diurnal (2 Peaks)</option>
+                        <option value="shock">Industrial Shock Loading</option>
+                        <option value="storm">Storm Event Washout</option>
+                    </select>
+                </div>
+                <div class="form-group grid-2">
+                    <div>
+                        <label>Peak Factor (Q)</label>
+                        <input type="number" id="peakQ" value="1.5" step="0.1">
+                    </div>
+                    <div>
+                        <label>Peak Factor (TSS)</label>
+                        <input type="number" id="peakTSS" value="1.2" step="0.1">
+                    </div>
+                </div>
+
+                <div class="section-header">Equipment Limits</div>
+                <div class="form-group">
+                    <label>Rated Solids Cap. (kg/hr)</label>
+                    <input type="number" id="ratedCap" value="1500">
+                </div>
+                <div class="form-group">
+                    <label>Poly Skid Limit (L/hr)</label>
+                    <input type="number" id="polyLimit" value="1000">
+                </div>
+                <div class="form-group">
+                    <label>Dose Rate (g/kg)</label>
+                    <input type="number" id="polyDose" value="5">
+                </div>
+
+                <button class="btn-run" onclick="runSimulation()">
+                    <i class="fas fa-play"></i> Simulate 24 Hours
+                </button>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="dashboard-area">
+                <!-- KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Peak Solids Load</div>
+                        <div class="kpi-val" id="kpiPeakLoad">-</div>
+                        <div class="kpi-sub" id="kpiPeakTime">at -:--</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Overload Duration</div>
+                        <div class="kpi-val" id="kpiOverloadDur">-</div>
+                        <div class="kpi-sub">% of Operation</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Min Safety Margin</div>
+                        <div class="kpi-val" id="kpiMargin">-</div>
+                        <div class="kpi-sub">Critical Bottleneck</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Polymer Var.</div>
+                        <div class="kpi-val" id="kpiPolyVar">-</div>
+                        <div class="kpi-sub">Peak / Avg Ratio</div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-container">
+                    <canvas id="simChart"></canvas>
+                </div>
+
+                <!-- Analysis -->
+                <div class="analysis-box" id="analysisBox" style="display:none;">
+                    <strong><i class="fas fa-robot analysis-icon"></i> AI Risk Assessment:</strong><br>
+                    <span id="analysisText"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+
+        function runSimulation() {
+            // Inputs
+            const baseQ = parseFloat(document.getElementById('baseFlow').value) || 0;
+            const baseTSS = parseFloat(document.getElementById('baseTSS').value) || 0;
+            const type = document.getElementById('profileType').value;
+            const pfQ = parseFloat(document.getElementById('peakQ').value) || 1;
+            const pfTSS = parseFloat(document.getElementById('peakTSS').value) || 1;
+            const ratedCap = parseFloat(document.getElementById('ratedCap').value) || 1;
+            const polyCap = parseFloat(document.getElementById('polyLimit').value) || 1; // L/hr
+            const dose = parseFloat(document.getElementById('polyDose').value) || 0; // g/kg
+            // Assume 0.3% solution strength for poly calc if needed, or poly cap is "kg active"? 
+            // Usually Skid is L/hr of solution. Let's assume standard 0.3% strength (3 g/L).
+            // PolyReq (L/hr) = Load(kg/hr) * Dose(g/kg) / Strength(g/L)
+            const strength = 3.0; // g/L
+
+            // Generate Time Series (24h)
+            const hours = Array.from({length: 24}, (_, i) => i);
+            const dataLoad = [];
+            const dataCap = [];
+            
+            let overloadedCount = 0;
+            let maxLoad = 0;
+            let maxLoadTime = 0;
+            let minMargin = 100;
+            let maxPolyFlow = 0;
+            let avgPolyFlow = 0;
+            
+            hours.forEach(t => {
+                // Profile Multipliers
+                let multiQ = 1;
+                let multiTSS = 1;
+                
+                if (type === 'diurnal') {
+                    // Morning peak 9am, Evening peak 8pm
+                    const morning = Math.exp(-Math.pow(t - 9, 2) / 4); 
+                    const evening = Math.exp(-Math.pow(t - 20, 2) / 4);
+                    const combined = (morning + evening);
+                    // Normalize to avg 1 roughly? Or just use as add-on.
+                    // Let's typically oscillate around 1. 
+                    // Simple simulation: Base + (Peak-Base)*Curve
+                    multiQ = 1 + (pfQ - 1) * combined;
+                    multiTSS = 1 + (pfTSS - 1) * combined; // TSS implies flushing events
+                } else if (type === 'shock') {
+                    // Random spikes or single big event at noon
+                    if(t >= 11 && t <= 14) {
+                        multiQ = pfQ;
+                        multiTSS = pfTSS;
+                    }
+                } else {
+                    // Storm - sustained high
+                    if(t >= 1 && t <= 8) {
+                        multiQ = pfQ;
+                        multiTSS = 1; // Dilution effect often, but let's assume worst case user input
+                    }
+                }
+                
+                const q = baseQ * multiQ;
+                const tss = baseTSS * multiTSS;
+                const load = (q * tss) / 1000; // kg/hr
+                
+                if(load > maxLoad) { maxLoad = load; maxLoadTime = t; }
+                if(load > ratedCap) overloadedCount++;
+                
+                const margin = ((ratedCap - load) / ratedCap) * 100;
+                if(margin < minMargin) minMargin = margin;
+                
+                const polyFlow = (load * dose) / strength; // L/hr
+                if(polyFlow > maxPolyFlow) maxPolyFlow = polyFlow;
+                avgPolyFlow += polyFlow;
+
+                dataLoad.push(load);
+                dataCap.push(ratedCap);
+            });
+            
+            avgPolyFlow /= 24;
+
+            // Render Chart
+            renderChart(hours, dataLoad, dataCap);
+            
+            // Update KPIs
+            document.getElementById('kpiPeakLoad').textContent = maxLoad.toFixed(0) + " kg/hr";
+            document.getElementById('kpiPeakTime').textContent = `@ ${maxLoadTime}:00`;
+            
+            const overloadPerc = (overloadedCount / 24) * 100;
+            const ovEl = document.getElementById('kpiOverloadDur');
+            ovEl.textContent = overloadPerc.toFixed(0) + "%";
+            ovEl.className = (overloadPerc > 0) ? 'kpi-val risk-high' : 'kpi-val risk-ok';
+            
+            const mgEl = document.getElementById('kpiMargin');
+            mgEl.textContent = minMargin.toFixed(0) + "%";
+            mgEl.className = (minMargin < 10) ? 'kpi-val risk-high' : 'kpi-val risk-ok';
+            
+            document.getElementById('kpiPolyVar').textContent = (maxPolyFlow / (avgPolyFlow || 1)).toFixed(1) + "x";
+
+            // Analysis
+            const box = document.getElementById('analysisBox');
+            const txt = document.getElementById('analysisText');
+            box.style.display = 'block';
+            
+            if (overloadPerc > 0) {
+                 txt.innerHTML = `CRITICAL ALERT: System is overloaded for <strong>${overloadedCount} hours/day</strong>. <br>` +
+                 `Peak Solids Load (${maxLoad.toFixed(0)} kg/hr) exceeds capacity by ${((maxLoad/ratedCap - 1)*100).toFixed(0)}%. ` +
+                 `This will cause potential centrifuge choking or sludge carryover during these windows. Recommended: Equalization Tank or Upsizing.`;
+                 box.style.borderColor = '#ef4444';
+                 box.style.background = '#fef2f2';
+                 box.style.color = '#991b1b';
+            } else {
+                 txt.innerHTML = `System performs safely under dynamic conditions. Minimum safety margin is ${minMargin.toFixed(0)}%. ` +
+                 `Polymer dosing requires a turndown ratio of ${(maxPolyFlow/avgPolyFlow).toFixed(1)}:1 to handle peaks efficiently.`;
+                 box.style.borderColor = '#10b981';
+                 box.style.background = '#f0fdf4';
+                 box.style.color = '#065f46';
+            }
+        }
+
+        function renderChart(labels, loading, capacity) {
+            const ctx = document.getElementById('simChart').getContext('2d');
+            if(myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.map(h => `${h}:00`),
+                    datasets: [{
+                        label: 'Solids Load (kg/hr)',
+                        data: loading,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Rated Capacity',
+                        data: capacity,
+                        borderColor: '#ef4444',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Mass Loading (kg/hr)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Init run
+        // window.onload = runSimulation;
+    </script>
+</body>
+</html>

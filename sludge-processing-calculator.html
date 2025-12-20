@@ -4,7 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sludge Processing Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 8px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,237 +25,360 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background-color: #f4f1e8;
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 40px 20px;
+            color: var(--text-main);
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
 
         .container {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 40px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 700px;
-            margin: 0 auto;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            border: 1px solid var(--border-color);
         }
 
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
+        .header {
             margin-bottom: 30px;
-            color: #8b4513;
             text-align: center;
         }
 
-        .form-group {
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        h1 i {
+            color: var(--primary-color);
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .grid-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
             margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 5px;
         }
 
         label {
             display: block;
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #6d4c28;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
         }
 
         input[type="number"] {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #d4af7a;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background-color: white;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            color: var(--text-main);
+            transition: all 0.2s;
+            background: #fff;
         }
 
         input[type="number"]:focus {
             outline: none;
-            border-color: #8b4513;
-            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
         input::placeholder {
-            color: #aaa;
-            font-style: italic;
+            color: #cbd5e1;
+        }
+
+        .unit {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
         }
 
         .calculate-btn {
             width: 100%;
-            background-color: #8b4513;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 16px;
-            font-size: 18px;
+            padding: 14px;
+            font-size: 16px;
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: var(--radius);
             cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 20px;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
         }
 
         .calculate-btn:hover {
-            background-color: #6d4c28;
+            background-color: var(--primary-hover);
         }
 
         .results {
             margin-top: 30px;
-            padding: 25px;
-            background-color: #faf8f3;
-            border-radius: 8px;
-            border-left: 4px solid #8b4513;
+            background-color: #f1f5f9;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
             display: none;
         }
 
-        .results h2 {
-            font-size: 24px;
-            color: #8b4513;
-            margin-bottom: 20px;
+        .results-header {
+            padding: 15px 20px;
+            background: #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
             font-weight: 600;
-        }
-
-        .result-item {
+            color: #334155;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #e8dcc0;
-            font-size: 16px;
-            color: #333;
         }
 
-        .result-item:last-child {
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .result-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .result-item:nth-child(2n) {
+            border-right: none;
+        }
+        
+        /* Last row fix */
+        .result-item:nth-last-child(-n+2) {
             border-bottom: none;
         }
 
-        .result-value {
+        .result-label {
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             font-weight: 600;
-            color: #8b4513;
-            min-width: 120px;
-            text-align: right;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 30px 20px;
-            }
+        .result-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
 
-            h1 {
-                font-size: 28px;
-            }
+        .result-unit {
+            font-size: 12px;
+            color: var(--text-light);
+            font-weight: 400;
+            margin-left: 2px;
+        }
 
+        @media (max-width: 600px) {
+            .grid-form {
+                grid-template-columns: 1fr;
+            }
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            .result-item:nth-child(2n) {
+                border-right: 1px solid var(--border-color); /* Restore right border */
+            }
             .result-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-
-            .result-value {
-                min-width: auto;
-                text-align: left;
+                border-right: none !important;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Sludge Processing Calculator</h1>
+        <div class="header">
+            <h1><i class="fas fa-trash-restore"></i> Sludge Processing Calculator</h1>
+            <p class="subtitle">Mass Balance Engine for Dewatering Units</p>
+        </div>
         
         <form id="sludgeForm">
-            <div class="form-group">
-                <label for="feedFlow">Sludge Feed Flow (m³/day):</label>
-                <input type="number" id="feedFlow" placeholder="Enter feed flow" step="0.1" required>
+            <div class="grid-form">
+                <div class="form-group">
+                    <label for="feedFlow">Feed Flow</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="feedFlow" placeholder="0.0" step="0.1" required>
+                        <span class="unit">m³/day</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="concentration">Sludge Conc.</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="concentration" placeholder="0" step="1" required>
+                        <span class="unit">mg/L</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="recovery">Solids Recovery</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="recovery" placeholder="0.0" step="0.1" min="0" max="100" required>
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="consistency">Cake Consistency</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="consistency" placeholder="0.0" step="0.1" min="0" max="100" required>
+                        <span class="unit">%</span>
+                    </div>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="concentration">Sludge Concentration (mg/L):</label>
-                <input type="number" id="concentration" placeholder="Enter concentration" step="1" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="recovery">Solids Recovery (%):</label>
-                <input type="number" id="recovery" placeholder="Enter recovery percentage" step="0.1" min="0" max="100" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="consistency">Cake Consistency (%):</label>
-                <input type="number" id="consistency" placeholder="Enter cake consistency" step="0.1" min="0" max="100" required>
-            </div>
-            
-            <button type="button" class="calculate-btn" onclick="calculate()">Calculate</button>
+            <button type="button" class="calculate-btn" onclick="calculate()">
+                <i class="fas fa-calculator"></i> Calculate Balance
+            </button>
         </form>
         
         <div class="results" id="results">
-            <h2>Results:</h2>
-            <div class="result-item">
-                <span>Sludge Mass (kg/day):</span>
-                <span class="result-value" id="sludgeMass">0.00</span>
+            <div class="results-header">
+                <span><i class="fas fa-chart-pie"></i> Mass Balance Results</span>
             </div>
-            <div class="result-item">
-                <span>Cake Mass (kg/day):</span>
-                <span class="result-value" id="cakeMass">0.00</span>
-            </div>
-            <div class="result-item">
-                <span>Cake Volume (m³/day):</span>
-                <span class="result-value" id="cakeVolume">0.00</span>
-            </div>
-            <div class="result-item">
-                <span>Centrate Volume (m³/day):</span>
-                <span class="result-value" id="centrateVolume">0.00</span>
-            </div>
-            <div class="result-item">
-                <span>Centrate TSS Mass (kg/day):</span>
-                <span class="result-value" id="centrateTssMass">0.00</span>
-            </div>
-            <div class="result-item">
-                <span>Centrate TSS Concentration (mg/L):</span>
-                <span class="result-value" id="centrateTssConc">0.00</span>
+            <div class="results-grid">
+                <!-- 1 -->
+                <div class="result-item">
+                    <span class="result-label">Incoming Sludge Mass</span>
+                    <div>
+                        <span class="result-value" id="sludgeMass">0.00</span>
+                        <span class="result-unit">kg/day</span>
+                    </div>
+                </div>
+                <!-- 2 -->
+                <div class="result-item">
+                    <span class="result-label">Recovered Cake Solids</span>
+                    <div>
+                        <span class="result-value" id="cakeDrySolids">0.00</span>
+                        <span class="result-unit">kg/day</span>
+                    </div>
+                </div>
+                <!-- 3 -->
+                <div class="result-item">
+                    <span class="result-label">Cake Volume</span>
+                    <div>
+                        <span class="result-value" id="cakeVolume">0.00</span>
+                        <span class="result-unit">m³/day</span>
+                    </div>
+                </div>
+                <!-- 4 -->
+                <div class="result-item">
+                    <span class="result-label">Centrate Volume</span>
+                    <div>
+                        <span class="result-value" id="centrateVolume">0.00</span>
+                        <span class="result-unit">m³/day</span>
+                    </div>
+                </div>
+                <!-- 5 -->
+                <div class="result-item">
+                    <span class="result-label">Centrate TSS Mass</span>
+                    <div>
+                        <span class="result-value" id="centrateTssMass">0.00</span>
+                        <span class="result-unit">kg/day</span>
+                    </div>
+                </div>
+                <!-- 6 -->
+                <div class="result-item">
+                    <span class="result-label">Centrate TSS Conc.</span>
+                    <div>
+                        <span class="result-value" id="centrateTssConc">0</span>
+                        <span class="result-unit">mg/L</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         function calculate() {
-            // Get input values
-            const feedFlow = parseFloat(document.getElementById('feedFlow').value);
-            const concentration = parseFloat(document.getElementById('concentration').value);
-            const recovery = parseFloat(document.getElementById('recovery').value);
-            const consistency = parseFloat(document.getElementById('consistency').value);
+            const feedFlow = parseFloat(document.getElementById('feedFlow').value); // m³/day
+            const concentration = parseFloat(document.getElementById('concentration').value); // mg/L
+            const recovery = parseFloat(document.getElementById('recovery').value) / 100; // fraction
+            const consistency = parseFloat(document.getElementById('consistency').value) / 100; // fraction
 
-            // Validate inputs
-            if (!feedFlow || !concentration || recovery === '' || consistency === '' || 
-                recovery < 0 || recovery > 100 || consistency < 0 || consistency > 100) {
-                alert('Please enter valid values for all fields.');
+            if (
+                isNaN(feedFlow) || feedFlow <= 0 ||
+                isNaN(concentration) || concentration <= 0 ||
+                isNaN(recovery) || recovery <= 0 || recovery > 1 ||
+                isNaN(consistency) || consistency <= 0 || consistency > 1
+            ) {
+                alert("Please enter valid engineering values.");
                 return;
             }
 
-            // Calculate sludge mass (kg/day)
-            const sludgeMass = (feedFlow * concentration) / 1000; // Convert mg/L to kg/m³
+            // 1. Dry solids in feed (kg/day)
+            const sludgeMass = (feedFlow * concentration) / 1000;
 
-            // Calculate cake mass (kg/day) - based on recovery percentage
-            const cakeMass = sludgeMass * (recovery / 100);
+            // 2. Dry solids recovered in cake (kg/day)
+            const cakeDrySolids = sludgeMass * recovery;
 
-            // Calculate cake volume (m³/day)
-            // Assuming cake density of 1000 kg/m³ at given consistency
-            const cakeVolume = cakeMass / (1000 * (consistency / 100));
+            // 3. Dry solids lost in centrate (kg/day)
+            const centrateTssMass = sludgeMass - cakeDrySolids;
 
-            // Calculate centrate volume (m³/day)
-            const centrateVolume = feedFlow - cakeVolume;
+            // 4. Cake volume (m³/day)
+            const cakeVolume = cakeDrySolids / (1000 * consistency);
 
-            // Calculate centrate TSS mass (kg/day) - solids not recovered
-            const centrateTssMass = sludgeMass - cakeMass;
+            // 5. Water retained in cake (m³/day)
+            const waterInCake = cakeVolume - (cakeDrySolids / 1000);
 
-            // Calculate centrate TSS concentration (mg/L)
-            const centrateTssConc = centrateVolume > 0 ? (centrateTssMass * 1000) / centrateVolume : 0;
+            // 6. Centrate volume (m³/day)
+            const centrateVolume = feedFlow - waterInCake;
 
-            // Display results
+            // 7. Centrate TSS concentration (mg/L)
+            const centrateTssConc =
+                centrateVolume > 0
+                    ? (centrateTssMass * 1000) / centrateVolume
+                    : 0;
+
+            // Display
             document.getElementById('sludgeMass').textContent = sludgeMass.toFixed(2);
-            document.getElementById('cakeMass').textContent = cakeMass.toFixed(2);
-            document.getElementById('cakeVolume').textContent = cakeVolume.toFixed(2);
-            document.getElementById('centrateVolume').textContent = centrateVolume.toFixed(2);
+            document.getElementById('cakeDrySolids').textContent = cakeDrySolids.toFixed(2);
+            document.getElementById('cakeVolume').textContent = cakeVolume.toFixed(3);
+            document.getElementById('centrateVolume').textContent = centrateVolume.toFixed(3);
             document.getElementById('centrateTssMass').textContent = centrateTssMass.toFixed(2);
-            document.getElementById('centrateTssConc').textContent = centrateTssConc.toFixed(2);
+            document.getElementById('centrateTssConc').textContent = centrateTssConc.toFixed(0);
 
             document.getElementById('results').style.display = 'block';
         }

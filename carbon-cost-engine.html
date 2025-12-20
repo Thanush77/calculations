@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Cost Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --radius: 8px;
+            --carbon-color: #059669;
+            --cost-color: #b45309;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 30px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle { color: var(--text-light); font-size: 14px; }
+
+        .main-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+
+        /* Side Panel (Global Inputs) */
+        .global-panel {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+        
+        .section-header {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        .section-header:first-child { margin-top: 0; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* Main Table Area */
+        .table-area { overflow-x: auto; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .data-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: var(--text-main);
+            width: 180px;
+        }
+        
+        .data-table th:first-child {
+            width: 220px;
+            text-align: left;
+            background: #fff;
+            border-top: none;
+            border-left: none;
+        }
+        
+        .cat-row {
+            background: #f8fafc;
+            font-weight: 700;
+            text-align: left !important;
+            color: var(--text-light);
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .input-cell input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .total-row td {
+            font-weight: 700;
+            font-size: 14px;
+            background: #ecfdf5;
+            color: #047857;
+        }
+        .cost-row td {
+            font-weight: 700;
+            font-size: 14px;
+            background: #fff7ed;
+            color: #9a3412;
+        }
+        
+        .action-bar {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { background: var(--primary-hover); }
+        
+        .verdict-box {
+            grid-column: 1 / -1;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .verdict-title { font-weight: 700; margin-bottom: 10px; font-size: 16px; color: #0f172a; }
+        .recommendation { font-size: 14px; line-height: 1.5; color: #334155; }
+
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-leaf"></i> Carbon Cost Engine</h1>
+            <p class="subtitle">Scope-2 Emissions & Financial Monetization</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Global Settings -->
+            <div class="global-panel">
+                <div class="section-header">Emission Factors</div>
+                <div class="form-group">
+                    <label>Grid Location</label>
+                    <select id="gridPreset" onchange="updateGridFactor()">
+                        <option value="0.82">India Avg Grid (0.82)</option>
+                        <option value="0.5">Moderate Grid (0.50)</option>
+                        <option value="0.05">Green PPA / Solar (0.05)</option>
+                        <option value="2.7">Diesel Gen-Set (2.7)</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Intensity (kg CO₂/kWh)</label>
+                    <input type="number" id="gridIntensity" value="0.82" step="0.01">
+                </div>
+
+                <div class="section-header">Financials</div>
+                <div class="form-group">
+                    <label>Carbon Price (₹/tCO₂)</label>
+                    <input type="number" id="carbonPrice" value="2000">
+                </div>
+                <div class="form-group">
+                    <label>Electricity Cost (₹/kWh)</label>
+                    <input type="number" id="elecPrice" value="8">
+                </div>
+
+                <div class="section-header">Projection</div>
+                <div class="form-group">
+                    <label>Period (Years)</label>
+                    <select id="period">
+                        <option value="10">10 Years</option>
+                        <option value="15" selected>15 Years</option>
+                        <option value="20">20 Years</option>
+                    </select>
+                </div>
+                <div class="form-group grid-2">
+                    <div>
+                        <label>Power Esc %</label>
+                        <input type="number" id="escPower" value="5">
+                    </div>
+                    <div>
+                        <label>Carbon Esc %</label>
+                        <input type="number" id="escCarbon" value="8">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Table -->
+            <div class="table-area">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Option A</th>
+                            <th>Option B</th>
+                            <th>Option C</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                         <tr>
+                            <td style="text-align:left; font-weight:600;">Model / Name</td>
+                            <td class="input-cell"><input type="text" id="name_0" value="Standard Unit"></td>
+                            <td class="input-cell"><input type="text" id="name_1" value="Efficient Unit"></td>
+                            <td class="input-cell"><input type="text" id="name_2" value="High Perf. Unit"></td>
+                        </tr>
+
+                        <!-- Inputs -->
+                        <tr class="cat-row"><td colspan="4">Operational Input</td></tr>
+                        <tr>
+                            <td style="text-align:left;">Installed Power (kW)</td>
+                            <td class="input-cell"><input type="number" id="pow_0" value="45"></td>
+                            <td class="input-cell"><input type="number" id="pow_1" value="37"></td>
+                            <td class="input-cell"><input type="number" id="pow_2" value="55"></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Avg. Load Factor (%)</td>
+                            <td class="input-cell"><input type="number" id="load_0" value="85"></td>
+                            <td class="input-cell"><input type="number" id="load_1" value="80"></td>
+                            <td class="input-cell"><input type="number" id="load_2" value="90"></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Op. Hours / Year</td>
+                            <td class="input-cell"><input type="number" id="hrs_0" value="8000"></td>
+                            <td class="input-cell"><input type="number" id="hrs_1" value="8000"></td>
+                            <td class="input-cell"><input type="number" id="hrs_2" value="8000"></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Annual Output (e.g. tDS)</td>
+                            <td class="input-cell"><input type="number" id="out_0" value="3000"></td>
+                            <td class="input-cell"><input type="number" id="out_1" value="3000"></td>
+                            <td class="input-cell"><input type="number" id="out_2" value="3500"></td>
+                        </tr>
+
+                        <!-- Calculated Annual -->
+                        <tr class="cat-row"><td colspan="4">Annual Impact (Year 1)</td></tr>
+                        <tr>
+                            <td style="text-align:left;">Energy (kWh/yr)</td>
+                            <td id="res_kwh_0">0</td>
+                            <td id="res_kwh_1">0</td>
+                            <td id="res_kwh_2">0</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td style="text-align:left;">Scope-2 Emissions (tCO₂/yr)</td>
+                            <td id="res_co2_0">0</td>
+                            <td id="res_co2_1">0</td>
+                            <td id="res_co2_2">0</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Carbon Intensity (kgCO₂/unit)</td>
+                            <td id="res_int_0">0</td>
+                            <td id="res_int_1">0</td>
+                            <td id="res_int_2">0</td>
+                        </tr>
+
+                        <!-- Costs -->
+                        <tr class="cat-row"><td colspan="4">Monetized Cost (Life-Cycle)</td></tr>
+                        <tr>
+                            <td style="text-align:left;">Life-Cycle Energy Cost (₹ Cr)</td>
+                            <td id="lcc_e_0">0</td>
+                            <td id="lcc_e_1">0</td>
+                            <td id="lcc_e_2">0</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">Life-Cycle Carbon Cost (₹ Cr)</td>
+                            <td id="lcc_c_0">0</td>
+                            <td id="lcc_c_1">0</td>
+                            <td id="lcc_c_2">0</td>
+                        </tr>
+                        <tr class="cost-row">
+                            <td style="text-align:left;">Total Adjusted Cost (₹ Cr)</td>
+                            <td id="lcc_total_0">0</td>
+                            <td id="lcc_total_1">0</td>
+                            <td id="lcc_total_2">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="action-bar">
+                 <button class="btn" onclick="calculate()">
+                    <i class="fas fa-calculator"></i> Calculate Emissions
+                </button>
+            </div>
+            
+            <div class="verdict-box" id="verdictBox">
+                <div class="verdict-title"><i class="fas fa-globe-asia"></i> Sustainability Verdict</div>
+                <div class="recommendation" id="verdictText"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateGridFactor() {
+            const preset = document.getElementById('gridPreset').value;
+            if(preset !== 'Custom') {
+                document.getElementById('gridIntensity').value = preset;
+            }
+        }
+
+        function calculate() {
+            // Globals
+            const ef = parseFloat(document.getElementById('gridIntensity').value) || 0;
+            const cPrice = parseFloat(document.getElementById('carbonPrice').value) || 0;
+            const ePrice = parseFloat(document.getElementById('elecPrice').value) || 0;
+            const years = parseInt(document.getElementById('period').value) || 15;
+            
+            const escE = (parseFloat(document.getElementById('escPower').value) || 0)/100;
+            const escC = (parseFloat(document.getElementById('escCarbon').value) || 0)/100;
+
+            let options = [];
+
+            for(let i=0; i<3; i++) {
+                const name = document.getElementById(`name_${i}`).value;
+                const kw = parseFloat(document.getElementById(`pow_${i}`).value) || 0;
+                const load = (parseFloat(document.getElementById(`load_${i}`).value) || 0)/100;
+                const hrs = parseFloat(document.getElementById(`hrs_${i}`).value) || 0;
+                const output = parseFloat(document.getElementById(`out_${i}`).value) || 1;
+
+                // 1. Annual Physicals
+                const kwh = kw * load * hrs;
+                const co2_kg = kwh * ef;
+                const co2_ton = co2_kg / 1000;
+                const intensity = (output > 0) ? (co2_kg / output) : 0;
+
+                // 2. Year 1 Costs
+                const costE_yr1 = kwh * ePrice;
+                const costC_yr1 = co2_ton * cPrice;
+
+                // 3. Life Cycle Projection
+                let lccE = 0;
+                let lccC = 0;
+                
+                for(let y=0; y<years; y++) {
+                    lccE += costE_yr1 * Math.pow(1 + escE, y);
+                    lccC += costC_yr1 * Math.pow(1 + escC, y);
+                }
+                
+                const totalLCC = lccE + lccC;
+
+                options.push({
+                    id: i,
+                    name,
+                    kwh,
+                    co2_ton,
+                    intensity,
+                    lccE,
+                    lccC,
+                    totalLCC
+                });
+            }
+
+            // Render
+            let lowestCarbon = options[0];
+            let lowestCost = options[0];
+
+            options.forEach(opt => {
+                if(opt.co2_ton < lowestCarbon.co2_ton) lowestCarbon = opt;
+                if(opt.totalLCC < lowestCost.totalLCC) lowestCost = opt;
+                
+                // Formats
+                document.getElementById(`res_kwh_${opt.id}`).textContent = opt.kwh.toLocaleString(undefined, {maximumFractionDigits:0});
+                document.getElementById(`res_co2_${opt.id}`).textContent = opt.co2_ton.toFixed(1);
+                document.getElementById(`res_int_${opt.id}`).textContent = opt.intensity.toFixed(3);
+                
+                document.getElementById(`lcc_e_${opt.id}`).textContent = (opt.lccE/10000000).toFixed(2);
+                document.getElementById(`lcc_c_${opt.id}`).textContent = (opt.lccC/10000000).toFixed(2);
+                document.getElementById(`lcc_total_${opt.id}`).textContent = (opt.totalLCC/10000000).toFixed(2);
+            });
+            
+            // Verdict
+            const vBox = document.getElementById('verdictBox');
+            vBox.style.display = 'block';
+            
+            const savedCO2 = (Math.max(...options.map(o=>o.co2_ton)) - lowestCarbon.co2_ton) * years;
+
+            document.getElementById('verdictText').innerHTML = 
+                `<strong>Lowest Carbon Impact:</strong> ${lowestCarbon.name} (${lowestCarbon.co2_ton.toFixed(0)} tCO₂/yr).<br>` +
+                `<strong>Lowest Adjusted Cost:</strong> ${lowestCost.name} (₹${(lowestCost.totalLCC/10000000).toFixed(2)} Cr).<br>` +
+                `<br>Over ${years} years, choosing ${lowestCarbon.name} avoids approximately <strong>${savedCO2.toFixed(0)} Tonnes of CO₂</strong> compared to the least efficient option. ` +
+                `The monetized carbon risk adds ₹${(lowestCarbon.lccC/10000000).toFixed(2)} Cr to the total projected cost.`;
+        }
+    </script>
+</body>
+</html>
