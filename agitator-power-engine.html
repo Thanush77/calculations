@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agitator Design Suite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 25px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle { color: var(--text-light); font-size: 14px; }
+
+        .main-content {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .calculator-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-light);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-calc {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-calc:hover { background: var(--primary-hover); }
+
+        .result-box {
+            margin-top: 20px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 13px;
+        }
+        .result-row:last-child { border-bottom: none; }
+        
+        .result-label { color: var(--text-light); }
+        .result-val { font-weight: 700; color: #0f172a; }
+
+        .info-section {
+            grid-column: 1 / -1;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .info-title {
+            color: #0369a1;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .info-text {
+            color: #0c4a6e;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .status-pass { color: var(--success-color); }
+        .status-fail { color: var(--danger-color); }
+
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-fan"></i> Agitator Design Suite</h1>
+            <p class="subtitle">Motor Power Calculation & Shaft Deflection Analysis</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Power Calculator -->
+            <div class="calculator-card">
+                <div class="card-title"><i class="fas fa-bolt"></i> Motor Power Calculator</div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Fluid Density (kg/m³)</label>
+                        <input type="number" id="p_rho" value="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Agitator Speed (RPM)</label>
+                        <input type="number" id="p_rpm" value="60">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Tank Diameter (mm)</label>
+                        <input type="number" id="p_tank" value="1500" onchange="autoSuggestImpeller()">
+                    </div>
+                    <div class="form-group">
+                        <label>Impeller Diameter (m)</label>
+                        <input type="number" id="p_imp" value="0.5" step="0.01">
+                        <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Rec: ~0.33 x Tank Dia</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Impeller Type</label>
+                    <select id="p_type">
+                        <option value="5.0">Rushton Turbine (Np = 5.0)</option>
+                        <option value="1.5">Pitched Blade 45° (Np = 1.5)</option>
+                        <option value="0.5">Hydrofoil (Np = 0.3-0.6)</option>
+                        <option value="custom">Custom Np</option>
+                    </select>
+                </div>
+
+                <button class="btn-calc" onclick="calcPower()">Calculate Power</button>
+
+                <div class="result-box">
+                    <div class="result-row">
+                        <span class="result-label">Hydraulic Power</span>
+                        <span class="result-val" id="res_p_hyd">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Motor Power (kW)</span>
+                        <span class="result-val" id="res_p_kw">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Required HP</span>
+                        <span class="result-val" id="res_p_hp">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deflection Calculator -->
+            <div class="calculator-card">
+                <div class="card-title"><i class="fas fa-ruler-combined"></i> Shaft Deflection Check</div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Shaft Length L (mm)</label>
+                        <input type="number" id="d_len" value="1200">
+                    </div>
+                    <div class="form-group">
+                        <label>Shaft Diameter d (mm)</label>
+                        <input type="number" id="d_dia" value="40">
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Material</label>
+                        <select id="d_mat">
+                            <option value="2.0e11">Mild Steel</option>
+                            <option value="1.93e11">SS 304/316</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Hydraulic Force Const (C)</label>
+                        <input type="number" id="d_c" value="0.2" readonly style="background:#f1f5f9;">
+                    </div>
+                </div>
+
+                <div style="font-size:12px; color:#64748b; margin-bottom:15px; font-style:italic;">
+                    * Uses Density, Speed & Impeller Dia from Power Calc
+                </div>
+
+                <button class="btn-calc" style="background:#64748b;" onclick="calcDeflection()">Check Deflection</button>
+
+                <div class="result-box">
+                    <div class="result-row">
+                        <span class="result-label">Hydraulic Force</span>
+                        <span class="result-val" id="res_d_force">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Max Deflection</span>
+                        <span class="result-val" id="res_d_def">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Limit (L / 250)</span>
+                        <span class="result-val" id="res_d_lim">-</span>
+                    </div>
+                    <div class="result-row" style="background:#f8fafc; border-top:1px solid #e2e8f0; margin-top:5px; padding-top:10px;">
+                        <span class="result-label" style="font-weight:700;">Status</span>
+                        <span class="result-val" id="res_d_status">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <div class="info-title"><i class="fas fa-info-circle"></i> Engineering Assumptions</div>
+                <div class="info-text">
+                    • <strong>Power Calculation:</strong> Based on $P = N_p \rho N^3 D^5$. Includes estimated efficiency losses. Motor Power calculated with Service Factor 1.3 and Efficiency 0.9.<br>
+                    • <strong>Shaft Deflection:</strong> modeled as a cantilever beam with point load at the end. Hydraulic force $F = C \rho N^2 D^4$. <br>
+                    • <strong>Safety:</strong> Deflection limit is set to L/250 to prevent seal failure and excessive vibration.
+                </div>
+                <div class="info-text" style="margin-bottom:0; color:#64748b; font-size:12px;">
+                    FUTURE: Add critical speed analysis, bearing life calculation, and stepped shaft support.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function autoSuggestImpeller() {
+            const T = parseFloat(document.getElementById('p_tank').value) || 0;
+            if (T > 0) {
+                document.getElementById('p_imp').value = ((T * 0.33) / 1000).toFixed(2);
+            }
+        }
+
+        function calcPower() {
+            // Inputs
+            const rho = parseFloat(document.getElementById('p_rho').value) || 1000;
+            const rpm = parseFloat(document.getElementById('p_rpm').value) || 0;
+            const D = parseFloat(document.getElementById('p_imp').value) || 0;
+            const Np = parseFloat(document.getElementById('p_type').value) || 1.5;
+
+            // Calc
+            const N = rpm / 60; // rps
+            // Power (Watts) = Np * rho * N^3 * D^5
+            const P_watts = Np * rho * Math.pow(N, 3) * Math.pow(D, 5);
+            
+            // Motor Sizing
+            const servFactor = 1.3;
+            const eff = 0.95; // Motor efficiency
+            const P_motor_watts = (P_watts / eff) * servFactor;
+            const P_kw = P_motor_watts / 1000;
+            const HP = P_motor_watts / 746;
+
+            // Results
+            document.getElementById('res_p_hyd').textContent = P_watts.toFixed(1) + " W";
+            document.getElementById('res_p_kw').textContent = P_kw.toFixed(2) + " kW";
+            document.getElementById('res_p_hp').textContent = HP.toFixed(2) + " HP";
+            
+            // Trigger Deflection Update automatically for convenience?
+            // calcDeflection(); 
+        }
+
+        function calcDeflection() {
+            // Inputs 
+            const L_mm = parseFloat(document.getElementById('d_len').value) || 0;
+            const d_mm = parseFloat(document.getElementById('d_dia').value) || 0;
+            const E = parseFloat(document.getElementById('d_mat').value);
+            const C = 0.2; 
+            
+            // From Power Calc Inputs
+            const rho = parseFloat(document.getElementById('p_rho').value) || 1000;
+            const rpm = parseFloat(document.getElementById('p_rpm').value) || 0;
+            const D = parseFloat(document.getElementById('p_imp').value) || 0;
+
+            const N = rpm / 60;
+            const L = L_mm / 1000;
+            const d = d_mm / 1000;
+
+            // Hydraulic Force F = C * rho * N^2 * D^4
+            // Note: Some formulas use N in rpm vs rps, check units carefully. 
+            // Standard Chemical Engineering uses rps for consistent SI units.
+            // F (Newtons)
+            const F = C * rho * Math.pow(N, 2) * Math.pow(D, 4); 
+
+            // Moment of Inertia I = (pi * d^4) / 64
+            const I = (Math.PI * Math.pow(d, 4)) / 64;
+
+            // Deflection delta = (F * L^3) / (3 * E * I)
+            const delta = (F * Math.pow(L, 3)) / (3 * E * I);
+            const delta_mm = delta * 1000;
+
+            // Limit
+            const limit_mm = L_mm / 250;
+
+            // Display
+            document.getElementById('res_d_force').textContent = F.toFixed(1) + " N";
+            document.getElementById('res_d_def').textContent = delta_mm.toFixed(2) + " mm";
+            document.getElementById('res_d_lim').textContent = limit_mm.toFixed(2) + " mm";
+            
+            const statEl = document.getElementById('res_d_status');
+            if(delta_mm < limit_mm) {
+                statEl.innerHTML = "<i class='fas fa-check-circle'></i> SAFE";
+                statEl.className = "result-val status-pass";
+            } else {
+                statEl.innerHTML = "<i class='fas fa-exclamation-triangle'></i> REDESIGN NEEDED";
+                statEl.className = "result-val status-fail";
+            }
+        }
+    </script>
+</body>
+</html>

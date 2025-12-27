@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Intelligent P&ID Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb; --accent: #f59e0b; --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --text: #0f172a;
+            --error: #ef4444; --warning: #f59e0b; --success: #10b981; --htds: #ef4444; --ltds: #3b82f6; --sludge: #dc2626;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 18px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px; }
+        .workspace { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 340px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; padding: 20px; }
+        .panel-section { margin-bottom: 25px; }
+        .panel-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+        .btn-gen, .btn-validate, .btn-optimize, .btn-sheet { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; margin-bottom: 8px; }
+        .btn-gen { background: var(--primary); color: white; } .btn-gen:hover { background: #1d4ed8; }
+        .btn-validate { background: var(--warning); color: white; } .btn-validate:hover { background: #d97706; }
+        .btn-optimize { background: var(--success); color: white; } .btn-optimize:hover { background: #059669; }
+        .btn-sheet { background: #6b7280; color: white; font-size: 11px; width: auto; padding: 6px 12px; margin: 2px; border-radius:6px; }
+        .btn-sheet.active { background: var(--primary); }
+        .logs { font-size: 11px; border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px; max-height: 150px; overflow-y: auto; }
+        .log-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #f1f5f9; }
+        .violation-item { color: var(--error); } .violation-item.warning { color: var(--warning); } .opt-item { color: var(--success); }
+        .canvas-area { flex: 1; background: #f1f5f9; position: relative; overflow: auto; display: flex; flex-direction: column; }
+        .sheet-tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px; overflow-x: auto; }
+        #pidCanvas { background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 4px; flex: 1; padding: 12px; }
+        .toolbar { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 10; }
+        .tool-btn { background: white; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #475569; display: flex; align-items: center; gap: 6px; }
+        .tool-btn:hover { background: #f8fafc; border-color: var(--primary); color: var(--primary); }
+        .stream { fill: none; stroke-width: 2; } .stream:hover { stroke-width: 3; cursor: pointer; }
+        .htds { stroke: var(--htds); } .ltds { stroke: var(--ltds); } .sludge { stroke: var(--sludge); stroke-width: 3; }
+        .bypass { stroke-dasharray: 5,5; stroke: var(--success); } .dosing { stroke: #8b5cf6; stroke-width: 1.5; }
+        .unit { rx: 4; } .inst { font-size: 8px; fill: #475569; }
+    </style>
+</head>
+<body>
+<header>
+    <h1><i class="fas fa-network-wired"></i> Intelligent P&ID Generator <span id="projectBadge" style="font-size:11px; background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:12px; margin-left:10px;">Select Template</span></h1>
+    <div style="font-size:12px; color:#64748b;">Auto-Generate Process P&IDs with Engineering Logic</div>
+</header>
+<div class="workspace">
+    <div class="sidebar">
+        <div class="panel-section">
+            <div class="panel-title">Process Definition</div>
+            <div class="form-group">
+                <label>Plant Template</label>
+                <select id="plantType" onchange="updateTemplate()">
+                    <option value="etp_standard">ETP - Standard (HTDS/LTDS Split)</option>
+                    <option value="stp_mbbr">STP - MBBR Based</option>
+                    <option value="stp_sbr">STP - SBR (Sequential Batch)</option>
+                    <option value="wfi_loop">Pharma - WFI Generation & Distribution</option>
+                    <option value="etp_pharma">Pharma ETP - Advanced Treatment</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Client Name</label>
+                <input type="text" id="clientName" value="" placeholder="e.g., Cipla Ltd" onchange="runEngine()">
+            </div>
+            <div class="form-group">
+                <label>Project Code</label>
+                <input type="text" id="projectCode" value="" placeholder="e.g., REV-02" onchange="runEngine()">
+            </div>
+            <div class="form-group">
+                <label>Design Flow (m³/hr)</label>
+                <input type="number" id="flowRate" value="8.33" onchange="runEngine()">
+            </div>
+            <div class="form-group" id="htdsSplitGroup">
+                <label>HTDS/LTDS Split (% HT)</label>
+                <input type="range" id="htdsSplit" min="40" max="80" value="60" onchange="runEngine()"> <span id="splitVal">60/40</span>
+            </div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-title">Engineering Rules</div>
+            <div class="form-group">
+                <label>EQ HRT (hrs)</label>
+                <input type="number" id="eqRetention" value="8" onchange="runEngine()">
+            </div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-title">Design Calculations <span id="calcCount">0</span></div>
+            <div id="designCalcList" class="logs" style="max-height: 200px;"></div>
+        </div>
+        <button class="btn-gen" onclick="runEngine()"><i class="fas fa-bolt"></i> Generate Full REV 2</button>
+        <button class="btn-validate" onclick="validateModel()"><i class="fas fa-check-circle"></i> Run Validation Check</button>
+        <button class="btn-optimize" onclick="optimizeModel()"><i class="fas fa-cogs"></i> Optimize (5 Suggestions)</button>
+        <div class="panel-section">
+            <div class="panel-title">Violations <span id="violationCount">0</span></div>
+            <div id="violationLog" class="logs"></div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-title">Optimizations <span id="optCount">0</span></div>
+            <div id="optSuggestions" class="logs"></div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-title">BOM <span id="bomCount">0 items</span></div>
+            <div id="bomList" class="logs"></div>
+        </div>
+    </div>
+    <div class="canvas-area">
+        <div class="toolbar">
+            <button class="tool-btn" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> Export 14-Page PDF</button>
+            <button class="tool-btn" onclick="exportSVG()"><i class="fas fa-download"></i> Export SVG</button>
+            <button class="tool-btn" onclick="toggleLabels()"><i class="fas fa-tag"></i> Toggle Tags</button>
+        </div>
+        <div class="sheet-tabs" id="sheetTabs"></div>
+        <div id="pidCanvas"></div>
+    </div>
+</div>
+<script>
+    // Full RULEBOOK (REV 2 Specific)
+    const RULEBOOK = {
+        "P-01": { type: "process", description: "Full sequence enforced", mandatory_units: ["FS-101", "TK-101", "DAF-101"], severity: "error" },
+        "H-01": { type: "hydraulic", service_velocity_limits: { gravity: {min:0.6,max:1.0}, pump_discharge: {min:1.5,max:2.5}, sludge: {min:1.0,max:2.0} }, severity: "error" },
+        "M-03": { type: "mechanical", material_rules: { rw: "UPVC", acid: "SS316", sludge: "CS" }, severity: "error" },
+        "S-03": { type: "safety", chemical_units: { "TK-901": ["bund", "vent", "LSHH"] }, severity: "error" },
+        "O-01": { type: "optimization", objective: "pipe_cost", severity: "suggestion" },
+        "O-02": { type: "optimization", objective: "energy", actions: ["VFD BL-601"] , severity: "suggestion" },
+        "O-03": { type: "optimization", objective: "maintenance", severity: "suggestion" }
+    };
+
+    const PIPE_SCHED = [{dn:25,id:25},{dn:32,id:32},{dn:40,id:40},{dn:50,id:50},{dn:65,id:65},{dn:80,id:80},{dn:100,id:100},{dn:125,id:125},{dn:150,id:150},{dn:200,id:200}];
+    let currentModel = null; let violations = []; let optimizations = []; let currentSheet = 0;
+
+    function getPipeSize(flow, vel, service = 'gravity') {
+        const Q_sec = flow / 3600;
+        const A_req = Q_sec / vel;
+        const d_req_mm = Math.sqrt(4 * A_req / Math.PI) * 1000;
+        let chosen = PIPE_SCHED[PIPE_SCHED.length-1];
+        for(let p of PIPE_SCHED) { if(p.id >= d_req_mm) { chosen = p; break; } }
+        return chosen.dn;
+    }
+
+    function getUnitById(model, id) {
+        for (const s of model.sheets) {
+            if (!s) continue;
+            const u = (s.units || []).find(x => x.id === id);
+            if (u) return u;
+        }
+        return null;
+    }
+
+    function updateTemplate() {
+        const template = document.getElementById('plantType').value;
+        const flow = parseFloat(document.getElementById('flowRate').value) || 8.33;
+        const badges = {
+            'etp_standard': `${(flow * 24).toFixed(0)} KLD ETP - 13 Sheets`,
+            'stp_mbbr': `${(flow * 24).toFixed(0)} KLD STP (MBBR) - 10 Sheets`,
+            'stp_sbr': `${(flow * 24).toFixed(0)} KLD STP (SBR) - 8 Sheets`,
+            'wfi_loop': `WFI Loop (${flow.toFixed(1)} m³/hr) - 6 Sheets`,
+            'etp_pharma': `${(flow * 24).toFixed(0)} KLD Pharma ETP - 12 Sheets`
+        };
+        document.getElementById('projectBadge').innerText = badges[template] || 'Select Template';
+        
+        // Show/hide HTDS split for ETP templates only
+        const splitGroup = document.getElementById('htdsSplitGroup');
+        if (template.includes('etp')) {
+            splitGroup.style.display = 'block';
+        } else {
+            splitGroup.style.display = 'none';
+        }
+        
+        runEngine();
+    }
+
+    // ========== DYNAMIC SIZING HELPER FUNCTIONS ==========
+    function calcTankVolume(Q, HRT_hrs) {
+        return Math.ceil(Q * HRT_hrs);
+    }
+
+    function calcBioTankVolume(Q, BOD_in, FM_ratio, MLSS) {
+        // Vol = Q × BOD / (F:M × MLSS)
+        return Math.ceil((Q * 24 * BOD_in) / (FM_ratio * MLSS));
+    }
+
+    function calcClarifierArea(Q, SOR) {
+        // Surface Overflow Rate = m³/m²/hr
+        return Math.ceil(Q / SOR);
+    }
+
+    function calcPumpSpec(Q, duty=1.2, head=25) {
+        return `${(Q * duty).toFixed(1)} m3/hr @${head}m`;
+    }
+
+    function calcBlowerAOR(Q, BOD, TKN=0) {
+        // Simplified: AOR (kg O2/day) = 1.5×BOD + 4.6×TKN (as kg/day)
+        const BOD_kgd = Q * 24 * BOD / 1000;
+        const TKN_kgd = Q * 24 * TKN / 1000;
+        return 1.5 * BOD_kgd + 4.6 * TKN_kgd;
+    }
+
+    // ======== DESIGN CALCULATIONS STORAGE ========
+    let designCalcs = [];
+
+    function addCalc(name, formula, value, unit) {
+        designCalcs.push({ name, formula, value, unit });
+    }
+
+    // ========== TEMPLATE FACTORY ==========
+    function generateModel() {
+        const template = document.getElementById('plantType').value;
+        const Q = parseFloat(document.getElementById('flowRate').value) || 8.33;
+        const hrt = parseFloat(document.getElementById('eqRetention').value) || 8;
+        const split = parseInt(document.getElementById('htdsSplit').value) / 100;
+
+        designCalcs = []; // Reset calculations
+
+        // Route to template-specific generator
+        switch(template) {
+            case 'etp_standard':
+                return generateETP_Standard(Q, hrt, split);
+            case 'stp_mbbr':
+                return generateSTP_MBBR(Q, hrt);
+            case 'stp_sbr':
+                return generateSTP_SBR(Q, hrt);
+            case 'wfi_loop':
+                return generateWFI_Loop(Q);
+            case 'etp_pharma':
+                return generateETP_Pharma(Q, hrt, split);
+            default:
+                return generateETP_Standard(Q, hrt, split);
+        }
+    }
+
+    // ========== TEMPLATE 1: ETP STANDARD (HTDS/LTDS) ==========
+    function generateETP_Standard(Q, hrt, split) {
+        const Q_HT = Q * split, Q_LT = Q * (1 - split);
+        const clientName = document.getElementById('clientName').value || 'Client Name';
+        const projectCode = document.getElementById('projectCode').value || 'REV-01';
+        const today = new Date().toISOString().split('T')[0];
+
+        document.getElementById('splitVal').innerText = `${Math.round(split*100)}/${Math.round(100-split*100)}`;
+
+        // Dynamic Sizing
+        const Vol_HT_EQ = calcTankVolume(Q_HT, hrt);
+        const Vol_LT_EQ = calcTankVolume(Q_LT, hrt);
+       const Vol_Anoxic = calcTankVolume(Q_LT, 4);
+        const Vol_MBBR = calcTankVolume(Q_LT, 8);
+
+        const dn_ht_in = getPipeSize(Q_HT, 0.8);
+        const dn_ht_pump = getPipeSize(Q_HT, 2.0);
+        const dn_lt_in = getPipeSize(Q_LT, 0.8);
+        const dn_lt_pump = getPipeSize(Q_LT, 2.0);
+
+        // Store calculations
+        addCalc('HT EQ Tank', `${Q_HT.toFixed(2)} × ${hrt}`, Vol_HT_EQ, 'm³');
+        addCalc('LT EQ Tank', `${Q_LT.toFixed(2)} × ${hrt}`, Vol_LT_EQ, 'm³');
+        addCalc('HT Inlet Pipe', `Q=${Q_HT.toFixed(2)}, v=0.8`, dn_ht_in, 'DN');
+        addCalc('LT Inlet Pipe', `Q=${Q_LT.toFixed(2)}, v=0.8`, dn_lt_in, 'DN');
+
+        const model = { design: { Q, Q_HT, Q_LT, hrt, template: 'etp_standard' }, units: [], streams: [], equipment: [], instruments: [], sludge_streams: [], sheets: [] };
+        violations = []; optimizations = [];
+
+        // Sheet 1: HT Inlet/EQ/DAF
+        model.sheets.push({
+            units: [
+                { id: 'FS-101', type: 'Screen', x: 80, y: 250, label: `Bar Screen\\n${(Q_HT*1.2).toFixed(1)} m3/hr`, moc: 'SS316' },
+                { id: 'TK-101', type: 'EQ Tank', x: 280, y: 250, label: `HT EQ\\n${Vol_HT_EQ} m3`, moc: 'CS' },
+                { id: 'DAF-101', type: 'DAF', x: 550, y: 250, label: 'HT DAF', moc: 'SS304' }
+            ],
+            equipment: [
+                { id: 'P-101A', type: 'Pump', x: 380, y: 300, spec: calcPumpSpec(Q_HT), redundant: 'B', moc: 'SS316' }
+            ],
+            streams: [
+                { from: 'FS-101', to: 'TK-101', flow: Q_HT, dn: dn_ht_in, id: 'L-101', service: 'gravity', color: 'htds' },
+                { from: 'TK-101', to: 'DAF-101', flow: Q_HT, dn: dn_ht_pump, id: 'L-102', pump: 'P-101A', service: 'pump_discharge' }
+            ]
+        });
+
+        // Sheet 2-3: Similar for other HT stages (simplified for now)
+        model.sheets.push({ units: [{ id: 'RB-301', type: 'Stripper', x: 350, y: 250, label: 'Stripper Col', moc: 'SS316' }], equipment: [], streams: [] });
+        
+        // Sheet 3: LT Inlet/EQ/DAF
+        model.sheets.push({
+            units: [
+                { id: 'FS-401', type: 'Screen', x: 80, y: 250, label: `LT Screen\\n${(Q_LT*1.2).toFixed(1)} m3/hr`, moc: 'SS316' },
+                { id: 'TK-401', type: 'EQ Tank', x: 280, y: 250, label: `LT EQ\\n${Vol_LT_EQ} m3`, moc: 'CS' },
+                { id: 'DAF-501', type: 'DAF', x: 550, y: 250, label: 'LT DAF', moc: 'SS304' }
+            ],
+            equipment: [
+                { id: 'P-401A', type: 'Pump', x: 380, y: 300, spec: calcPumpSpec(Q_LT), redundant: 'B', moc: 'SS316' }
+            ],
+            streams: [
+                { from: 'FS-401', to: 'TK-401', flow: Q_LT, dn: dn_lt_in, id: 'L-401', service: 'gravity', color: 'ltds' },
+                { from: 'TK-401', to: 'DAF-501', flow: Q_LT, dn: dn_lt_pump, id: 'L-402', pump: 'P-401A', service: 'pump_discharge' }
+            ]
+        });
+
+        // Sheet 4: Bio Treatment
+        model.sheets.push({
+            units: [
+                { id: 'TK-601', type: 'Anoxic Tank', x: 100, y: 250, label: `Anoxic\\n${Vol_Anoxic} m3`, moc: 'RCC' },
+                { id: 'TK-602', type: 'MBBR Tank', x: 350, y: 250, label: `MBBR\\n${Vol_MBBR} m3`, moc: 'RCC' },
+                { id: 'TK-603', type: 'Mech Tank', x: 600, y: 250, label: `Mech\\n${Math.ceil(Vol_MBBR/4)} m3`, moc: 'RCC' }
+            ],
+            equipment: [
+                { id: 'BL-601A', type: 'Blower', x: 400, y: 150, spec: `${(Q_LT*2).toFixed(0)} m3/min`, redundant: 'B', moc: 'MS' }
+            ],
+            streams: [
+                { from: 'TK-601', to: 'TK-602', flow: Q_LT, dn: getPipeSize(Q_LT, 2.0), id: 'L-602', service: 'pump_discharge' },
+                { from: 'TK-602', to: 'TK-603', flow: Q_LT, dn: getPipeSize(Q_LT, 0.8), id: 'L-603', service: 'gravity' }
+            ]
+        });
+
+        // Remaining sheets (placeholders for conciseness)
+        for (let i = 5; i <= 10; i++) model.sheets.push({ units: [], equipment: [], streams: [], notes: `Sheet ${i}: Process Detail` });
+        
+        model.sheets.push({ units: [], streams: [], notes: `${projectCode} | Date: ${today} | Client: ${clientName} | EPC: EEPL` });
+
+        model.instruments = [];
+        model.sludge_streams = [];
+        applyRules(model);
+        currentModel = model;
+        return model;
+    }
+
+    // ========== TEMPLATE 2: STP - MBBR ==========
+    function generateSTP_MBBR(Q, hrt) {
+        const clientName = document.getElementById('clientName').value || 'Client Name';
+        const projectCode = document.getElementById('projectCode').value || 'REV-01';
+        const today = new Date().toISOString().split('T')[0];
+
+        // Engineering Parameters
+        const BOD_in = 300; // mg/L typical domestic
+        const FM_ratio = 0.2; // F:M ratio
+        const MLSS = 3500; // mg/L
+        const SOR = 1.2; // m³/m²/hr
+
+        // Dynamic Sizing
+        const Vol_EQ = calcTankVolume(Q, hrt);
+        const Vol_Anoxic = calcTankVolume(Q, 4);
+        const Vol_MBBR = calcBioTankVolume(Q, BOD_in, FM_ratio, MLSS);
+        const Area_Clarifier = calcClarifierArea(Q, SOR);
+        const AOR = calcBlowerAOR(Q, BOD_in, 40);
+
+        const dn_inlet = getPipeSize(Q, 0.8);
+        const dn_pump = getPipeSize(Q, 2.0);
+
+        // Store calculations
+        addCalc('EQ Tank', `${Q.toFixed(2)} × ${hrt}`, Vol_EQ, 'm³');
+        addCalc('MBBR Vol', `(${Q}×24×${BOD_in})/(${FM_ratio}×${MLSS})`, Vol_MBBR, 'm³');
+        addCalc('Clarifier Area', `${Q.toFixed(2)} / ${SOR}`, Area_Clarifier, 'm²');
+        addCalc('AOR', `1.5×BOD + 4.6×TKN`, AOR.toFixed(1), 'kgO₂/day');
+        addCalc('Inlet Pipe', `Q=${Q.toFixed(2)}, v=0.8`, dn_inlet, 'DN');
+
+        const model = { design: { Q, hrt, template: 'stp_mbbr' }, units: [], streams: [], equipment: [], instruments: [], sludge_streams: [], sheets: [] };
+        violations = []; optimizations = [];
+
+        // Sheet 1: Inlet & EQ
+        model.sheets.push({
+            units: [
+                { id: 'FS-101', type: 'Screen', x: 80, y: 250, label: `Bar Screen\\n${(Q*1.2).toFixed(1)} m3/hr`, moc: 'SS316' },
+                { id: 'GC-101', type: 'Grit Chamber', x: 250, y: 250, label: 'Grit\\nRemoval', moc: 'RCC' },
+                { id: 'TK-101', type: 'EQ Tank', x: 450, y: 250, label: `EQ Tank\\n${Vol_EQ} m3`, moc: 'RCC' }
+            ],
+            equipment: [
+                { id: 'P-101A', type: 'Pump', x: 580, y: 300, spec: calcPumpSpec(Q), redundant: 'B', moc: 'Cast Iron' }
+            ],
+            streams: [
+                { from: 'FS-101', to: 'GC-101', flow: Q, dn: dn_inlet, id: 'L-101', service: 'gravity' },
+                { from: 'GC-101', to: 'TK-101', flow: Q, dn: dn_inlet, id: 'L-102', service: 'gravity' }
+            ]
+        });
+
+        // Sheet 2: Bio Treatment
+        model.sheets.push({
+            units: [
+                { id: 'TK-201', type: 'Anoxic Tank', x: 100, y: 250, label: `Anoxic\\n${Vol_Anoxic} m3`, moc: 'RCC' },
+                { id: 'TK-202', type: 'MBBR Tank', x: 350, y: 250, label: `MBBR\\n${Vol_MBBR} m3`, moc: 'RCC' }
+            ],
+            equipment: [
+                { id: 'BL-201A', type: 'Blower', x: 450, y: 150, spec: `${(AOR/48).toFixed(1)} m3/min`, redundant: 'B', moc: 'MS' },
+                { id: 'MX-201', type: 'Mixer', x: 150, y: 350, spec: '1.5 kW', moc: 'SS316' }
+            ],
+            streams: [
+                { from: 'TK-201', to: 'TK-202', flow: Q, dn: dn_pump, id: 'L-201', service: 'pump_discharge' }
+            ]
+        });
+
+        // Sheet 3: Clarifier
+        model.sheets.push({
+            units: [
+                { id: 'CL-301', type: 'Clarifier', x: 250, y: 250, label: `Clarifier\\n${Area_Clarifier} m²`, moc: 'RCC' },
+                { id: 'TK-302', type: 'Treated Water', x: 500, y: 250, label: 'Treated\\nEffluent', moc: 'RCC' }
+            ],
+            equipment: [],
+            streams: [
+                { from: 'CL-301', to: 'TK-302', flow: Q*0.95, dn: getPipeSize(Q*0.95, 0.8), id: 'L-301', service: 'gravity' }
+            ]
+        });
+
+        // Remaining sheets (placeholders)
+        for (let i = 4; i <= 9; i++) model.sheets.push({ units: [], equipment: [], streams: [], notes: `Sheet ${i}: Details` });
+        
+        model.sheets.push({ units: [], streams: [], notes: `${projectCode} | Date: ${today} | Client: ${clientName} | EPC: EEPL` });
+
+        model.instruments = [];
+        model.sludge_streams = [];
+        applyRules(model);
+        currentModel = model;
+        return model;
+    }
+
+    // ========== TEMPLATE 3: STP - SBR ==========
+    function generateSTP_SBR(Q, hrt) {
+        const clientName = document.getElementById('clientName').value || 'Client Name';
+        const projectCode = document.getElementById('projectCode').value || 'REV-01';
+        const today = new Date().toISOString().split('T')[0];
+
+        // SBR Cycle Engineering
+        const Fill_hrs = 1.5;
+        const React_hrs = 4.5;
+        const Settle_hrs = 1.5;
+        const Decant_hrs = 0.5;
+        const TotalCycle_hrs = Fill_hrs + React_hrs + Settle_hrs + Decant_hrs;
+        const NumCycles = Math.floor(24 / TotalCycle_hrs);
+        
+        // Tank Sizing
+        const Vol_EQ = calcTankVolume(Q, hrt);
+        const Vol_SBR = Math.ceil(Q * TotalCycle_hrs * 1.2); // 20% safety factor
+        const dn_inlet = getPipeSize(Q, 0.8);
+
+        // Store calculations
+        addCalc('EQ Tank', `${Q.toFixed(2)} × ${hrt}`, Vol_EQ, 'm³');
+        addCalc('SBR Volume', `${Q.toFixed(2)} × ${TotalCycle_hrs.toFixed(1)} × 1.2`, Vol_SBR, 'm³');
+        addCalc('Cycles/Day', `24 / ${TotalCycle_hrs}`, NumCycles, 'cycles');
+        addCalc('React Time', 'Fixed', React_hrs, 'hrs');
+        addCalc('Inlet Pipe', `Q=${Q.toFixed(2)}, v=0.8`, dn_inlet, 'DN');
+
+        const model = { design: { Q, hrt, template: 'stp_sbr' }, units: [], streams: [], equipment: [], instruments: [], sludge_streams: [], sheets: [] };
+        violations = []; optimizations = [];
+
+        // Sheet 1: Inlet & EQ
+        model.sheets.push({
+            units: [
+                { id: 'FS-101', type: 'Screen', x: 80, y: 250, label: `Bar Screen\\n${(Q*1.2).toFixed(1)} m3/hr`, moc: 'SS316' },
+                { id: 'TK-101', type: 'EQ Tank', x: 350, y: 250, label: `EQ Tank\\n${Vol_EQ} m3`, moc: 'RCC' }
+            ],
+            equipment: [
+                { id: 'P-101A', type: 'Pump', x: 500, y: 300, spec: calcPumpSpec(Q), redundant: 'B', moc: 'Cast Iron' }
+            ],
+            streams: [
+                { from: 'FS-101', to: 'TK-101', flow: Q, dn: dn_inlet, id: 'L-101', service: 'gravity' }
+            ]
+        });
+
+        // Sheet 2: SBR Reactor
+        model.sheets.push({
+            units: [
+                { id: 'SBR-201', type: 'SBR Tank', x: 300, y: 250, label: `SBR\\n${Vol_SBR} m3\\n${NumCycles} cyc/day`, moc: 'RCC' },
+                { id: 'TK-202', type: 'Effluent Tank', x: 600, y: 250, label: 'Treated\\nEffluent', moc: 'RCC' }
+            ],
+            equipment: [
+                { id: 'BL-201A', type: 'Blower', x: 350, y: 150, spec: `${(Q*1.5).toFixed(1)} m3/min`, redundant: 'B', moc: 'MS' },
+                { id: 'MX-201', type: 'Decanter', x: 450, y: 300, spec: 'Auto Control', moc: 'SS316' }
+            ],
+            streams: [
+                { from: 'SBR-201', to: 'TK-202', flow: Q*0.95, dn: getPipeSize(Q*0.95, 0.8), id: 'L-202', service: 'gravity' }
+            ]
+        });
+
+        // Remaining sheets
+        for (let i = 3; i <= 7; i++) model.sheets.push({ units: [], equipment: [], streams: [], notes: `Sheet ${i}: Details` });
+        model.sheets.push({ units: [], streams: [], notes: `${projectCode} | Date: ${today} | Client: ${clientName} | EPC: EEPL` });
+
+        model.instruments = [];
+        model.sludge_streams = [];
+        applyRules(model);
+        currentModel = model;
+        return model;
+    }
+
+    function generateWFI_Loop(Q) {
+        const clientName = document.getElementById('clientName').value || 'Client Name';
+        const projectCode = document.getElementById('projectCode').value || 'REV-01';
+        const today = new Date().toISOString().split('T')[0];
+
+        // WFI Loop Engineering
+        const Loop_Velocity = 1.3; // m/s (turbulent flow)
+        const Storage_Vol = Math.ceil(Q * 4); // 4 hours storage
+        const dn_loop = getPipeSize(Q, Loop_Velocity);
+        const dn_usepoint = 25; // DN25 for use points
+
+        // Store calculations
+        addCalc('WFI Storage', `${Q.toFixed(2)} × 4 hrs`, Storage_Vol, 'm³');
+        addCalc('Loop Velocity', 'Turbulent', Loop_Velocity.toFixed(2), 'm/s');
+        addCalc('Main Loop Pipe', `Q=${Q.toFixed(2)}, v=${Loop_Velocity}`, dn_loop, 'DN');
+        addCalc('Use Point Drops', 'Standard', dn_usepoint, 'DN');
+
+        const model = { design: { Q, template: 'wfi_loop' }, units: [], streams: [], equipment: [], instruments: [], sludge_streams: [], sheets: [] };
+        violations = []; optimizations = [];
+
+        // Sheet 1: Generation
+        model.sheets.push({
+            units: [
+                { id: 'RO-101', type: 'RO Unit', x: 80, y: 250, label: `RO\\n${(Q*1.5).toFixed(1)} m3/hr`, moc: 'SS316L' },
+                { id: 'MCS-101', type: 'Multi-Column Still', x: 350, y: 250, label: `Still\\n${Q.toFixed(1)} m3/hr`, moc: 'SS316L' },
+                { id: 'TK-101', type: 'WFI Storage', x: 620, y: 250, label: `WFI Tank\\n${Storage_Vol} m3`, moc: 'SS316L' }
+            ],
+            equipment: [
+                { id: 'P-101A', type: 'Pump', x: 450, y: 300, spec: calcPumpSpec(Q, 1.1, 15), redundant: 'B', moc: 'SS316L' },
+                { id: 'UV-101', type: 'UV Unit', x: 550, y: 150, spec: '254nm', moc: 'SS316L' }
+            ],
+            streams: [
+                { from: 'RO-101', to: 'MCS-101', flow: Q, dn: dn_loop, id: 'L-101', service: 'pump_discharge' },
+                { from: 'MCS-101', to: 'TK-101', flow: Q, dn: dn_loop, id: 'L-102', service: 'pump_discharge' }
+            ]
+        });
+
+        // Sheet 2: Distribution Loop
+        model.sheets.push({
+            units: [
+                { id: 'TK-101', type: 'WFI Storage', x: 100, y: 250, label: `WFI Tank\\n${Storage_Vol} m3`, moc: 'SS316L' },
+                { id: 'POU-1', type: 'Point of Use', x: 400, y: 150, label: 'POU-1', moc: 'SS316L' },
+                { id: 'POU-2', type: 'Point of Use', x: 500, y: 250, label: 'POU-2', moc: 'SS316L' },
+                { id: 'POU-3', type: 'Point of Use', x: 400, y: 350, label: 'POU-3', moc: 'SS316L' }
+            ],
+            equipment: [
+                { id: 'P-201A', type: 'Loop Pump', x: 250, y: 250, spec: calcPumpSpec(Q*3, 1.0, 25), redundant: 'B', moc: 'SS316L' },
+                { id: 'HX-201', type: 'Heat Exchanger', x: 300, y: 150, spec: '80-85°C', moc: 'SS316L' }
+            ],
+            streams: []
+        });
+
+        for (let i = 3; i <= 5; i++) model.sheets.push({ units: [], equipment: [], streams: [], notes: `Sheet ${i}: Loop Details` });
+        model.sheets.push({ units: [], streams: [], notes: `${projectCode} | Date: ${today} | Client: ${clientName} | EPC: EEPL` });
+
+        model.instruments = [];
+        model.sludge_streams = [];
+        applyRules(model);
+        currentModel = model;
+        return model;
+    }
+
+    function generateETP_Pharma(Q, hrt, split) {
+        // Pharma ETP: Similar to standard ETP but with pharma-grade materials
+        const Q_HT = Q * split, Q_LT = Q * (1 - split);
+        const clientName = document.getElementById('clientName').value || 'Client Name';
+        const projectCode = document.getElementById('projectCode').value || 'REV-01';
+        const today = new Date().toISOString().split('T')[0];
+
+        document.getElementById('splitVal').innerText = `${Math.round(split*100)}/${Math.round(100-split*100)}`;
+
+        // Dynamic Sizing (same formulas as standard ETP)
+        const Vol_HT_EQ = calcTankVolume(Q_HT, hrt);
+        const Vol_LT_EQ = calcTankVolume(Q_LT, hrt);
+        const Vol_UF = Math.ceil(Q_LT * 2); // Ultrafiltration polishing
+
+        const dn_ht_in = getPipeSize(Q_HT, 1.2); // Higher velocity for pharma
+        const dn_lt_in = getPipeSize(Q_LT, 1.2);
+
+        // Store calculations
+        addCalc('HT EQ Tank', `${Q_HT.toFixed(2)} × ${hrt}`, Vol_HT_EQ, 'm³');
+        addCalc('LT EQ Tank', `${Q_LT.toFixed(2)} × ${hrt}`, Vol_LT_EQ, 'm³');
+        addCalc('UF Polishing', `${Q_LT.toFixed(2)} × 2`, Vol_UF, 'm³');
+        addCalc('Pharma Velocity', 'Turbulent', 1.2, 'm/s');
+
+        const model = { design: { Q, Q_HT, Q_LT, hrt, template: 'etp_pharma' }, units: [], streams: [], equipment: [], instruments: [], sludge_streams: [], sheets: [] };
+        violations = []; optimizations = [];
+
+        // Sheet 1: HT Stream (Pharma-grade)
+        model.sheets.push({
+            units: [
+                { id: 'FS-101', type: 'Auto Screen', x: 80, y: 250, label: `Auto Screen\\n${(Q_HT*1.2).toFixed(1)} m3/hr`, moc: 'SS316L' },
+                { id: 'TK-101', type: 'EQ Tank', x: 280, y: 250, label: `HT EQ\\n${Vol_HT_EQ} m3`, moc: 'SS316L' },
+                { id: 'DAF-101', type: 'DAF', x: 550, y: 250, label: 'Pharma DAF', moc: 'SS316L' }
+            ],
+            equipment: [
+                { id: 'P-101A', type: 'Diaphragm Pump', x: 380, y: 300, spec: calcPumpSpec(Q_HT), redundant: 'B', moc: 'SS316L' }
+            ],
+            streams: [
+                { from: 'FS-101', to: 'TK-101', flow: Q_HT, dn: dn_ht_in, id: 'L-101', service: 'gravity', color: 'htds' },
+                { from: 'TK-101', to: 'DAF-101', flow: Q_HT, dn: dn_ht_in, id: 'L-102', pump: 'P-101A', service: 'pump_discharge' }
+            ]
+        });
+
+        // Sheet 2: LT Stream with UF Polishing
+        model.sheets.push({
+            units: [
+                { id: 'TK-401', type: 'LT EQ', x: 100, y: 250, label: `LT EQ\\n${Vol_LT_EQ} m3`, moc: 'SS316L' },
+                { id: 'UF-501', type: 'UF Unit', x: 400, y: 250, label: `UF Polish\\n${Vol_UF} m3`, moc: 'SS316L' },
+                { id: 'TK-502', type: 'Treated', x: 650, y: 250, label: 'Pharma\\nEffluent', moc: 'SS316L' }
+            ],
+            equipment: [
+                { id: 'P-401A', type: 'Diaphragm Pump', x: 250, y: 300, spec: calcPumpSpec(Q_LT), redundant: 'B', moc: 'SS316L' }
+            ],
+            streams: [
+                { from: 'TK-401', to: 'UF-501', flow: Q_LT, dn: dn_lt_in, id: 'L-401', pump: 'P-401A', service: 'pump_discharge' },
+                { from: 'UF-501', to: 'TK-502', flow: Q_LT*0.9, dn: dn_lt_in, id: 'L-402', service: 'gravity' }
+            ]
+        });
+
+        for (let i = 3; i <= 11; i++) model.sheets.push({ units: [], equipment: [], streams: [], notes: `Sheet ${i}: Pharma Process` });
+        model.sheets.push({ units: [], streams: [], notes: `${projectCode} | Date: ${today} | Client: ${clientName} | EPC: EEPL` });
+
+        model.instruments = [];
+        model.sludge_streams = [];
+        applyRules(model);
+        currentModel = model;
+        return model;
+    }
+
+    function applyRules(model, phase) {
+        violations = [];
+        // P-01: ensure mandatory units exist
+        const missing = RULEBOOK['P-01'].mandatory_units.filter(u => !getUnitById(model, u));
+        if (missing.length) addViolation(RULEBOOK['P-01'], 'Missing units: ' + missing.join(', '));
+
+        // H-01: velocity checks across all sheet streams
+        const limitsConfig = RULEBOOK['H-01'].service_velocity_limits;
+        model.sheets.forEach(s => {
+            (s.streams || []).forEach(st => {
+                if (!st || !st.dn || !st.flow) return;
+                // compute velocity m/s: Q (m3/hr) -> m3/s ; area from dn (mm)
+                const Q_sec = st.flow / 3600;
+                const d_m = st.dn / 1000;
+                const area = Math.PI * (d_m ** 2) / 4;
+                if (area <= 0) return;
+                const v = Q_sec / area;
+                const limits = limitsConfig[st.service] || limitsConfig['gravity'];
+                if (v < limits.min || v > limits.max) addViolation(RULEBOOK['H-01'], `${st.id}: v=${v.toFixed(2)} m/s (limits ${limits.min}-${limits.max})`);
+            });
+        });
+
+        // M-03: MOC check for TK-101 example (search unit)
+        const uTK101 = getUnitById(model, 'TK-101');
+        if (uTK101 && uTK101.moc !== 'CS') addViolation(RULEBOOK['M-03'], 'TK-101 MOC mismatch');
+
+        // S-03: check TK-901 bund (example: check if a dosing tank contains 'bund' text)
+        const uTK901 = getUnitById(model, 'TK-901');
+        if (uTK901 && !(uTK901.label && uTK901.label.toLowerCase().includes('bund'))) addViolation(RULEBOOK['S-03'], 'TK-901 bund missing (check label)');
+    }
+
+    function addViolation(rule, details) {
+        const idName = rule.type || rule.objective || 'rule';
+        violations.push({ rule_id: idName, description: (rule.description || '') + ' ' + details, severity: rule.severity || 'error' });
+    }
+    
+    function addOptimization(rule, suggestion) {
+        const idName = rule.type || rule.objective || 'opt';
+        optimizations.push({ rule_id: idName, suggestion });
+    }
+
+    function validateModel() {
+        if (!currentModel) currentModel = generateModel();
+        applyRules(currentModel, 'safety');
+        renderViolations();
+    }
+
+    function optimizeModel() {
+        if (!currentModel) currentModel = generateModel();
+        optimizations = [];
+        // simple pipe-size suggestion: if a smaller DN can be used
+        currentModel.sheets.forEach(s => (s.streams || []).forEach(st => {
+            if (!st || !st.dn || !st.flow) return;
+            const alt = getPipeSize(st.flow, 1.5, st.service);
+            if (alt < st.dn) addOptimization(RULEBOOK['O-01'], `${st.id}: DN${alt} (instead of DN${st.dn})`);
+        }));
+        addOptimization(RULEBOOK['O-02'], 'VFD BL-601A/B: 25% energy');
+        addOptimization(RULEBOOK['O-03'], '2x50% P-301 vs 3x33% (-15% CAPEX)');
+        // ensure we render suggestions but do not call runEngine() (that would reset them)
+        renderOptimizations();
+        renderViolations(); // keep violations visible
+    }
+
+    function renderViolations() {
+        document.getElementById('violationCount').innerText = violations.length;
+        const log = document.getElementById('violationLog');
+        log.innerHTML = violations.map((v, idx) => `<div class="log-item violation-item ${v.severity || ''}"><strong>${v.rule_id}</strong> <span style="margin-left:8px;">${v.description}</span></div>`).join('') || '<div style="color:#475569;font-size:12px;padding:6px;">No violations</div>';
+    }
+
+    function renderOptimizations() {
+        document.getElementById('optCount').innerText = optimizations.length;
+        const log = document.getElementById('optSuggestions');
+        log.innerHTML = optimizations.map(o => `<div class="log-item opt-item"><strong>${o.rule_id}</strong> <span style="color:var(--success); margin-left:8px;">${o.suggestion}</span></div>`).join('') || '<div style="color:#475569;font-size:12px;padding:6px;">No suggestions</div>';
+    }
+
+    function renderDesignCalcs() {
+        document.getElementById('calcCount').innerText = designCalcs.length;
+        const list = document.getElementById('designCalcList');
+        list.innerHTML = designCalcs.map(c => `<div class="log-item" style="display:flex; flex-direction:column; align-items:flex-start; padding:8px 0;">
+            <div style="font-weight:600; font-size:11px; color:#0f172a;">${c.name}</div>
+            <div style="font-size:10px; color:#64748b; font-family:monospace; margin-top:2px;">${c.formula}</div>
+            <div style="font-size:12px; color:#2563eb; font-weight:700; margin-top:4px;">${c.value} ${c.unit}</div>
+        </div>`).join('') || '<div style="color:#475569;font-size:12px;padding:6px;">No calculations</div>';
+    }
+
+    function renderPID(model) {
+        const tabs = document.getElementById('sheetTabs'); tabs.innerHTML = '';
+        model.sheets.forEach((sheet, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `btn-sheet ${idx === currentSheet ? 'active' : ''}`;
+            btn.innerText = `Sheet ${idx + 1}`;
+            btn.onclick = () => { currentSheet = idx; renderPID(model); };
+            tabs.appendChild(btn);
+        });
+
+        const sheet = model.sheets[currentSheet];
+        if (!sheet) {
+            document.getElementById('pidCanvas').innerHTML = '<div style="padding:20px;color:#64748b;">No sheet to display.</div>';
+            return;
+        }
+
+        // Build SVG
+        let svg = `<svg width="1400" height="700" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#475569"/></marker></defs>`;
+
+        // Units
+        (sheet.units || []).forEach(u => {
+            const safeLabel = (u.label || '').split('\\n')[0] || u.id;
+            svg += `<g transform="translate(${u.x}, ${u.y})">
+                        <rect x="0" y="0" width="120" height="60" rx="6" class="unit" fill="#eff6ff" stroke="#2563eb"/>
+                        <text x="60" y="22" text-anchor="middle" font-size="11" fill="#0f172a">${safeLabel}</text>
+                        <text x="60" y="40" text-anchor="middle" font-size="9" fill="#475569">${u.moc || ''}</text>
+                    </g>`;
+            if ((u.type || '').includes('DAF')) svg += `<path d="M${u.x + 120} ${u.y + 30} H${u.x + 160}" class="bypass" stroke-width="1"/>`;
+        });
+
+        // Streams - only render if BOTH units are on this sheet
+        (sheet.streams || []).forEach(s => {
+            // Check if both units exist on THIS sheet (not other sheets)
+            const u1 = (sheet.units || []).find(uf => uf.id === s.from);
+            const u2 = (sheet.units || []).find(ut => ut.id === s.to);
+            
+            if (u1 && u2) {
+                const startX = (u1.x || 0) + 120;
+                const startY = (u1.y || 0) + 30;
+                const endX = (u2.x || 0);
+                const endY = (u2.y || 0) + 30;
+                const midX = (startX + endX) / 2;
+                const midY = (startY + endY) / 2;
+                const cls = s.type === 'dosing' ? 'dosing' : (s.color ? s.color : 'stream');
+                const d = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${midY} L ${endX} ${endY}`;
+                svg += `<path class="${cls} stream" d="${d}" marker-end="url(#arrow)" stroke="#475569"/>`;
+                svg += `<text x="${midX}" y="${midY + 12}" text-anchor="middle" class="stream-label" font-size="10">DN${s.dn} ${s.flow?.toFixed(2) || ''} m3/hr</text>`;
+            } else if (!u1 || !u2) {
+                // Stream goes off-sheet - show continuation marker
+                const sourceUnit = u1 || (sheet.units || [])[0];
+                if (sourceUnit && u1) {
+                    // Draw outgoing continuation
+                    const startX = (sourceUnit.x || 0) + 120;
+                    const startY = (sourceUnit.y || 0) + 30;
+                    svg += `<path class="stream" d="M ${startX} ${startY} L ${startX + 100} ${startY}" stroke="#475569" stroke-dasharray="5,5"/>`;
+                    svg += `<text x="${startX + 50}" y="${startY - 8}" text-anchor="middle" font-size="9" fill="#ef4444">To ${s.to}</text>`;
+                }
+            }
+        });
+
+        // Equipment
+        (sheet.equipment || []).forEach(e => {
+            svg += `<g transform="translate(${e.x}, ${e.y})">
+                        <circle cx="0" cy="0" r="16" fill="#fff" stroke="#475569" />
+                        <text x="0" y="-22" text-anchor="middle" font-size="9" fill="#333">${e.id}${e.redundant ? '/B' : ''}</text>
+                        <text x="0" y="6" text-anchor="middle" font-size="8" fill="#475569">${(e.spec||'').split(' ')[0]}</text>
+                    </g>`;
+        });
+
+        // Display notes (for text-only sheets like 12-14)
+        if (sheet.notes) {
+            const hasContent = (sheet.units || []).length > 0 || (sheet.equipment || []).length > 0;
+            if (hasContent) {
+                // Notes as subtitle if sheet has content
+                svg += `<text x="700" y="50" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">${sheet.notes}</text>`;
+            } else {
+                // Notes as main content if no units/equipment
+                svg += `<rect x="50" y="50" width="1300" height="600" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2" rx="8"/>`;
+                svg += `<text x="700" y="350" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">Sheet ${currentSheet + 1}</text>`;
+                svg += `<text x="700" y="390" text-anchor="middle" font-size="13" fill="#64748b">${sheet.notes}</text>`;
+            }
+        }
+        svg += '</svg>';
+
+        document.getElementById('pidCanvas').innerHTML = svg;
+        // update BOM each render to reflect visible items
+        renderBOM(model);
+        renderViolations();
+        renderOptimizations();
+        renderDesignCalcs();
+    }
+
+    function renderBOM(model) {
+        const items = [];
+        model.sheets.forEach(s => {
+            (s.units || []).forEach(u => items.push({ tag: u.id, desc: (u.label||'').split('\\n')[0] || u.type, spec: `${u.moc || ''}` }));
+            (s.equipment || []).forEach(e => items.push({ tag: e.id, desc: e.type, spec: `${e.spec || ''} ${e.redundant ? '1W+1S' : ''} ${e.moc || ''}` }));
+            (s.streams || []).forEach(st => items.push({ tag: st.id, desc: `${st.from}->${st.to}`, spec: `DN${st.dn} ${st.service || ''}` }));
+        });
+        (model.sludge_streams || []).forEach(s => items.push({ tag: s.id, desc: 'Sludge Line', spec: `DN${s.dn}` }));
+        document.getElementById('bomCount').innerText = `${items.length} items`;
+        const list = document.getElementById('bomList');
+        list.innerHTML = items.map(i => `<div class="log-item"><strong>${i.tag}</strong> ${i.desc} <span style="font-size:10px;">${i.spec}</span></div>`).join('') || '<div style="color:#64748b;padding:8px">No BOM items</div>';
+    }
+
+    function runEngine() {
+        const model = generateModel();
+        renderPID(model);
+    }
+
+    function exportPDF() {
+        if (!currentModel) {
+            alert('Please generate a P&ID first!');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape A4 (297 x 210 mm)
+        const sheets = currentModel.sheets || [];
+        const clientName = document.getElementById('clientName').value || 'Client Name';
+        const projectCode = document.getElementById('projectCode').value || 'Project Code';
+        const template = currentModel.design?.template || 'Unknown';
+        const flowRate = currentModel.design?.Q || 0;
+        
+        // Page 1: Cover Page
+        pdf.setFontSize(24);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('Process & Instrumentation Diagram', 148, 30, { align: 'center' });
+        
+        pdf.setFontSize(16);
+        pdf.setFont(undefined, 'normal');
+        pdf.text('Generated by Intelligent P&ID Engine', 148, 45, { align: 'center' });
+        
+        pdf.setFontSize(12);
+        pdf.text(`Project Code: ${projectCode}`, 20, 70);
+        pdf.text(`Client: ${clientName}`, 20, 80);
+        pdf.text(`Template: ${template.toUpperCase()}`, 20, 90);
+        pdf.text(`Design Flow: ${flowRate.toFixed(2)} m³/hr (${(flowRate * 24).toFixed(0)} KLD)`, 20, 100);
+        pdf.text(`EPC Contractor: EEPL`, 20, 110);
+        pdf.text(`Date: ${new Date().toISOString().split('T')[0]}`, 20, 120);
+        
+        pdf.setFontSize(10);
+        pdf.text(`Total Sheets: ${sheets.length}`, 20, 140);
+        pdf.text(`Revision: REV 2`, 20, 150);
+
+        // Page 2: Design Calculations Summary
+        if (designCalcs.length > 0) {
+            pdf.addPage();
+            pdf.setFontSize(16);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Design Calculations Summary', 148, 20, { align: 'center' });
+            
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'normal');
+            let y = 35;
+            
+            // Table header
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Parameter', 20, y);
+            pdf.text('Formula', 90, y);
+            pdf.text('Value', 230, y);
+            pdf.line(20, y + 2, 277, y + 2);
+            y += 8;
+            
+            pdf.setFont(undefined, 'normal');
+            designCalcs.forEach(calc => {
+                if (y > 190) { // New page if running out of space
+                    pdf.addPage();
+                    y = 20;
+                }
+                pdf.text(calc.name, 20, y);
+                pdf.text(calc.formula, 90, y);
+                pdf.text(`${calc.value} ${calc.unit}`, 230, y);
+                y += 7;
+            });
+        }
+
+        // Page 3+: P&ID Sheets as Images
+        sheets.forEach((sheet, i) => {
+            pdf.addPage();
+            
+            // Temporarily switch to this sheet to render it
+            const prevSheet = currentSheet;
+            currentSheet = i;
+            renderPID(currentModel);
+            
+            // Capture the SVG
+            const svgElement = document.querySelector('#pidCanvas svg');
+            if (svgElement) {
+                // Convert SVG to canvas then to image
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const canvas = document.createElement('canvas');
+                canvas.width = 1400;
+                canvas.height = 700;
+                const ctx = canvas.getContext('2d');
+                
+                const img = new Image();
+                const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(svgBlob);
+                
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0);
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    // Add sheet title
+                    pdf.setFontSize(14);
+                    pdf.setFont(undefined, 'bold');
+                    pdf.text(`Sheet ${i + 1} of ${sheets.length}`, 148, 15, { align: 'center' });
+                    
+                    // Add image (scaled to fit)
+                    pdf.addImage(imgData, 'PNG', 10, 20, 277, 138.5);
+                    
+                    // Add notes if present
+                    if (sheet.notes) {
+                        pdf.setFontSize(9);
+                        pdf.setFont(undefined, 'italic');
+                        pdf.text(sheet.notes, 148, 170, { align: 'center' });
+                    }
+                    
+                    URL.revokeObjectURL(url);
+                };
+                img.src = url;
+            } else {
+                // Fallback for non-graphical sheets
+                pdf.setFontSize(12);
+                pdf.text(`Sheet ${i + 1}: ${sheet.notes || 'Process Details'}`, 20, 20);
+            }
+            
+            currentSheet = prevSheet;
+        });
+
+        // Final Page: BOM
+        pdf.addPage();
+        pdf.setFontSize(16);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('Bill of Materials (BOM)', 148, 20, { align: 'center' });
+        
+        const items = [];
+        currentModel.sheets.forEach(s => {
+            (s.units || []).forEach(u => items.push({ tag: u.id, type: 'Unit', desc: (u.label||'').split('\\n')[0] || u.type, spec: u.moc || '' }));
+            (s.equipment || []).forEach(e => items.push({ tag: e.id, type: 'Equipment', desc: e.type, spec: `${e.spec || ''} ${e.moc || ''}` }));
+            (s.streams || []).forEach(st => items.push({ tag: st.id, type: 'Line', desc: `${st.from}→${st.to}`, spec: `DN${st.dn}` }));
+        });
+        
+        pdf.setFontSize(9);
+        pdf.setFont(undefined, 'normal');
+        let y = 35;
+        
+        // BOM Table header
+        pdf.setFont(undefined, 'bold');
+        pdf.text('Tag', 20, y);
+        pdf.text('Type', 60, y);
+        pdf.text('Description', 100, y);
+        pdf.text('Specification', 200, y);
+        pdf.line(20, y + 2, 277, y + 2);
+        y += 7;
+        
+        pdf.setFont(undefined, 'normal');
+        items.forEach((item, idx) => {
+            if (y > 190) {
+                pdf.addPage();
+                y = 20;
+            }
+            pdf.text(item.tag, 20, y);
+            pdf.text(item.type, 60, y);
+            pdf.text(item.desc.substring(0, 40), 100, y);
+            pdf.text(item.spec.substring(0, 30), 200, y);
+            y += 6;
+        });
+
+        // Save the PDF
+        const filename = `${projectCode}_${template}_PID_${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(filename);
+        
+        // Restore original sheet view
+        renderPID(currentModel);
+    }
+
+    function exportSVG() {
+        const svgData = document.getElementById('pidCanvas').innerHTML;
+        const blob = new Blob([svgData], {type: 'image/svg+xml'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.href = url; link.download = `sheet-${currentSheet + 1}.svg`; link.click();
+    }
+
+    function toggleLabels() {
+        const labels = document.querySelectorAll('.stream-label');
+        labels.forEach(l => l.style.display = l.style.display === 'none' ? 'block' : 'none');
+    }
+
+    window.onload = runEngine;
+</script>
+</body>
+</html>

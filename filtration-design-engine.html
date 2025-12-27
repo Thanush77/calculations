@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtration Design Suite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary-color: #10b981;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border-color: #e2e8f0;
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 25px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle { color: var(--text-light); font-size: 14px; }
+
+        .main-content {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .calculator-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-calc {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-calc:hover { background: var(--primary-hover); }
+
+        .btn-calc.secondary { background: var(--secondary-color); }
+        .btn-calc.secondary:hover { background: #059669; }
+
+        .result-box {
+            margin-top: 20px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            flex-grow: 1;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 13px;
+        }
+        .result-row:last-child { border-bottom: none; }
+        
+        .result-label { color: var(--text-light); }
+        .result-val { font-weight: 700; color: #0f172a; }
+
+        .advanced-toggle {
+            font-size: 11px;
+            color: var(--primary-color);
+            cursor: pointer;
+            text-align: right;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .advanced-area { display: none; background: #eff6ff; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        .advanced-area.show { display: block; }
+        
+        .badge {
+            font-size: 10px;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #475569;
+        }
+
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-filter"></i> Filtration Design Suite</h1>
+            <p class="subtitle">Pressure Sand Filter (PSF) & Activated Carbon Filter (ACF)</p>
+        </div>
+
+        <div class="main-content">
+            <!-- PSF Calculator -->
+            <div class="calculator-card">
+                <div class="card-title" style="color:#3b82f6;">
+                    <i class="fas fa-layer-group"></i> Pressure Sand Filter (PSF)
+                    <span style="font-size:11px; margin-left:auto; background:#eff6ff; padding:4px 8px; border-radius:12px;">Suspended Solids Removal</span>
+                </div>
+                
+                <div class="form-group">
+                    <label>Feed Flow Rate Q (m³/hr)</label>
+                    <input type="number" id="psf_flow" value="15">
+                </div>
+
+                <div class="advanced-toggle" onclick="toggleAdv('psf_adv')"><i class="fas fa-cog"></i> Advanced Settings</div>
+                <div class="advanced-area" id="psf_adv">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Filtration Velocity <span class="badge">m/hr</span></label>
+                            <input type="number" id="psf_vel" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Backwash Velocity <span class="badge">m/hr</span></label>
+                            <input type="number" id="psf_bw_vel" value="15">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-calc" onclick="calcPSF()">Design PSF System</button>
+
+                <div class="result-box">
+                    <div class="result-row">
+                        <span class="result-label">Required Area</span>
+                        <span class="result-val" id="psf_area">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Vessel Diameter</span>
+                        <span class="result-val" id="psf_dia">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Straight Height</span>
+                        <span class="result-val" id="psf_h">-</span>
+                    </div>
+                     <div class="result-row">
+                        <span class="result-label">Media Depth (Sand)</span>
+                        <span class="result-val" id="psf_sand">-</span>
+                    </div>
+                    <div class="result-row" style="background:#f0f9ff; border-top:1px solid #e2e8f0; margin-top:5px; padding-top:10px;">
+                        <span class="result-label" style="font-weight:700;">Backwash Flow</span>
+                        <span class="result-val" id="psf_bw">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACF Calculator -->
+            <div class="calculator-card">
+                <div class="card-title" style="color:#10b981;">
+                    <i class="fas fa-cube"></i> Activated Carbon Filter (ACF)
+                    <span style="font-size:11px; margin-left:auto; background:#ecfdf5; color:#065f46; padding:4px 8px; border-radius:12px;">Cl₂ & Organics Removal</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Feed Flow Rate Q (m³/hr)</label>
+                    <input type="number" id="acf_flow" value="15">
+                </div>
+
+                <div class="advanced-toggle" style="color:#10b981;" onclick="toggleAdv('acf_adv')"><i class="fas fa-cog"></i> Advanced Settings</div>
+                <div class="advanced-area" id="acf_adv" style="background:#f0fdf4;">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>EBCT <span class="badge">min</span></label>
+                            <input type="number" id="acf_ebct" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Carbon Bed Depth <span class="badge">mm</span></label>
+                            <input type="number" id="acf_depth" value="1000">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-calc secondary" onclick="calcACF()">Design ACF System</button>
+
+                <div class="result-box">
+                    <div class="result-row">
+                        <span class="result-label">Carbon Volume</span>
+                        <span class="result-val" id="acf_vol">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Vessel Diameter</span>
+                        <span class="result-val" id="acf_dia">-</span>
+                    </div>
+                     <div class="result-row">
+                        <span class="result-label">Vessel Height (HOS)</span>
+                        <span class="result-val" id="acf_h">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Carbon Weight (kg)</span>
+                        <span class="result-val" id="acf_kg">-</span>
+                    </div>
+                    <div class="result-row" style="background:#f0fdf4; border-top:1px solid #e2e8f0; margin-top:5px; padding-top:10px;">
+                        <span class="result-label" style="font-weight:700;">Backwash Flow</span>
+                        <span class="result-val" id="acf_bw">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAdv(id) {
+            document.getElementById(id).classList.toggle('show');
+        }
+
+        function calcPSF() {
+            // Inputs
+            const Q = parseFloat(document.getElementById('psf_flow').value) || 0;
+            const V = parseFloat(document.getElementById('psf_vel').value) || 10;
+            const Vbw = parseFloat(document.getElementById('psf_bw_vel').value) || 15;
+
+            // Step 1: Area
+            const A = Q / V;
+            
+            // Step 2: Diameter
+            const D = Math.sqrt((4 * A) / Math.PI);
+            
+            // Standardizing Logic?? For now calculated value
+            
+            // Step 3: Media & Height
+            const sandDepth = 700; // mm
+            const gravelDepth = 300; // mm
+            const mediaTotal = sandDepth + gravelDepth;
+            const freeboard = mediaTotal * 0.45; // ~40-50%
+            const totalH = (mediaTotal + freeboard) / 1000; // m
+
+            // Step 5: Backwash
+            const Qbw = A * Vbw;
+
+            // Output
+            document.getElementById('psf_area').textContent = A.toFixed(2) + " m²";
+            document.getElementById('psf_dia').textContent = (D * 1000).toFixed(0) + " mm";
+            document.getElementById('psf_sand').textContent = sandDepth + " mm";
+            document.getElementById('psf_h').textContent = totalH.toFixed(2) + " m";
+            document.getElementById('psf_bw').textContent = Qbw.toFixed(1) + " m³/hr";
+        }
+
+        function calcACF() {
+            // Inputs
+            const Q = parseFloat(document.getElementById('acf_flow').value) || 0;
+            const ebct = parseFloat(document.getElementById('acf_ebct').value) || 10;
+            const h_bed = parseFloat(document.getElementById('acf_depth').value) || 1000; // mm
+            const rho_c = 500; // kg/m3
+
+            // Step 1: Carbon Volume
+            const Vol = (Q * ebct) / 60; // m3
+            
+            // Step 2: Area
+            // Area = Vol / Bed Depth (m)
+            const h_m = h_bed / 1000;
+            const A = Vol / h_m;
+
+            // Step 3: Dia
+            const D = Math.sqrt((4 * A) / Math.PI);
+
+            // Step 4: Carbon Qty
+            const W = Vol * rho_c;
+
+            // Step 5: Backwash
+            // Typically 12 m/hr
+            const Vbw = 12; 
+            const Qbw = A * Vbw;
+
+            // Vessel Height
+            const freeboard = h_bed * 0.5; // 50% expansion space for carbon
+            const gravel = 300;
+            const totalH = (h_bed + gravel + freeboard) / 1000;
+
+            // Output
+            document.getElementById('acf_vol').textContent = Vol.toFixed(2) + " m³";
+            document.getElementById('acf_dia').textContent = (D * 1000).toFixed(0) + " mm";
+            document.getElementById('acf_kg').textContent = W.toFixed(0) + " kg";
+            document.getElementById('acf_h').textContent = totalH.toFixed(2) + " m";
+            document.getElementById('acf_bw').textContent = Qbw.toFixed(1) + " m³/hr";
+        }
+    </script>
+</body>
+</html>
