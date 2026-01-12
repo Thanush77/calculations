@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold Lime Soda Softening Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --secondary: #06b6d4;
+            --accent: #10b981;
+            --bg-gradient-start: #0c4a6e;
+            --bg-gradient-end: #134e5e;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 50%, #1a3a4a 100%);
+            min-height: 100vh;
+        }
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glow-effect {
+            box-shadow: 0 0 30px rgba(14, 165, 233, 0.3);
+        }
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15), 0 0 20px rgba(6, 182, 212, 0.2);
+            border-color: var(--primary);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        .result-card {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.95) 0%, rgba(6, 182, 212, 0.95) 100%);
+            color: white;
+        }
+        .tooltip { position: relative; cursor: help; }
+        .tooltip .tooltip-text {
+            visibility: hidden; width: 200px; background-color: #1e293b; color: #fff;
+            text-align: center; border-radius: 8px; padding: 8px;
+            position: absolute; z-index: 100; bottom: 125%; left: 50%;
+            margin-left: -100px; opacity: 0; transition: opacity 0.3s;
+            font-size: 12px;
+        }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        .chemical-formula { font-family: 'Courier New', monospace; font-weight: 500; }
+        .formula-section {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border-left: 4px solid var(--primary);
+        }
+        .reaction-eq {
+            background: rgba(14, 165, 233, 0.05);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .efficiency-bar {
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%);
+            height: 8px; border-radius: 4px; position: relative; overflow: hidden;
+        }
+        .efficiency-indicator {
+            position: absolute; top: 0; left: 0; height: 100%;
+            background: rgba(255, 255, 255, 0.8); border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .preset-btn {
+            transition: all 0.2s ease;
+        }
+        .preset-btn:hover {
+            transform: scale(1.02);
+        }
+        .preset-btn.active {
+            box-shadow: 0 0 0 2px var(--primary);
+            background: rgba(14, 165, 233, 0.2);
+        }
+        .nav-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .chart-container {
+            position: relative;
+            height: 200px;
+        }
+        @media print {
+            body { background: white !important; color: black; }
+            .no-print { display: none !important; }
+            .print-container { box-shadow: none; border: none; padding: 10px; }
+            .result-card { background: #f3f4f6 !important; color: black !important; }
+        }
+        @media (max-width: 768px) {
+            .chart-container { height: 180px; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation Header -->
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="hidden sm:inline">Back to Dashboard</span>
+                </a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">🧪 Cold Lime Soda Softening Engine</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="resetInputs()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                    <i class="fas fa-undo mr-1"></i> Reset
+                </button>
+                <button onclick="exportPDF()" class="px-3 py-1.5 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                    <i class="fas fa-file-pdf mr-1"></i> PDF
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6 print-container" id="report-content">
+        <!-- Presets Section -->
+        <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl mb-6 no-print">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="text-sm font-semibold text-gray-700"><i class="fas fa-magic mr-1"></i> Quick Presets:</span>
+                <button onclick="loadPreset('groundwater')" class="preset-btn px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200">
+                    <i class="fas fa-water mr-1"></i> Groundwater
+                </button>
+                <button onclick="loadPreset('surface')" class="preset-btn px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200">
+                    <i class="fas fa-leaf mr-1"></i> Surface Water
+                </button>
+                <button onclick="loadPreset('industrial')" class="preset-btn px-4 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-200">
+                    <i class="fas fa-industry mr-1"></i> Industrial
+                </button>
+                <button onclick="loadPreset('borewell')" class="preset-btn px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200">
+                    <i class="fas fa-arrow-down mr-1"></i> Borewell (High TDS)
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Left Panel: Input Section -->
+            <div class="xl:col-span-1 space-y-6 no-print">
+                <!-- Water Analysis Input -->
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl card-hover">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-flask text-sky-500"></i> Water Analysis Input
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Flow Rate (m³/day)</label>
+                            <input type="number" id="flow-rate" value="300" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">pH</label>
+                            <input type="number" id="ph" value="8.04" step="0.1" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1 tooltip">Total Alkalinity <span class="tooltip-text">as CaCO₃ equivalent</span></label>
+                            <input type="number" id="total-alkalinity" value="638.3" step="0.1" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1 tooltip">Calcium (Ca²⁺) <span class="tooltip-text">Ionic concentration ppm</span></label>
+                            <input type="number" id="ca-ion" value="742.6" step="0.1" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1 tooltip">Magnesium (Mg²⁺) <span class="tooltip-text">Ionic concentration ppm</span></label>
+                            <input type="number" id="mg-ion" value="362.3" step="0.1" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Silica (SiO₂)</label>
+                            <input type="number" id="sio2" value="4.4" step="0.1" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Temperature (°C)</label>
+                            <input type="number" id="temperature" value="25" step="1" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Free CO₂ (ppm)</label>
+                            <input type="number" id="co2" value="15" step="0.1" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Settings -->
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl card-hover">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cog text-cyan-500"></i> Advanced Settings
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1 tooltip">Target Hardness <span class="tooltip-text">Desired residual hardness (ppm)</span></label>
+                            <input type="number" id="target-hardness" value="50" step="5" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1 tooltip">Lime Purity (%) <span class="tooltip-text">Commercial purity 85-95%</span></label>
+                            <input type="number" id="lime-purity" value="90" min="70" max="100" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1 tooltip">Soda Purity (%) <span class="tooltip-text">Commercial purity 95-99%</span></label>
+                            <input type="number" id="soda-purity" value="98" min="80" max="100" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Lime Slurry (% w/v)</label>
+                            <input type="number" id="lime-slurry" value="10" min="5" max="20" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Soda Solution (% w/v)</label>
+                            <input type="number" id="soda-solution" value="15" min="5" max="30" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Storage Days</label>
+                            <input type="number" id="storage-days" value="7" min="1" max="30" class="w-full p-2 border border-gray-300 rounded-lg input-glow text-sm">
+                        </div>
+                    </div>
+                    <button id="calculate-btn" class="w-full mt-4 bg-gradient-to-r from-sky-600 to-cyan-600 text-white font-bold py-3 px-6 rounded-xl hover:from-sky-700 hover:to-cyan-700 transition-all duration-300 shadow-lg">
+                        <i class="fas fa-calculator mr-2"></i> Calculate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Water Quality Analysis -->
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-blue-500"></i> Water Quality Analysis
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl">
+                            <h4 class="text-sm font-semibold text-blue-800 mb-2">Hardness Distribution</h4>
+                            <div class="space-y-1.5 text-sm">
+                                <div class="flex justify-between"><span class="text-blue-700">Ca Hardness:</span><span id="ca-hardness" class="font-bold text-blue-900">0 ppm</span></div>
+                                <div class="flex justify-between"><span class="text-blue-700">Mg Hardness:</span><span id="mg-hardness" class="font-bold text-blue-900">0 ppm</span></div>
+                                <div class="flex justify-between border-t pt-1.5"><span class="text-blue-700">Total:</span><span id="total-hardness" class="font-bold text-blue-900">0 ppm</span></div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 p-4 rounded-xl">
+                            <h4 class="text-sm font-semibold text-cyan-800 mb-2">Hardness Types</h4>
+                            <div class="space-y-1.5 text-sm">
+                                <div class="flex justify-between"><span class="text-cyan-700">Carbonate:</span><span id="carbonate-hardness" class="font-bold text-cyan-900">0 ppm</span></div>
+                                <div class="flex justify-between"><span class="text-cyan-700">Non-Carbonate:</span><span id="non-carbonate-hardness" class="font-bold text-cyan-900">0 ppm</span></div>
+                                <div class="flex justify-between border-t pt-1.5"><span class="text-cyan-700">Alkalinity:</span><span id="alkalinity-display" class="font-bold text-cyan-900">0 ppm</span></div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-xl">
+                            <h4 class="text-sm font-semibold text-emerald-800 mb-2">Process Efficiency</h4>
+                            <div class="space-y-1.5 text-sm">
+                                <div><span class="text-emerald-700">Ca Removal:</span><span id="ca-removal-efficiency" class="font-bold text-emerald-900 ml-1">0%</span></div>
+                                <div class="efficiency-bar"><div id="ca-efficiency-bar" class="efficiency-indicator" style="width:0%"></div></div>
+                                <div><span class="text-emerald-700">Mg Removal:</span><span id="mg-removal-efficiency" class="font-bold text-emerald-900 ml-1">0%</span></div>
+                                <div class="efficiency-bar"><div id="mg-efficiency-bar" class="efficiency-indicator" style="width:0%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hardness Chart -->
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-3 rounded-xl">
+                            <h4 class="text-xs font-semibold text-gray-600 mb-2 text-center">Hardness Distribution</h4>
+                            <div class="chart-container"><canvas id="hardnessChart"></canvas></div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-xl">
+                            <h4 class="text-xs font-semibold text-gray-600 mb-2 text-center">Sludge Composition</h4>
+                            <div class="chart-container"><canvas id="sludgeChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chemical Requirements -->
+                <div class="result-card rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-flask"></i> Chemical Requirements
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                            <h4 class="text-sm font-semibold text-white mb-3">Lime Requirements</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center"><span class="text-white/90 chemical-formula">Ca(OH)₂</span><span id="lime-required" class="text-white font-bold text-lg">0 ppm</span></div>
+                                <div class="flex justify-between items-center"><span class="text-white/90">Commercial:</span><span id="lime-commercial" class="text-white font-bold text-lg">0 kg/day</span></div>
+                                <div class="flex justify-between items-center text-xs"><span class="text-white/70">Theoretical:</span><span id="lime-theoretical" class="text-white/90">0 ppm</span></div>
+                                <div class="w-full bg-white/30 rounded-full h-1.5"><div id="lime-progress" class="bg-white h-1.5 rounded-full" style="width:0%"></div></div>
+                            </div>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                            <h4 class="text-sm font-semibold text-white mb-3">Soda Ash Requirements</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center"><span class="text-white/90 chemical-formula">Na₂CO₃</span><span id="soda-required" class="text-white font-bold text-lg">0 ppm</span></div>
+                                <div class="flex justify-between items-center"><span class="text-white/90">Commercial:</span><span id="soda-commercial" class="text-white font-bold text-lg">0 kg/day</span></div>
+                                <div class="flex justify-between items-center text-xs"><span class="text-white/70">Theoretical:</span><span id="soda-theoretical" class="text-white/90">0 ppm</span></div>
+                                <div class="w-full bg-white/30 rounded-full h-1.5"><div id="soda-progress" class="bg-white h-1.5 rounded-full" style="width:0%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tank Sizing & Clarifier Design -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Chemical Tank Sizing -->
+                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl card-hover">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="fas fa-cubes text-orange-500"></i> Chemical Tank Sizing
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-orange-50 rounded-lg">
+                                <div class="flex justify-between items-center"><span class="text-gray-700 text-sm">Lime Slurry Tank</span><span id="lime-tank" class="text-orange-700 font-bold">0 m³</span></div>
+                                <p class="text-xs text-gray-500 mt-1">@ <span id="lime-slurry-display">10</span>% concentration</p>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded-lg">
+                                <div class="flex justify-between items-center"><span class="text-gray-700 text-sm">Soda Solution Tank</span><span id="soda-tank" class="text-blue-700 font-bold">0 m³</span></div>
+                                <p class="text-xs text-gray-500 mt-1">@ <span id="soda-solution-display">15</span>% concentration</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="flex justify-between items-center"><span class="text-gray-700 text-sm">Storage Autonomy</span><span id="storage-autonomy" class="text-gray-700 font-bold">7 days</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clarifier Design -->
+                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl card-hover">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="fas fa-flask text-purple-500"></i> Clarifier Design
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-purple-50 rounded-lg">
+                                <div class="flex justify-between items-center"><span class="text-gray-700 text-sm">Surface Area</span><span id="clarifier-area" class="text-purple-700 font-bold">0 m²</span></div>
+                                <p class="text-xs text-gray-500 mt-1">SOR: 1.0 m/hr</p>
+                            </div>
+                            <div class="p-3 bg-indigo-50 rounded-lg">
+                                <div class="flex justify-between items-center"><span class="text-gray-700 text-sm">Diameter</span><span id="clarifier-diameter" class="text-indigo-700 font-bold">0 m</span></div>
+                            </div>
+                            <div class="p-3 bg-pink-50 rounded-lg">
+                                <div class="flex justify-between items-center"><span class="text-gray-700 text-sm">Detention Time</span><span id="clarifier-detention" class="text-pink-700 font-bold">0 hrs</span></div>
+                                <p class="text-xs text-gray-500 mt-1">Side Water Depth: 3.5m</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recarbonation Section -->
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl card-hover">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cloud text-teal-500"></i> Recarbonation System (CO₂)
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-teal-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Effluent pH (post-softening)</p>
+                            <p id="effluent-ph" class="text-xl font-bold text-teal-700">10.5</p>
+                        </div>
+                        <div class="p-3 bg-teal-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Target pH</p>
+                            <p id="target-ph" class="text-xl font-bold text-teal-700">8.3</p>
+                        </div>
+                        <div class="p-3 bg-teal-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">CO₂ Required</p>
+                            <p id="co2-required" class="text-xl font-bold text-teal-700">0 kg/hr</p>
+                        </div>
+                        <div class="p-3 bg-teal-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Daily CO₂</p>
+                            <p id="co2-daily" class="text-xl font-bold text-teal-700">0 kg/day</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sludge Analysis -->
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-trash-restore text-red-500"></i> Sludge Production
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="p-3 bg-blue-50 rounded-lg"><span class="text-xs text-gray-600">CaCO₃</span><p id="caco3-sludge" class="font-bold text-blue-700">0 ppm</p></div>
+                        <div class="p-3 bg-purple-50 rounded-lg"><span class="text-xs text-gray-600">Mg(OH)₂</span><p id="mgoh2-sludge" class="font-bold text-purple-700">0 ppm</p></div>
+                        <div class="p-3 bg-yellow-50 rounded-lg"><span class="text-xs text-gray-600">CaSiO₃</span><p id="casio3-sludge" class="font-bold text-yellow-700">0 ppm</p></div>
+                        <div class="p-3 bg-red-50 rounded-lg"><span class="text-xs text-gray-600">Total Sludge</span><p id="total-sludge-kg" class="font-bold text-red-700">0 kg/day</p></div>
+                    </div>
+                </div>
+
+                <!-- Economic Analysis & Cost Projections -->
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-rupee-sign text-emerald-500"></i> Economic Analysis (INR)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Daily Costs -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Daily Operating Cost</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg"><span class="text-gray-700 text-sm">Lime Cost</span><span id="lime-cost" class="text-blue-700 font-bold">₹0</span></div>
+                                <div class="flex justify-between items-center p-3 bg-cyan-50 rounded-lg"><span class="text-gray-700 text-sm">Soda Cost</span><span id="soda-cost" class="text-cyan-700 font-bold">₹0</span></div>
+                                <div class="flex justify-between items-center p-3 bg-teal-50 rounded-lg"><span class="text-gray-700 text-sm">CO₂ Cost</span><span id="co2-cost" class="text-teal-700 font-bold">₹0</span></div>
+                                <div class="flex justify-between items-center p-3 bg-emerald-100 rounded-lg"><span class="text-gray-800 font-semibold">Total Daily</span><span id="total-cost" class="text-emerald-700 font-bold text-lg">₹0</span></div>
+                            </div>
+                        </div>
+                        <!-- Cost Projections -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Cost Projections</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center p-3 bg-amber-50 rounded-lg"><span class="text-gray-700 text-sm">Monthly Cost</span><span id="monthly-cost" class="text-amber-700 font-bold">₹0</span></div>
+                                <div class="flex justify-between items-center p-3 bg-orange-50 rounded-lg"><span class="text-gray-700 text-sm">Yearly Cost</span><span id="yearly-cost" class="text-orange-700 font-bold">₹0</span></div>
+                                <div class="flex justify-between items-center p-3 bg-rose-50 rounded-lg"><span class="text-gray-700 text-sm">Cost per m³</span><span id="cost-per-m3" class="text-rose-700 font-bold">₹0</span></div>
+                            </div>
+                            <!-- Cost Chart -->
+                            <div class="mt-3 bg-gray-50 p-2 rounded-lg">
+                                <div class="chart-container" style="height:120px"><canvas id="costChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-xl no-print">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button onclick="exportResults()" class="flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-sky-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-sky-700 hover:to-cyan-700 transition-all shadow-lg text-sm">
+                            <i class="fas fa-download mr-2"></i> Export JSON
+                        </button>
+                        <button onclick="window.print()" class="flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-slate-600 to-slate-700 text-white font-semibold rounded-lg hover:from-slate-700 hover:to-slate-800 transition-all shadow-lg text-sm">
+                            <i class="fas fa-print mr-2"></i> Print Report
+                        </button>
+                        <button onclick="generateReport()" class="flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg text-sm">
+                            <i class="fas fa-file-alt mr-2"></i> Text Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // --- Constants ---
+            const M = {
+                Ca: 40.08, Mg: 24.305, CaCO3: 100.087, Ca_OH_2: 74.093, Na2CO3: 105.988,
+                Mg_OH_2: 58.320, SiO2: 60.084, CaSiO3: 116.162, CO2: 44.01
+            };
+
+            const STOICH = {
+                LIME_EXCESS: 1.35,
+                MIXING_EFFICIENCY: 0.95,
+                SETTLING_EFFICIENCY: 0.85,
+                SAFETY_FACTOR: 1.1
+            };
+
+            const COSTS = {
+                LIME: 8500,      // ₹/tonne
+                SODA: 18000,     // ₹/tonne
+                CO2: 25          // ₹/kg
+            };
+
+            // Presets
+            const PRESETS = {
+                groundwater: { flow: 500, ph: 7.8, alkalinity: 350, ca: 180, mg: 80, sio2: 15, temp: 28, co2: 25 },
+                surface: { flow: 1000, ph: 7.5, alkalinity: 180, ca: 80, mg: 40, sio2: 8, temp: 25, co2: 10 },
+                industrial: { flow: 200, ph: 8.2, alkalinity: 500, ca: 450, mg: 200, sio2: 20, temp: 35, co2: 30 },
+                borewell: { flow: 300, ph: 8.04, alkalinity: 638.3, ca: 742.6, mg: 362.3, sio2: 4.4, temp: 25, co2: 15 }
+            };
+
+            // Charts
+            let hardnessChart, sludgeChart, costChart;
+
+            // --- Init ---
+            document.addEventListener('DOMContentLoaded', () => {
+                initCharts();
+                document.getElementById('calculate-btn').addEventListener('click', performCalculation);
+                document.querySelectorAll('input[type="number"]').forEach(input => {
+                    input.addEventListener('input', debounce(performCalculation, 300));
+                });
+                performCalculation();
+            });
+
+            function debounce(func, wait) {
+                let timeout;
+                return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); };
+            }
+
+            function initCharts() {
+                const commonOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } }
+                };
+
+                hardnessChart = new Chart(document.getElementById('hardnessChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Ca Hardness', 'Mg Hardness'],
+                        datasets: [{ data: [50, 50], backgroundColor: ['#3b82f6', '#8b5cf6'], borderWidth: 0 }]
+                    },
+                    options: { ...commonOptions, cutout: '60%' }
+                });
+
+                sludgeChart = new Chart(document.getElementById('sludgeChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['CaCO₃', 'Mg(OH)₂', 'CaSiO₃', 'Excess'],
+                        datasets: [{ data: [25, 25, 25, 25], backgroundColor: ['#3b82f6', '#a855f7', '#eab308', '#6b7280'], borderWidth: 0 }]
+                    },
+                    options: { ...commonOptions, cutout: '60%' }
+                });
+
+                costChart = new Chart(document.getElementById('costChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Lime', 'Soda', 'CO₂'],
+                        datasets: [{ label: 'Daily Cost (₹)', data: [0, 0, 0], backgroundColor: ['#3b82f6', '#06b6d4', '#14b8a6'] }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 9 } } } }
+                    }
+                });
+            }
+
+            // --- Presets ---
+            window.loadPreset = function(type) {
+                const p = PRESETS[type];
+                if (!p) return;
+                document.getElementById('flow-rate').value = p.flow;
+                document.getElementById('ph').value = p.ph;
+                document.getElementById('total-alkalinity').value = p.alkalinity;
+                document.getElementById('ca-ion').value = p.ca;
+                document.getElementById('mg-ion').value = p.mg;
+                document.getElementById('sio2').value = p.sio2;
+                document.getElementById('temperature').value = p.temp;
+                document.getElementById('co2').value = p.co2;
+                performCalculation();
+            };
+
+            window.resetInputs = function() {
+                loadPreset('borewell');
+                document.getElementById('target-hardness').value = 50;
+                document.getElementById('lime-purity').value = 90;
+                document.getElementById('soda-purity').value = 98;
+                document.getElementById('lime-slurry').value = 10;
+                document.getElementById('soda-solution').value = 15;
+                document.getElementById('storage-days').value = 7;
+            };
+
+            // --- Main Calculation ---
+            function performCalculation() {
+                // Read inputs
+                const flowRate = parseFloat(document.getElementById('flow-rate').value) || 0;
+                const pH = parseFloat(document.getElementById('ph').value) || 7;
+                const temperature = parseFloat(document.getElementById('temperature').value) || 25;
+                const targetHardness = parseFloat(document.getElementById('target-hardness').value) || 50;
+                const limePurity = parseFloat(document.getElementById('lime-purity').value) / 100 || 0.9;
+                const sodaPurity = parseFloat(document.getElementById('soda-purity').value) / 100 || 0.98;
+                const limeSlurryConc = parseFloat(document.getElementById('lime-slurry').value) || 10;
+                const sodaSolutionConc = parseFloat(document.getElementById('soda-solution').value) || 15;
+                const storageDays = parseFloat(document.getElementById('storage-days').value) || 7;
+
+                const ions = {
+                    alkalinity: parseFloat(document.getElementById('total-alkalinity').value) || 0,
+                    ca: parseFloat(document.getElementById('ca-ion').value) || 0,
+                    mg: parseFloat(document.getElementById('mg-ion').value) || 0,
+                    sio2: parseFloat(document.getElementById('sio2').value) || 0,
+                    co2: parseFloat(document.getElementById('co2').value) || 0
+                };
+
+                // Temperature correction factor (reaction rate increases with temp)
+                const tempFactor = 1 + (temperature - 25) * 0.02;
+
+                // Hardness calculations
+                const caHardness = ions.ca * (M.CaCO3 / M.Ca);
+                const mgHardness = ions.mg * (M.CaCO3 / M.Mg);
+                const totalHardness = caHardness + mgHardness;
+                const carbonateHardness = Math.min(totalHardness, ions.alkalinity);
+                const nonCarbonateHardness = Math.max(0, totalHardness - carbonateHardness);
+
+                // Chemical requirements (pure basis)
+                const limeForCO2 = (pH < 8.3) ? ions.co2 * (M.Ca_OH_2 / M.CO2) : 0;
+                const limeForCarbonateHardness = carbonateHardness * (M.Ca_OH_2 / M.CaCO3);
+                const limeForMagnesium = mgHardness * (M.Ca_OH_2 / M.CaCO3);
+                const limeForSilica = ions.sio2 * (M.Ca_OH_2 / M.SiO2);
+                const theoreticalLime = limeForCO2 + limeForCarbonateHardness + limeForMagnesium + limeForSilica;
+                const totalLimePPM = (theoreticalLime * STOICH.LIME_EXCESS * STOICH.SAFETY_FACTOR / STOICH.MIXING_EFFICIENCY) / tempFactor;
+
+                const theoreticalSoda = nonCarbonateHardness * (M.Na2CO3 / M.CaCO3);
+                const totalSodaPPM = (theoreticalSoda * STOICH.SAFETY_FACTOR / STOICH.MIXING_EFFICIENCY) / tempFactor;
+
+                // Commercial chemical (accounting for purity)
+                const limeKgDay = (totalLimePPM * flowRate) / 1000 / limePurity;
+                const sodaKgDay = (totalSodaPPM * flowRate) / 1000 / sodaPurity;
+
+                // Sludge
+                const sludge = {
+                    caco3: totalHardness * STOICH.SETTLING_EFFICIENCY,
+                    mgoh2: mgHardness * (M.Mg_OH_2 / M.CaCO3) * STOICH.SETTLING_EFFICIENCY,
+                    casio3: ions.sio2 * (M.CaSiO3 / M.SiO2) * STOICH.SETTLING_EFFICIENCY,
+                    excessLime: (totalLimePPM - theoreticalLime) * (M.CaCO3 / M.Ca_OH_2) * 0.8
+                };
+                const totalSludgePPM = sludge.caco3 + sludge.mgoh2 + sludge.casio3 + sludge.excessLime;
+                const sludgeKgDay = (totalSludgePPM * flowRate) / 1000;
+
+                // Tank sizing
+                const limeTankM3 = (limeKgDay * storageDays) / (limeSlurryConc * 10);
+                const sodaTankM3 = (sodaKgDay * storageDays) / (sodaSolutionConc * 10);
+
+                // Clarifier design
+                const flowRateM3Hr = flowRate / 24;
+                const surfaceLoadingRate = 1.0; // m/hr
+                const clarifierArea = flowRateM3Hr / surfaceLoadingRate;
+                const clarifierDiameter = Math.sqrt(4 * clarifierArea / Math.PI);
+                const sideWaterDepth = 3.5;
+                const clarifierVolume = clarifierArea * sideWaterDepth;
+                const clarifierDetention = clarifierVolume / flowRateM3Hr;
+
+                // Recarbonation (CO2 for pH adjustment)
+                const effluentPH = 10.5; // Typical post-softening pH
+                const targetPH = 8.3;
+                const co2RequiredPPM = (effluentPH - targetPH) * 20; // Simplified est.
+                const co2KgHr = (co2RequiredPPM * flowRateM3Hr) / 1000;
+                const co2KgDay = co2KgHr * 24;
+
+                // Economics
+                const limeCostDay = (limeKgDay * COSTS.LIME) / 1000;
+                const sodaCostDay = (sodaKgDay * COSTS.SODA) / 1000;
+                const co2CostDay = co2KgDay * COSTS.CO2;
+                const totalCostDay = limeCostDay + sodaCostDay + co2CostDay;
+                const monthlyCost = totalCostDay * 30;
+                const yearlyCost = totalCostDay * 365;
+                const costPerM3 = flowRate > 0 ? totalCostDay / flowRate : 0;
+
+                // Efficiency
+                const removalEfficiency = totalHardness > 0 ? Math.min(98, ((totalHardness - targetHardness) / totalHardness) * 100) : 0;
+                const caRemoval = Math.min(95, (caHardness / (caHardness + 10)) * 100);
+                const mgRemoval = Math.min(98, (mgHardness / (mgHardness + 5)) * 100);
+
+                // Update UI
+                updateUI({
+                    caHardness, mgHardness, totalHardness, carbonateHardness, nonCarbonateHardness,
+                    alkalinity: ions.alkalinity, totalLimePPM, theoreticalLime, totalSodaPPM, theoreticalSoda,
+                    limeKgDay, sodaKgDay, sludge, totalSludgePPM, sludgeKgDay,
+                    limeTankM3, sodaTankM3, storageDays, limeSlurryConc, sodaSolutionConc,
+                    clarifierArea, clarifierDiameter, clarifierDetention,
+                    effluentPH, targetPH, co2KgHr, co2KgDay,
+                    limeCostDay, sodaCostDay, co2CostDay, totalCostDay, monthlyCost, yearlyCost, costPerM3,
+                    caRemoval, mgRemoval, removalEfficiency
+                });
+
+                // Update charts
+                updateCharts(caHardness, mgHardness, sludge, limeCostDay, sodaCostDay, co2CostDay);
+            }
+
+            function updateUI(d) {
+                const fmt = (n, dec = 1) => n.toFixed(dec);
+                const fmtINR = (n) => '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+                document.getElementById('ca-hardness').textContent = fmt(d.caHardness) + ' ppm';
+                document.getElementById('mg-hardness').textContent = fmt(d.mgHardness) + ' ppm';
+                document.getElementById('total-hardness').textContent = fmt(d.totalHardness) + ' ppm';
+                document.getElementById('carbonate-hardness').textContent = fmt(d.carbonateHardness) + ' ppm';
+                document.getElementById('non-carbonate-hardness').textContent = fmt(d.nonCarbonateHardness) + ' ppm';
+                document.getElementById('alkalinity-display').textContent = fmt(d.alkalinity) + ' ppm';
+
+                document.getElementById('ca-removal-efficiency').textContent = fmt(d.caRemoval) + '%';
+                document.getElementById('mg-removal-efficiency').textContent = fmt(d.mgRemoval) + '%';
+                document.getElementById('ca-efficiency-bar').style.width = d.caRemoval + '%';
+                document.getElementById('mg-efficiency-bar').style.width = d.mgRemoval + '%';
+
+                document.getElementById('lime-required').textContent = fmt(d.totalLimePPM, 2) + ' ppm';
+                document.getElementById('lime-commercial').textContent = fmt(d.limeKgDay, 1) + ' kg/day';
+                document.getElementById('lime-theoretical').textContent = fmt(d.theoreticalLime, 2) + ' ppm';
+                document.getElementById('lime-progress').style.width = Math.min((d.totalLimePPM / 2000) * 100, 100) + '%';
+
+                document.getElementById('soda-required').textContent = fmt(d.totalSodaPPM, 2) + ' ppm';
+                document.getElementById('soda-commercial').textContent = fmt(d.sodaKgDay, 1) + ' kg/day';
+                document.getElementById('soda-theoretical').textContent = fmt(d.theoreticalSoda, 2) + ' ppm';
+                document.getElementById('soda-progress').style.width = Math.min((d.totalSodaPPM / 2000) * 100, 100) + '%';
+
+                document.getElementById('caco3-sludge').textContent = fmt(d.sludge.caco3) + ' ppm';
+                document.getElementById('mgoh2-sludge').textContent = fmt(d.sludge.mgoh2) + ' ppm';
+                document.getElementById('casio3-sludge').textContent = fmt(d.sludge.casio3) + ' ppm';
+                document.getElementById('total-sludge-kg').textContent = fmt(d.sludgeKgDay, 1) + ' kg/day';
+
+                document.getElementById('lime-tank').textContent = fmt(d.limeTankM3, 2) + ' m³';
+                document.getElementById('soda-tank').textContent = fmt(d.sodaTankM3, 2) + ' m³';
+                document.getElementById('storage-autonomy').textContent = d.storageDays + ' days';
+                document.getElementById('lime-slurry-display').textContent = d.limeSlurryConc;
+                document.getElementById('soda-solution-display').textContent = d.sodaSolutionConc;
+
+                document.getElementById('clarifier-area').textContent = fmt(d.clarifierArea, 1) + ' m²';
+                document.getElementById('clarifier-diameter').textContent = fmt(d.clarifierDiameter, 2) + ' m';
+                document.getElementById('clarifier-detention').textContent = fmt(d.clarifierDetention, 1) + ' hrs';
+
+                document.getElementById('effluent-ph').textContent = d.effluentPH.toFixed(1);
+                document.getElementById('target-ph').textContent = d.targetPH.toFixed(1);
+                document.getElementById('co2-required').textContent = fmt(d.co2KgHr, 2) + ' kg/hr';
+                document.getElementById('co2-daily').textContent = fmt(d.co2KgDay, 1) + ' kg/day';
+
+                document.getElementById('lime-cost').textContent = fmtINR(d.limeCostDay);
+                document.getElementById('soda-cost').textContent = fmtINR(d.sodaCostDay);
+                document.getElementById('co2-cost').textContent = fmtINR(d.co2CostDay);
+                document.getElementById('total-cost').textContent = fmtINR(d.totalCostDay);
+                document.getElementById('monthly-cost').textContent = fmtINR(d.monthlyCost);
+                document.getElementById('yearly-cost').textContent = fmtINR(d.yearlyCost);
+                document.getElementById('cost-per-m3').textContent = '₹' + d.costPerM3.toFixed(2);
+            }
+
+            function updateCharts(caH, mgH, sludge, limeCost, sodaCost, co2Cost) {
+                hardnessChart.data.datasets[0].data = [caH, mgH];
+                hardnessChart.update();
+
+                sludgeChart.data.datasets[0].data = [sludge.caco3, sludge.mgoh2, sludge.casio3, sludge.excessLime];
+                sludgeChart.update();
+
+                costChart.data.datasets[0].data = [limeCost, sodaCost, co2Cost];
+                costChart.update();
+            }
+
+            // --- Export Functions ---
+            window.exportResults = function() {
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    inputs: {
+                        flowRate: document.getElementById('flow-rate').value,
+                        ph: document.getElementById('ph').value,
+                        alkalinity: document.getElementById('total-alkalinity').value,
+                        calcium: document.getElementById('ca-ion').value,
+                        magnesium: document.getElementById('mg-ion').value
+                    },
+                    results: {
+                        totalHardness: document.getElementById('total-hardness').textContent,
+                        limeRequired: document.getElementById('lime-commercial').textContent,
+                        sodaRequired: document.getElementById('soda-commercial').textContent,
+                        totalCost: document.getElementById('total-cost').textContent
+                    }
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'lime-soda-results.json'; a.click();
+            };
+
+            window.generateReport = function() {
+                const report = `
+COLD LIME SODA SOFTENING DESIGN REPORT
+Generated: ${new Date().toLocaleString()}
+========================================
+
+INPUT PARAMETERS:
+- Flow Rate: ${document.getElementById('flow-rate').value} m³/day
+- pH: ${document.getElementById('ph').value}
+- Total Alkalinity: ${document.getElementById('total-alkalinity').value} ppm
+- Calcium: ${document.getElementById('ca-ion').value} ppm
+- Magnesium: ${document.getElementById('mg-ion').value} ppm
+
+WATER QUALITY ANALYSIS:
+- Total Hardness: ${document.getElementById('total-hardness').textContent}
+- Carbonate Hardness: ${document.getElementById('carbonate-hardness').textContent}
+- Non-Carbonate Hardness: ${document.getElementById('non-carbonate-hardness').textContent}
+
+CHEMICAL REQUIREMENTS:
+- Lime (Commercial): ${document.getElementById('lime-commercial').textContent}
+- Soda Ash (Commercial): ${document.getElementById('soda-commercial').textContent}
+
+EQUIPMENT SIZING:
+- Clarifier Area: ${document.getElementById('clarifier-area').textContent}
+- Clarifier Diameter: ${document.getElementById('clarifier-diameter').textContent}
+- Lime Tank: ${document.getElementById('lime-tank').textContent}
+- Soda Tank: ${document.getElementById('soda-tank').textContent}
+
+RECARBONATION:
+- CO₂ Required: ${document.getElementById('co2-daily').textContent}
+
+ECONOMIC ANALYSIS (INR):
+- Daily Cost: ${document.getElementById('total-cost').textContent}
+- Monthly Cost: ${document.getElementById('monthly-cost').textContent}
+- Yearly Cost: ${document.getElementById('yearly-cost').textContent}
+- Cost per m³: ${document.getElementById('cost-per-m3').textContent}
+
+SLUDGE PRODUCTION:
+- Total Sludge: ${document.getElementById('total-sludge-kg').textContent}
+                `;
+                const blob = new Blob([report], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'lime-soda-report.txt'; a.click();
+            };
+
+            window.exportPDF = function() {
+                const element = document.getElementById('report-content');
+                const opt = {
+                    margin: 10,
+                    filename: 'lime-soda-softening-report.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            };
+        })();
+    </script>
+</body>
+</html>

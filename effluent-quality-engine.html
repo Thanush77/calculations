@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Effluent Quality & Compliance Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #10b981; --secondary: #06b6d4; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0c4a6e 0%, #134e5e 50%, #1a3a4a 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .pass { background: #dcfce7; color: #166534; }
+        .fail { background: #fef2f2; color: #991b1b; }
+        .warn { background: #fef3c7; color: #92400e; }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">✅ Effluent Quality & Compliance Engine</h1>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-flask text-blue-500"></i> Influent Water Quality
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Total Hardness (ppm)</label>
+                                <input type="number" id="influentHardness" value="800" class="input-field">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Ca Hardness (ppm)</label>
+                                <input type="number" id="influentCa" value="500" class="input-field">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Mg Hardness (ppm)</label>
+                                <input type="number" id="influentMg" value="300" class="input-field">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Alkalinity (ppm)</label>
+                                <input type="number" id="influentAlk" value="400" class="input-field">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">pH</label>
+                                <input type="number" id="influentPH" value="7.8" step="0.1" class="input-field">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Silica (ppm)</label>
+                                <input type="number" id="influentSilica" value="15" class="input-field">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">TDS (ppm)</label>
+                                <input type="number" id="influentTDS" value="1200" class="input-field">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Iron (ppm)</label>
+                                <input type="number" id="influentIron" value="0.5" step="0.1" class="input-field">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cog text-cyan-500"></i> Process Parameters
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Lime Dose (ppm)</label>
+                            <input type="number" id="limeDose" value="300" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Soda Ash Dose (ppm)</label>
+                            <input type="number" id="sodaDose" value="200" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Recarbonation (Yes/No)</label>
+                            <select id="recarbonation" class="input-field">
+                                <option value="yes">Yes - CO₂ injection</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-balance-scale text-green-500"></i> Compliance Standard
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Standard Type</label>
+                            <select id="standardType" class="input-field">
+                                <option value="boiler">Boiler Feed Water</option>
+                                <option value="cooling">Cooling Tower Makeup</option>
+                                <option value="drinking">IS 10500 Drinking Water</option>
+                                <option value="industrial">Industrial Process</option>
+                                <option value="custom">Custom Limits</option>
+                            </select>
+                        </div>
+                        <div id="customLimits" class="hidden space-y-2">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-xs text-gray-500">Max Hardness</label>
+                                    <input type="number" id="maxHardness" value="50" class="input-field">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500">Max Silica</label>
+                                    <input type="number" id="maxSilica" value="5" class="input-field">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold py-2.5 rounded-lg hover:from-emerald-700 hover:to-teal-700">
+                        <i class="fas fa-check-circle mr-2"></i> Analyze & Check Compliance
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Predicted Effluent Quality -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-tint text-blue-500"></i> Predicted Effluent Quality
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-blue-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Residual Hardness</p>
+                            <p id="effluentHardness" class="text-xl font-bold text-blue-700">0 ppm</p>
+                        </div>
+                        <div class="p-3 bg-cyan-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Residual Alkalinity</p>
+                            <p id="effluentAlk" class="text-xl font-bold text-cyan-700">0 ppm</p>
+                        </div>
+                        <div class="p-3 bg-teal-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Effluent pH</p>
+                            <p id="effluentPH" class="text-xl font-bold text-teal-700">0</p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Residual Silica</p>
+                            <p id="effluentSilica" class="text-xl font-bold text-green-700">0 ppm</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-emerald-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Ca Hardness</p>
+                            <p id="effluentCa" class="text-xl font-bold text-emerald-700">0 ppm</p>
+                        </div>
+                        <div class="p-3 bg-sky-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Mg Hardness</p>
+                            <p id="effluentMg" class="text-xl font-bold text-sky-700">0 ppm</p>
+                        </div>
+                        <div class="p-3 bg-indigo-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">TDS</p>
+                            <p id="effluentTDS" class="text-xl font-bold text-indigo-700">0 ppm</p>
+                        </div>
+                        <div class="p-3 bg-purple-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Iron</p>
+                            <p id="effluentIron" class="text-xl font-bold text-purple-700">0 ppm</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Removal Efficiency -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-green-500"></i> Removal Efficiency
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="text-center">
+                            <p class="text-xs text-gray-600 mb-1">Total Hardness</p>
+                            <p id="hardnessRemoval" class="text-2xl font-bold text-green-600">0%</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs text-gray-600 mb-1">Ca Removal</p>
+                            <p id="caRemoval" class="text-2xl font-bold text-blue-600">0%</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs text-gray-600 mb-1">Mg Removal</p>
+                            <p id="mgRemoval" class="text-2xl font-bold text-purple-600">0%</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs text-gray-600 mb-1">Silica Removal</p>
+                            <p id="silicaRemoval" class="text-2xl font-bold text-cyan-600">0%</p>
+                        </div>
+                    </div>
+                    <div style="height:180px"><canvas id="removalChart"></canvas></div>
+                </div>
+
+                <!-- Compliance Check -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-clipboard-check text-emerald-500"></i> Compliance Assessment
+                    </h3>
+                    <div id="complianceTable" class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="text-left p-2 rounded-tl-lg">Parameter</th>
+                                    <th class="text-center p-2">Influent</th>
+                                    <th class="text-center p-2">Effluent</th>
+                                    <th class="text-center p-2">Standard</th>
+                                    <th class="text-center p-2 rounded-tr-lg">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="complianceBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Overall Compliance Status -->
+                <div id="overallStatus" class="rounded-2xl p-6 text-center">
+                    <i id="statusIcon" class="fas fa-check-circle text-5xl mb-3"></i>
+                    <h2 id="statusText" class="text-2xl font-bold mb-2">Checking...</h2>
+                    <p id="statusDesc" class="text-sm opacity-80">Analyzing effluent quality against selected standard</p>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-yellow-500"></i> Recommendations
+                    </h3>
+                    <div id="recommendations" class="space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // Standard limits
+            const STANDARDS = {
+                boiler: { hardness: 5, silica: 0.5, iron: 0.05, tds: 500, ph: { min: 8.5, max: 9.5 }, alkalinity: 100 },
+                cooling: { hardness: 200, silica: 50, iron: 0.5, tds: 1500, ph: { min: 7.0, max: 9.0 }, alkalinity: 300 },
+                drinking: { hardness: 200, silica: 30, iron: 0.3, tds: 500, ph: { min: 6.5, max: 8.5 }, alkalinity: 200 },
+                industrial: { hardness: 100, silica: 20, iron: 0.3, tds: 1000, ph: { min: 6.5, max: 8.5 }, alkalinity: 200 },
+                custom: { hardness: 50, silica: 5, iron: 0.1, tds: 500, ph: { min: 7.0, max: 8.5 }, alkalinity: 100 }
+            };
+
+            let removalChart;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initChart();
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.getElementById('standardType').addEventListener('change', () => {
+                    document.getElementById('customLimits').classList.toggle('hidden', 
+                        document.getElementById('standardType').value !== 'custom');
+                });
+                document.querySelectorAll('input, select').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function initChart() {
+                removalChart = new Chart(document.getElementById('removalChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Total Hardness', 'Ca Hardness', 'Mg Hardness', 'Silica', 'Iron'],
+                        datasets: [
+                            { label: 'Influent', data: [0,0,0,0,0], backgroundColor: '#94a3b8' },
+                            { label: 'Effluent', data: [0,0,0,0,0], backgroundColor: '#10b981' }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'ppm' } } }
+                    }
+                });
+            }
+
+            function calculate() {
+                // Influent values
+                const influent = {
+                    hardness: parseFloat(document.getElementById('influentHardness').value),
+                    ca: parseFloat(document.getElementById('influentCa').value),
+                    mg: parseFloat(document.getElementById('influentMg').value),
+                    alk: parseFloat(document.getElementById('influentAlk').value),
+                    ph: parseFloat(document.getElementById('influentPH').value),
+                    silica: parseFloat(document.getElementById('influentSilica').value),
+                    tds: parseFloat(document.getElementById('influentTDS').value),
+                    iron: parseFloat(document.getElementById('influentIron').value)
+                };
+
+                const limeDose = parseFloat(document.getElementById('limeDose').value);
+                const sodaDose = parseFloat(document.getElementById('sodaDose').value);
+                const recarbonation = document.getElementById('recarbonation').value === 'yes';
+
+                // Calculate effluent quality based on lime-soda softening
+                // Simplified prediction model
+                const caRemovalEff = Math.min(95, 50 + limeDose * 0.15);
+                const mgRemovalEff = Math.min(98, 60 + limeDose * 0.12);
+                const silicaRemovalEff = Math.min(60, limeDose * 0.2);
+                
+                const effluent = {
+                    ca: influent.ca * (1 - caRemovalEff / 100),
+                    mg: influent.mg * (1 - mgRemovalEff / 100),
+                    silica: influent.silica * (1 - silicaRemovalEff / 100),
+                    iron: influent.iron * 0.1, // Iron precipitates with lime
+                    // TDS increases slightly due to Na from soda ash
+                    tds: influent.tds - influent.hardness * 0.3 + sodaDose * 0.8
+                };
+                effluent.hardness = effluent.ca + effluent.mg;
+                effluent.alk = recarbonation ? Math.min(80, sodaDose * 0.3) : sodaDose * 0.5;
+                effluent.ph = recarbonation ? 8.3 : 10.5;
+
+                const hardnessRemoval = ((influent.hardness - effluent.hardness) / influent.hardness * 100).toFixed(1);
+                const caRemoval = ((influent.ca - effluent.ca) / influent.ca * 100).toFixed(1);
+                const mgRemoval = ((influent.mg - effluent.mg) / influent.mg * 100).toFixed(1);
+                const silicaRemoval = ((influent.silica - effluent.silica) / influent.silica * 100).toFixed(1);
+
+                // Update UI
+                document.getElementById('effluentHardness').textContent = effluent.hardness.toFixed(1) + ' ppm';
+                document.getElementById('effluentCa').textContent = effluent.ca.toFixed(1) + ' ppm';
+                document.getElementById('effluentMg').textContent = effluent.mg.toFixed(1) + ' ppm';
+                document.getElementById('effluentAlk').textContent = effluent.alk.toFixed(0) + ' ppm';
+                document.getElementById('effluentPH').textContent = effluent.ph.toFixed(1);
+                document.getElementById('effluentSilica').textContent = effluent.silica.toFixed(1) + ' ppm';
+                document.getElementById('effluentTDS').textContent = effluent.tds.toFixed(0) + ' ppm';
+                document.getElementById('effluentIron').textContent = effluent.iron.toFixed(2) + ' ppm';
+
+                document.getElementById('hardnessRemoval').textContent = hardnessRemoval + '%';
+                document.getElementById('caRemoval').textContent = caRemoval + '%';
+                document.getElementById('mgRemoval').textContent = mgRemoval + '%';
+                document.getElementById('silicaRemoval').textContent = silicaRemoval + '%';
+
+                // Update chart
+                removalChart.data.datasets[0].data = [influent.hardness, influent.ca, influent.mg, influent.silica, influent.iron * 100];
+                removalChart.data.datasets[1].data = [effluent.hardness, effluent.ca, effluent.mg, effluent.silica, effluent.iron * 100];
+                removalChart.update();
+
+                // Compliance check
+                const standardType = document.getElementById('standardType').value;
+                const standard = STANDARDS[standardType];
+                if (standardType === 'custom') {
+                    standard.hardness = parseFloat(document.getElementById('maxHardness').value);
+                    standard.silica = parseFloat(document.getElementById('maxSilica').value);
+                }
+
+                const checks = [
+                    { param: 'Total Hardness', influent: influent.hardness, effluent: effluent.hardness, limit: standard.hardness, unit: 'ppm' },
+                    { param: 'Silica', influent: influent.silica, effluent: effluent.silica, limit: standard.silica, unit: 'ppm' },
+                    { param: 'Iron', influent: influent.iron, effluent: effluent.iron, limit: standard.iron, unit: 'ppm' },
+                    { param: 'TDS', influent: influent.tds, effluent: effluent.tds, limit: standard.tds, unit: 'ppm' },
+                    { param: 'pH', influent: influent.ph, effluent: effluent.ph, limit: `${standard.ph.min}-${standard.ph.max}`, unit: '' },
+                    { param: 'Alkalinity', influent: influent.alk, effluent: effluent.alk, limit: standard.alkalinity, unit: 'ppm' }
+                ];
+
+                const complianceBody = document.getElementById('complianceBody');
+                let failCount = 0;
+                complianceBody.innerHTML = checks.map(c => {
+                    let status, statusClass;
+                    if (c.param === 'pH') {
+                        status = (c.effluent >= standard.ph.min && c.effluent <= standard.ph.max) ? 'PASS' : 'FAIL';
+                    } else {
+                        status = c.effluent <= c.limit ? 'PASS' : 'FAIL';
+                    }
+                    if (status === 'FAIL') failCount++;
+                    statusClass = status === 'PASS' ? 'pass' : 'fail';
+
+                    return `<tr class="border-b">
+                        <td class="p-2 font-medium">${c.param}</td>
+                        <td class="p-2 text-center">${c.influent.toFixed(1)} ${c.unit}</td>
+                        <td class="p-2 text-center font-bold">${c.effluent.toFixed(c.param === 'Iron' ? 2 : 1)} ${c.unit}</td>
+                        <td class="p-2 text-center">${c.limit} ${c.unit}</td>
+                        <td class="p-2 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${statusClass}">${status}</span></td>
+                    </tr>`;
+                }).join('');
+
+                // Overall status
+                const overallStatus = document.getElementById('overallStatus');
+                const statusIcon = document.getElementById('statusIcon');
+                const statusText = document.getElementById('statusText');
+                const statusDesc = document.getElementById('statusDesc');
+
+                if (failCount === 0) {
+                    overallStatus.className = 'rounded-2xl p-6 text-center bg-gradient-to-r from-emerald-500 to-green-500 text-white';
+                    statusIcon.className = 'fas fa-check-circle text-5xl mb-3';
+                    statusText.textContent = '✓ COMPLIANT';
+                    statusDesc.textContent = 'All parameters meet the selected standard requirements';
+                } else {
+                    overallStatus.className = 'rounded-2xl p-6 text-center bg-gradient-to-r from-red-500 to-orange-500 text-white';
+                    statusIcon.className = 'fas fa-exclamation-triangle text-5xl mb-3';
+                    statusText.textContent = '✗ NON-COMPLIANT';
+                    statusDesc.textContent = `${failCount} parameter(s) exceed the standard limits`;
+                }
+
+                // Recommendations
+                const recommendations = [];
+                if (effluent.hardness > standard.hardness) {
+                    recommendations.push({ icon: 'fa-flask', text: 'Increase lime dose or add ion exchange polishing' });
+                }
+                if (effluent.silica > standard.silica) {
+                    recommendations.push({ icon: 'fa-filter', text: 'Consider warm lime softening or activated alumina for silica removal' });
+                }
+                if (!recarbonation && standardType !== 'boiler') {
+                    recommendations.push({ icon: 'fa-cloud', text: 'Add recarbonation to reduce pH for downstream processes' });
+                }
+                if (effluent.tds > standard.tds) {
+                    recommendations.push({ icon: 'fa-tint', text: 'Consider RO treatment for TDS reduction' });
+                }
+                if (recommendations.length === 0) {
+                    recommendations.push({ icon: 'fa-check', text: 'Process is optimized for the selected standard' });
+                }
+
+                document.getElementById('recommendations').innerHTML = recommendations.map(r => `
+                    <div class="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
+                        <i class="fas ${r.icon} text-yellow-600"></i>
+                        <span class="text-sm text-gray-700">${r.text}</span>
+                    </div>
+                `).join('');
+            }
+        })();
+    </script>
+</body>
+</html>

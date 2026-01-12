@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dosing Pump & Slaker Design Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #0ea5e9; --secondary: #06b6d4; --accent: #f59e0b; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0c4a6e 0%, #134e5e 50%, #1a3a4a 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .card:hover { transform: translateY(-3px); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .result-gradient { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); }
+        .pump-card { border-left: 4px solid var(--accent); }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">💉 Dosing Pump & Slaker Engine</h1>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20"><i class="fas fa-print mr-1"></i> Print</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <!-- Process Parameters -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cog text-sky-500"></i> Process Parameters
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Water Flow Rate (m³/hr)</label>
+                            <input type="number" id="waterFlow" value="50" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Hours/Day</label>
+                            <input type="number" id="opHours" value="24" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lime Dosing -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-flask text-orange-500"></i> Lime Dosing (Ca(OH)₂)
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Lime Dose (ppm)</label>
+                            <input type="number" id="limeDose" value="200" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Slurry Concentration (%)</label>
+                            <input type="number" id="limeSlurry" value="10" min="5" max="20" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Lime Source</label>
+                            <select id="limeSource" class="input-field">
+                                <option value="hydrated">Hydrated Lime (Ca(OH)₂)</option>
+                                <option value="quicklime">Quicklime (CaO) - Needs Slaker</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Lime Purity (%)</label>
+                            <input type="number" id="limePurity" value="90" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soda Dosing -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-vial text-blue-500"></i> Soda Ash Dosing (Na₂CO₃)
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Soda Dose (ppm)</label>
+                            <input type="number" id="sodaDose" value="150" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Solution Concentration (%)</label>
+                            <input type="number" id="sodaSolution" value="15" min="5" max="30" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Soda Purity (%)</label>
+                            <input type="number" id="sodaPurity" value="98" class="input-field">
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold py-2.5 rounded-lg hover:from-orange-600 hover:to-amber-600">
+                        <i class="fas fa-calculator mr-2"></i> Calculate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Lime Pump Results -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-syringe text-orange-500"></i> Lime Slurry Dosing Pump
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-orange-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Flow Rate</p>
+                            <p id="limeFlowLph" class="text-xl font-bold text-orange-700">0 L/hr</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Daily Consumption</p>
+                            <p id="limeDailyKg" class="text-xl font-bold text-orange-700">0 kg/day</p>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Pump Capacity (150%)</p>
+                            <p id="limePumpCapacity" class="text-xl font-bold text-amber-700">0 L/hr</p>
+                        </div>
+                        <div class="p-3 bg-yellow-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Discharge Pressure</p>
+                            <p id="limePressure" class="text-xl font-bold text-yellow-700">0 bar</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pump-card bg-orange-50/50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-700 mb-2">Recommended Pump Specifications</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div><span class="text-gray-600">Type:</span> <span id="limePumpType" class="font-bold">Progressive Cavity</span></div>
+                            <div><span class="text-gray-600">Max Flow:</span> <span id="limePumpMax" class="font-bold">0 L/hr</span></div>
+                            <div><span class="text-gray-600">Motor:</span> <span id="limeMotor" class="font-bold">0 kW</span></div>
+                            <div><span class="text-gray-600">Duty:</span> <span class="font-bold text-green-600">1W + 1S</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soda Pump Results -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-syringe text-blue-500"></i> Soda Solution Dosing Pump
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-blue-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Flow Rate</p>
+                            <p id="sodaFlowLph" class="text-xl font-bold text-blue-700">0 L/hr</p>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Daily Consumption</p>
+                            <p id="sodaDailyKg" class="text-xl font-bold text-blue-700">0 kg/day</p>
+                        </div>
+                        <div class="p-3 bg-cyan-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Pump Capacity (150%)</p>
+                            <p id="sodaPumpCapacity" class="text-xl font-bold text-cyan-700">0 L/hr</p>
+                        </div>
+                        <div class="p-3 bg-sky-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Discharge Pressure</p>
+                            <p id="sodaPressure" class="text-xl font-bold text-sky-700">0 bar</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pump-card bg-blue-50/50 p-4 rounded-lg" style="border-left-color: #3b82f6;">
+                        <h4 class="font-semibold text-gray-700 mb-2">Recommended Pump Specifications</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div><span class="text-gray-600">Type:</span> <span id="sodaPumpType" class="font-bold">Diaphragm</span></div>
+                            <div><span class="text-gray-600">Max Flow:</span> <span id="sodaPumpMax" class="font-bold">0 L/hr</span></div>
+                            <div><span class="text-gray-600">Motor:</span> <span id="sodaMotor" class="font-bold">0 kW</span></div>
+                            <div><span class="text-gray-600">Duty:</span> <span class="font-bold text-green-600">1W + 1S</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slaker Design (Conditional) -->
+                <div id="slakerSection" class="card hidden">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-fire-alt text-red-500"></i> Lime Slaker Design (CaO → Ca(OH)₂)
+                    </h3>
+                    <div class="p-4 bg-red-50 rounded-lg mb-4">
+                        <p class="text-sm text-red-800"><i class="fas fa-exclamation-triangle mr-1"></i> <strong>Exothermic Reaction:</strong> CaO + H₂O → Ca(OH)₂ + Heat (65 kJ/mol)</p>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-red-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Quicklime Required</p>
+                            <p id="quicklimeKg" class="text-xl font-bold text-red-700">0 kg/hr</p>
+                        </div>
+                        <div class="p-3 bg-red-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Water for Slaking</p>
+                            <p id="slakingWater" class="text-xl font-bold text-red-700">0 L/hr</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Slaker Volume</p>
+                            <p id="slakerVolume" class="text-xl font-bold text-orange-700">0 L</p>
+                        </div>
+                        <div class="p-3 bg-yellow-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Heat Generated</p>
+                            <p id="heatGenerated" class="text-xl font-bold text-yellow-700">0 kW</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <span class="text-gray-600">Slaker Type:</span> <span class="font-bold">Paste Slaker</span>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <span class="text-gray-600">Retention Time:</span> <span class="font-bold">5-10 min</span>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <span class="text-gray-600">Slaking Temp:</span> <span class="font-bold">70-100°C</span>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <span class="text-gray-600">Water:Lime Ratio:</span> <span id="waterLimeRatio" class="font-bold">2.5:1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment Summary -->
+                <div class="result-gradient rounded-2xl p-5 text-white">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-list-check"></i> Equipment Summary</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-white/70 border-b border-white/20">
+                                    <th class="text-left py-2">Equipment</th>
+                                    <th class="text-left py-2">Quantity</th>
+                                    <th class="text-left py-2">Capacity</th>
+                                    <th class="text-left py-2">Power</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipmentTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
+                        <span class="text-white/80">Total Installed Power:</span>
+                        <span id="totalPower" class="text-2xl font-bold">0 kW</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.getElementById('limeSource').addEventListener('change', toggleSlaker);
+                document.querySelectorAll('input').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function toggleSlaker() {
+                const source = document.getElementById('limeSource').value;
+                document.getElementById('slakerSection').classList.toggle('hidden', source !== 'quicklime');
+                calculate();
+            }
+
+            function calculate() {
+                const waterFlow = parseFloat(document.getElementById('waterFlow').value); // m³/hr
+                const opHours = parseFloat(document.getElementById('opHours').value);
+                
+                // Lime calculations
+                const limeDose = parseFloat(document.getElementById('limeDose').value); // ppm
+                const limeSlurryConc = parseFloat(document.getElementById('limeSlurry').value) / 100;
+                const limePurity = parseFloat(document.getElementById('limePurity').value) / 100;
+                const limeSource = document.getElementById('limeSource').value;
+
+                // Lime mass flow (kg/hr)
+                const limeKgHr = (limeDose * waterFlow) / 1000 / limePurity;
+                const limeDailyKg = limeKgHr * opHours;
+
+                // Slurry flow (L/hr) - considering slurry concentration
+                // Flow = mass / (concentration * density)
+                const slurryDensity = 1.0 + limeSlurryConc * 0.5; // kg/L approximate
+                const limeFlowLph = (limeKgHr / (limeSlurryConc * slurryDensity)); // L/hr
+                const limePumpCapacity = limeFlowLph * 1.5; // 150% design factor
+
+                // Pump sizing
+                const limePressure = 4; // bar (typical)
+                const limeMotorKw = Math.max(0.37, limePumpCapacity * limePressure / 36000 * 1.5);
+
+                // Soda calculations
+                const sodaDose = parseFloat(document.getElementById('sodaDose').value);
+                const sodaSolutionConc = parseFloat(document.getElementById('sodaSolution').value) / 100;
+                const sodaPurity = parseFloat(document.getElementById('sodaPurity').value) / 100;
+
+                const sodaKgHr = (sodaDose * waterFlow) / 1000 / sodaPurity;
+                const sodaDailyKg = sodaKgHr * opHours;
+                const sodaFlowLph = (sodaKgHr / (sodaSolutionConc * 1.15)); // L/hr, density ~1.15 kg/L
+                const sodaPumpCapacity = sodaFlowLph * 1.5;
+                const sodaPressure = 3; // bar
+                const sodaMotorKw = Math.max(0.18, sodaPumpCapacity * sodaPressure / 36000 * 1.5);
+
+                // Slaker calculations (if quicklime)
+                let slakerPower = 0;
+                if (limeSource === 'quicklime') {
+                    // CaO to Ca(OH)2: 56 g CaO + 18 g H2O = 74 g Ca(OH)2
+                    const quicklimeKgHr = limeKgHr * (56 / 74);
+                    const slakingWaterLph = quicklimeKgHr * 2.5; // 2.5 L water per kg CaO
+                    const slakerVolume = quicklimeKgHr * 10 * 10; // 10 min retention, safety
+                    const heatKw = quicklimeKgHr * 65 / 56 / 3.6; // 65 kJ/mol, 56 g/mol
+
+                    document.getElementById('quicklimeKg').textContent = quicklimeKgHr.toFixed(2) + ' kg/hr';
+                    document.getElementById('slakingWater').textContent = slakingWaterLph.toFixed(1) + ' L/hr';
+                    document.getElementById('slakerVolume').textContent = slakerVolume.toFixed(0) + ' L';
+                    document.getElementById('heatGenerated').textContent = heatKw.toFixed(2) + ' kW';
+                    
+                    slakerPower = 1.5; // Mixer motor
+                }
+
+                // Update UI
+                document.getElementById('limeFlowLph').textContent = limeFlowLph.toFixed(1) + ' L/hr';
+                document.getElementById('limeDailyKg').textContent = limeDailyKg.toFixed(1) + ' kg/day';
+                document.getElementById('limePumpCapacity').textContent = limePumpCapacity.toFixed(0) + ' L/hr';
+                document.getElementById('limePressure').textContent = limePressure + ' bar';
+                document.getElementById('limePumpMax').textContent = limePumpCapacity.toFixed(0) + ' L/hr';
+                document.getElementById('limeMotor').textContent = limeMotorKw.toFixed(2) + ' kW';
+                document.getElementById('limePumpType').textContent = limeFlowLph > 500 ? 'Progressive Cavity' : 'Peristaltic';
+
+                document.getElementById('sodaFlowLph').textContent = sodaFlowLph.toFixed(1) + ' L/hr';
+                document.getElementById('sodaDailyKg').textContent = sodaDailyKg.toFixed(1) + ' kg/day';
+                document.getElementById('sodaPumpCapacity').textContent = sodaPumpCapacity.toFixed(0) + ' L/hr';
+                document.getElementById('sodaPressure').textContent = sodaPressure + ' bar';
+                document.getElementById('sodaPumpMax').textContent = sodaPumpCapacity.toFixed(0) + ' L/hr';
+                document.getElementById('sodaMotor').textContent = sodaMotorKw.toFixed(2) + ' kW';
+                document.getElementById('sodaPumpType').textContent = sodaFlowLph > 200 ? 'Diaphragm' : 'Solenoid';
+
+                // Equipment table
+                const equipment = [
+                    { name: 'Lime Dosing Pump', qty: '1W + 1S', capacity: limePumpCapacity.toFixed(0) + ' L/hr', power: limeMotorKw.toFixed(2) + ' kW' },
+                    { name: 'Soda Dosing Pump', qty: '1W + 1S', capacity: sodaPumpCapacity.toFixed(0) + ' L/hr', power: sodaMotorKw.toFixed(2) + ' kW' },
+                    { name: 'Lime Tank Agitator', qty: '1', capacity: '-', power: '0.75 kW' }
+                ];
+                if (limeSource === 'quicklime') {
+                    equipment.push({ name: 'Lime Slaker', qty: '1', capacity: document.getElementById('slakerVolume').textContent, power: '1.50 kW' });
+                }
+
+                document.getElementById('equipmentTable').innerHTML = equipment.map(e => `
+                    <tr class="border-b border-white/10">
+                        <td class="py-2">${e.name}</td>
+                        <td class="py-2">${e.qty}</td>
+                        <td class="py-2">${e.capacity}</td>
+                        <td class="py-2">${e.power}</td>
+                    </tr>
+                `).join('');
+
+                const totalPower = limeMotorKw * 2 + sodaMotorKw * 2 + 0.75 + slakerPower;
+                document.getElementById('totalPower').textContent = totalPower.toFixed(2) + ' kW';
+            }
+        })();
+    </script>
+</body>
+</html>

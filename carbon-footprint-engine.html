@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Footprint Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #22c55e; --secondary: #16a34a; --accent: #065f46; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .scope-1 { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-left: 4px solid #ef4444; }
+        .scope-2 { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 4px solid #f59e0b; }
+        .scope-3 { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #22c55e; }
+        .credit-card { background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); border-left: 4px solid #06b6d4; }
+        .carbon-neutral { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+        .carbon-high { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">🌱 Carbon Footprint Calculator</h1>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20"><i class="fas fa-print mr-1"></i>Print</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <!-- Plant Parameters -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-industry text-green-500"></i> Plant Parameters
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Water Flow Rate (m³/day)</label>
+                            <input type="number" id="flowRate" value="2400" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Days/Year</label>
+                            <input type="number" id="opDays" value="330" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Energy Consumption -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt text-yellow-500"></i> Energy Consumption
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Electricity Use (kWh/day)</label>
+                            <input type="number" id="electricityUse" value="500" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Grid Emission Factor (kg CO₂/kWh)</label>
+                            <input type="number" id="gridFactor" value="0.82" step="0.01" class="input-field">
+                            <p class="text-xs text-gray-500 mt-1">India avg: 0.82 | Solar: 0.04</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Diesel Generator Use (L/day)</label>
+                            <input type="number" id="dieselUse" value="0" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chemical Consumption -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-flask text-emerald-500"></i> Chemical Consumption
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Lime (kg/day)</label>
+                            <input type="number" id="limeUse" value="300" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Soda Ash (kg/day)</label>
+                            <input type="number" id="sodaUse" value="200" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">CO₂ for Recarbonation (kg/day)</label>
+                            <input type="number" id="co2Use" value="50" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Polymer/Coagulant (kg/day)</label>
+                            <input type="number" id="polymerUse" value="5" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transport -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-truck text-blue-500"></i> Transport & Waste
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Chemical Delivery Distance (km one-way)</label>
+                            <input type="number" id="deliveryDistance" value="100" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Deliveries per Month</label>
+                            <input type="number" id="deliveriesPerMonth" value="4" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sludge Disposal (kg/day)</label>
+                            <input type="number" id="sludgeDisposal" value="500" class="input-field">
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2.5 rounded-lg hover:from-green-600 hover:to-emerald-600">
+                        <i class="fas fa-leaf mr-2"></i> Calculate Footprint
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Total Carbon Footprint -->
+                <div id="totalCard" class="carbon-neutral rounded-2xl p-6 text-white text-center">
+                    <p class="text-lg opacity-80">Total Annual Carbon Footprint</p>
+                    <p id="totalFootprint" class="text-5xl font-bold my-2">0</p>
+                    <p class="text-xl">tonnes CO₂e / year</p>
+                    <div class="mt-4 grid grid-cols-2 gap-4">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <p class="text-sm opacity-80">Per m³ Treated</p>
+                            <p id="footprintPerM3" class="text-2xl font-bold">0 kg</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <p class="text-sm opacity-80">Carbon Rating</p>
+                            <p id="carbonRating" class="text-2xl font-bold">A</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emissions by Scope -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Scope 1 -->
+                    <div class="scope-1 rounded-xl p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2"><i class="fas fa-fire mr-2 text-red-500"></i>Scope 1</h4>
+                        <p class="text-xs text-gray-600 mb-2">Direct Emissions</p>
+                        <p id="scope1" class="text-2xl font-bold text-red-700">0</p>
+                        <p class="text-xs text-gray-500">tonnes CO₂e/year</p>
+                        <div class="mt-2 text-xs text-gray-600">
+                            <div class="flex justify-between"><span>Diesel Gen:</span><span id="scope1Diesel" class="font-semibold">0</span></div>
+                            <div class="flex justify-between"><span>Fugitive:</span><span id="scope1Fugitive" class="font-semibold">0</span></div>
+                        </div>
+                    </div>
+                    <!-- Scope 2 -->
+                    <div class="scope-2 rounded-xl p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2"><i class="fas fa-plug mr-2 text-amber-500"></i>Scope 2</h4>
+                        <p class="text-xs text-gray-600 mb-2">Energy Indirect</p>
+                        <p id="scope2" class="text-2xl font-bold text-amber-700">0</p>
+                        <p class="text-xs text-gray-500">tonnes CO₂e/year</p>
+                        <div class="mt-2 text-xs text-gray-600">
+                            <div class="flex justify-between"><span>Grid Electricity:</span><span id="scope2Grid" class="font-semibold">0</span></div>
+                        </div>
+                    </div>
+                    <!-- Scope 3 -->
+                    <div class="scope-3 rounded-xl p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2"><i class="fas fa-link mr-2 text-green-500"></i>Scope 3</h4>
+                        <p class="text-xs text-gray-600 mb-2">Value Chain</p>
+                        <p id="scope3" class="text-2xl font-bold text-green-700">0</p>
+                        <p class="text-xs text-gray-500">tonnes CO₂e/year</p>
+                        <div class="mt-2 text-xs text-gray-600">
+                            <div class="flex justify-between"><span>Chemicals:</span><span id="scope3Chem" class="font-semibold">0</span></div>
+                            <div class="flex justify-between"><span>Transport:</span><span id="scope3Transport" class="font-semibold">0</span></div>
+                            <div class="flex justify-between"><span>Waste:</span><span id="scope3Waste" class="font-semibold">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CO2 Credit (Recarbonation) -->
+                <div class="credit-card rounded-xl p-4">
+                    <h4 class="font-semibold text-gray-800 mb-2"><i class="fas fa-minus-circle mr-2 text-cyan-500"></i>Carbon Credit: CO₂ Recarbonation</h4>
+                    <p class="text-xs text-gray-600 mb-2">CO₂ absorbed during recarbonation process (negative emission)</p>
+                    <div class="flex items-center gap-4">
+                        <p id="co2Credit" class="text-2xl font-bold text-cyan-700">-0</p>
+                        <div class="flex-1 bg-cyan-200 rounded-full h-2">
+                            <div id="creditBar" class="bg-cyan-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500">tonnes CO₂e/year</p>
+                    </div>
+                </div>
+
+                <!-- Breakdown Chart -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-chart-pie text-green-500 mr-2"></i>Emissions Breakdown</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div style="height: 250px;"><canvas id="scopeChart"></canvas></div>
+                        <div style="height: 250px;"><canvas id="sourceChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Benchmark Comparison -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-balance-scale text-blue-500 mr-2"></i>Industry Benchmark Comparison</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Your Plant</span>
+                                <span id="yourBenchmark" class="font-semibold text-green-600">0.25 kg CO₂/m³</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4 relative">
+                                <div id="yourBar" class="bg-green-500 h-4 rounded-full" style="width: 25%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">India Average (Conventional WTP)</span>
+                                <span class="font-semibold text-yellow-600">0.50 kg CO₂/m³</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-yellow-500 h-4 rounded-full" style="width: 50%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Best Practice (Green WTP)</span>
+                                <span class="font-semibold text-green-600">0.15 kg CO₂/m³</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-green-400 h-4 rounded-full" style="width: 15%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Industry Poor Practice</span>
+                                <span class="font-semibold text-red-600">1.00 kg CO₂/m³</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-red-500 h-4 rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reduction Recommendations -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i>Carbon Reduction Opportunities</h3>
+                    <div id="recommendations" class="space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // Emission factors (kg CO₂e per unit)
+            const EF = {
+                // Scope 1
+                diesel: 2.68,         // kg CO₂/L diesel
+                // Scope 2
+                // Grid factor is user input
+                // Scope 3 - Chemical production footprints
+                lime: 0.95,           // kg CO₂/kg Ca(OH)₂ (calcination + transport)
+                sodaAsh: 1.18,        // kg CO₂/kg Na₂CO₃ (Solvay process)
+                co2Purchase: 1.0,     // kg CO₂/kg CO₂ (production + compression)
+                polymer: 2.5,         // kg CO₂/kg polymer
+                // Transport
+                truck: 0.12,          // kg CO₂/km (heavy truck round trip)
+                // Waste
+                sludgeLandfill: 0.05  // kg CO₂/kg sludge (decomposition)
+            };
+
+            let scopeChart, sourceChart;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initCharts();
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.querySelectorAll('input').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function initCharts() {
+                scopeChart = new Chart(document.getElementById('scopeChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Scope 1', 'Scope 2', 'Scope 3'],
+                        datasets: [{ data: [10, 50, 40], backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], borderWidth: 0 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '55%',
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                    }
+                });
+
+                sourceChart = new Chart(document.getElementById('sourceChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Electricity', 'Lime', 'Soda Ash', 'Transport', 'Other'],
+                        datasets: [{ label: 'tonnes CO₂e/year', data: [100, 50, 40, 10, 5], backgroundColor: ['#f59e0b', '#22c55e', '#10b981', '#3b82f6', '#6b7280'] }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'tonnes CO₂e' } } }
+                    }
+                });
+            }
+
+            function calculate() {
+                // Inputs
+                const flowRate = parseFloat(document.getElementById('flowRate').value);
+                const opDays = parseFloat(document.getElementById('opDays').value);
+                const electricityUse = parseFloat(document.getElementById('electricityUse').value);
+                const gridFactor = parseFloat(document.getElementById('gridFactor').value);
+                const dieselUse = parseFloat(document.getElementById('dieselUse').value);
+                const limeUse = parseFloat(document.getElementById('limeUse').value);
+                const sodaUse = parseFloat(document.getElementById('sodaUse').value);
+                const co2Use = parseFloat(document.getElementById('co2Use').value);
+                const polymerUse = parseFloat(document.getElementById('polymerUse').value);
+                const deliveryDistance = parseFloat(document.getElementById('deliveryDistance').value);
+                const deliveriesPerMonth = parseFloat(document.getElementById('deliveriesPerMonth').value);
+                const sludgeDisposal = parseFloat(document.getElementById('sludgeDisposal').value);
+
+                // Annual values
+                const annualWater = flowRate * opDays; // m³/year
+
+                // Scope 1: Direct emissions (on-site fuel combustion)
+                const scope1Diesel = dieselUse * EF.diesel * opDays / 1000; // tonnes
+                const scope1Fugitive = 0; // Minimal for water treatment
+                const scope1Total = scope1Diesel + scope1Fugitive;
+
+                // Scope 2: Indirect energy emissions
+                const scope2Grid = electricityUse * gridFactor * opDays / 1000; // tonnes
+
+                // Scope 3: Value chain emissions
+                const scope3Lime = limeUse * EF.lime * opDays / 1000;
+                const scope3Soda = sodaUse * EF.sodaAsh * opDays / 1000;
+                const scope3CO2 = co2Use * EF.co2Purchase * opDays / 1000;
+                const scope3Polymer = polymerUse * EF.polymer * opDays / 1000;
+                const scope3Chemicals = scope3Lime + scope3Soda + scope3CO2 + scope3Polymer;
+
+                const annualDeliveries = deliveriesPerMonth * 12;
+                const scope3Transport = annualDeliveries * deliveryDistance * 2 * EF.truck / 1000; // Round trip
+
+                const scope3Waste = sludgeDisposal * EF.sludgeLandfill * opDays / 1000;
+
+                const scope3Total = scope3Chemicals + scope3Transport + scope3Waste;
+
+                // CO₂ Credit (recarbonation absorbs CO₂ from atmosphere/flue gas)
+                // Assuming purchased CO₂ is sequestered in water
+                const co2Credit = co2Use * opDays / 1000 * 0.5; // 50% credit for sequestration
+
+                // Total footprint
+                const grossTotal = scope1Total + scope2Grid + scope3Total;
+                const netTotal = grossTotal - co2Credit;
+
+                // Per m³
+                const footprintPerM3 = annualWater > 0 ? (netTotal * 1000) / annualWater : 0; // kg/m³
+
+                // Carbon rating
+                let rating = 'E';
+                if (footprintPerM3 <= 0.15) rating = 'A';
+                else if (footprintPerM3 <= 0.25) rating = 'B';
+                else if (footprintPerM3 <= 0.40) rating = 'C';
+                else if (footprintPerM3 <= 0.60) rating = 'D';
+
+                // Update UI
+                const fmt = (n, d = 2) => n.toFixed(d);
+
+                document.getElementById('totalFootprint').textContent = fmt(netTotal, 1);
+                document.getElementById('footprintPerM3').textContent = fmt(footprintPerM3, 3) + ' kg';
+                document.getElementById('carbonRating').textContent = rating;
+
+                document.getElementById('scope1').textContent = fmt(scope1Total);
+                document.getElementById('scope1Diesel').textContent = fmt(scope1Diesel) + ' t';
+                document.getElementById('scope1Fugitive').textContent = fmt(scope1Fugitive) + ' t';
+
+                document.getElementById('scope2').textContent = fmt(scope2Grid);
+                document.getElementById('scope2Grid').textContent = fmt(scope2Grid) + ' t';
+
+                document.getElementById('scope3').textContent = fmt(scope3Total);
+                document.getElementById('scope3Chem').textContent = fmt(scope3Chemicals) + ' t';
+                document.getElementById('scope3Transport').textContent = fmt(scope3Transport) + ' t';
+                document.getElementById('scope3Waste').textContent = fmt(scope3Waste) + ' t';
+
+                document.getElementById('co2Credit').textContent = '-' + fmt(co2Credit);
+                document.getElementById('creditBar').style.width = Math.min((co2Credit / netTotal) * 100, 100) + '%';
+
+                document.getElementById('yourBenchmark').textContent = fmt(footprintPerM3, 3) + ' kg CO₂/m³';
+                document.getElementById('yourBar').style.width = Math.min(footprintPerM3 * 100, 100) + '%';
+
+                // Card styling based on rating
+                const totalCard = document.getElementById('totalCard');
+                if (rating === 'A' || rating === 'B') {
+                    totalCard.className = 'carbon-neutral rounded-2xl p-6 text-white text-center';
+                } else {
+                    totalCard.className = 'carbon-high rounded-2xl p-6 text-white text-center';
+                }
+
+                // Update charts
+                scopeChart.data.datasets[0].data = [scope1Total, scope2Grid, scope3Total];
+                scopeChart.update();
+
+                sourceChart.data.datasets[0].data = [scope2Grid, scope3Lime, scope3Soda, scope3Transport, scope1Diesel + scope3Waste];
+                sourceChart.update();
+
+                // Recommendations
+                const recs = [];
+                if (gridFactor > 0.5) {
+                    recs.push({ icon: 'fa-solar-panel', text: 'Install rooftop solar PV to reduce grid dependency', saving: (scope2Grid * 0.7).toFixed(1) + ' t/year' });
+                }
+                if (scope3Lime > scope3Soda) {
+                    recs.push({ icon: 'fa-flask', text: 'Source lime from local suppliers to reduce transport emissions', saving: (scope3Transport * 0.3).toFixed(1) + ' t/year' });
+                }
+                if (dieselUse > 0) {
+                    recs.push({ icon: 'fa-battery-full', text: 'Eliminate DG use with battery backup or grid stabilization', saving: scope1Diesel.toFixed(1) + ' t/year' });
+                }
+                if (scope3Waste > 0.5) {
+                    recs.push({ icon: 'fa-recycle', text: 'Explore sludge reuse in construction materials', saving: (scope3Waste * 0.8).toFixed(1) + ' t/year' });
+                }
+                recs.push({ icon: 'fa-tree', text: 'Plant trees around facility for carbon sequestration', saving: '0.5-2 t/year' });
+
+                document.getElementById('recommendations').innerHTML = recs.map(r => `
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <i class="fas ${r.icon} text-green-500 text-xl"></i>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-700">${r.text}</p>
+                            <p class="text-xs text-green-600 font-semibold">Potential saving: ${r.saving}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        })();
+    </script>
+</body>
+</html>

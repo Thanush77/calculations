@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Balance Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #0ea5e9; --secondary: #06b6d4; --accent: #22c55e; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0c4a6e 0%, #134e5e 50%, #1a3a4a 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .flow-arrow { display: flex; align-items: center; justify-content: center; color: #0ea5e9; font-size: 1.5rem; }
+        .unit-box { border: 2px solid #0ea5e9; border-radius: 0.75rem; padding: 1rem; text-align: center; background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%); }
+        .loss-indicator { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #f59e0b; }
+        .recovery-good { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); }
+        .recovery-medium { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
+        .recovery-poor { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">💧 Water Balance Engine</h1>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20"><i class="fas fa-print mr-1"></i>Print</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <!-- Process Parameters -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-tint text-sky-500"></i> Process Inputs
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Raw Water Flow (m³/hr)</label>
+                            <input type="number" id="rawWaterFlow" value="100" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Hours/Day</label>
+                            <input type="number" id="opHours" value="24" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sludge Solids (% dry)</label>
+                            <input type="number" id="sludgeSolids" value="3" min="1" max="10" step="0.5" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sludge Production (kg/day)</label>
+                            <input type="number" id="sludgeProduction" value="500" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loss Factors -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-percentage text-orange-500"></i> Loss Factors
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Evaporation Loss (%)</label>
+                            <input type="number" id="evapLoss" value="0.5" min="0" max="5" step="0.1" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Filter Backwash (%)</label>
+                            <input type="number" id="backwashPct" value="3" min="1" max="10" step="0.5" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sampling/Lab Loss (m³/day)</label>
+                            <input type="number" id="samplingLoss" value="0.5" min="0" max="5" step="0.1" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Chemical Dilution Water (m³/hr)</label>
+                            <input type="number" id="chemDilution" value="0.5" min="0" max="5" step="0.1" class="input-field">
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-sky-500 to-cyan-500 text-white font-bold py-2.5 rounded-lg hover:from-sky-600 hover:to-cyan-600">
+                        <i class="fas fa-calculator mr-2"></i> Calculate Balance
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Process Flow Diagram -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-project-diagram text-blue-500"></i> Process Flow & Mass Balance
+                    </h3>
+                    <div class="grid grid-cols-5 gap-2 items-center text-sm">
+                        <!-- Raw Water -->
+                        <div class="unit-box">
+                            <i class="fas fa-faucet text-2xl text-blue-500 mb-2"></i>
+                            <p class="font-bold text-gray-800">Raw Water</p>
+                            <p id="rawWaterIn" class="text-lg font-bold text-blue-600">100 m³/hr</p>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                        <!-- Rapid Mix -->
+                        <div class="unit-box">
+                            <i class="fas fa-blender text-2xl text-purple-500 mb-2"></i>
+                            <p class="font-bold text-gray-800">Rapid Mix</p>
+                            <p id="rapidMixFlow" class="text-lg font-bold text-purple-600">100.5 m³/hr</p>
+                            <p class="text-xs text-gray-500">+Chem Water</p>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                        <!-- Flocculation -->
+                        <div class="unit-box">
+                            <i class="fas fa-sync text-2xl text-indigo-500 mb-2"></i>
+                            <p class="font-bold text-gray-800">Flocculation</p>
+                            <p id="flocFlow" class="text-lg font-bold text-indigo-600">100.5 m³/hr</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-5 gap-2 items-center text-sm mt-4">
+                        <!-- Clarifier -->
+                        <div class="unit-box col-span-2">
+                            <i class="fas fa-flask text-2xl text-teal-500 mb-2"></i>
+                            <p class="font-bold text-gray-800">Clarifier</p>
+                            <div class="grid grid-cols-2 gap-2 mt-2">
+                                <div>
+                                    <p class="text-xs text-gray-500">Overflow</p>
+                                    <p id="clarifierOverflow" class="font-bold text-teal-600">99.8 m³/hr</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Underflow</p>
+                                    <p id="clarifierUnderflow" class="font-bold text-orange-600">0.7 m³/hr</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                        <!-- Filter -->
+                        <div class="unit-box">
+                            <i class="fas fa-filter text-2xl text-green-500 mb-2"></i>
+                            <p class="font-bold text-gray-800">Filter</p>
+                            <p id="filterFlow" class="text-lg font-bold text-green-600">96.8 m³/hr</p>
+                            <p class="text-xs text-gray-500">Net Output</p>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                        <!-- Treated Water -->
+                        <div class="unit-box" style="background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%); border-color: #22c55e;">
+                            <i class="fas fa-check-circle text-2xl text-green-500 mb-2"></i>
+                            <p class="font-bold text-gray-800">Treated Water</p>
+                            <p id="treatedWater" class="text-lg font-bold text-green-600">96.8 m³/hr</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Water Losses Breakdown -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-orange-500"></i> Water Loss Analysis
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Loss Details -->
+                        <div class="space-y-3">
+                            <div class="loss-indicator p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700 text-sm"><i class="fas fa-trash-alt mr-2"></i>Sludge Blowdown</span>
+                                    <span id="sludgeLoss" class="font-bold text-orange-700">16.67 m³/day</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Based on sludge solids concentration</p>
+                            </div>
+                            <div class="loss-indicator p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700 text-sm"><i class="fas fa-undo mr-2"></i>Filter Backwash</span>
+                                    <span id="backwashLoss" class="font-bold text-orange-700">72.0 m³/day</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Recycled or sent to drain</p>
+                            </div>
+                            <div class="loss-indicator p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700 text-sm"><i class="fas fa-cloud mr-2"></i>Evaporation</span>
+                                    <span id="evapLossDisplay" class="font-bold text-orange-700">12.0 m³/day</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Open tank surface loss</p>
+                            </div>
+                            <div class="loss-indicator p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700 text-sm"><i class="fas fa-vial mr-2"></i>Sampling & Lab</span>
+                                    <span id="samplingLossDisplay" class="font-bold text-orange-700">0.5 m³/day</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Chart -->
+                        <div>
+                            <div style="height: 220px;"><canvas id="lossChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Table -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-table text-cyan-500"></i> Water Balance Summary
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700">
+                                    <th class="text-left py-2 px-3 rounded-tl-lg">Stream</th>
+                                    <th class="text-right py-2 px-3">Flow (m³/hr)</th>
+                                    <th class="text-right py-2 px-3">Flow (m³/day)</th>
+                                    <th class="text-right py-2 px-3 rounded-tr-lg">% of Input</th>
+                                </tr>
+                            </thead>
+                            <tbody id="balanceTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recovery & Efficiency -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div id="recoveryCard" class="card recovery-good p-4 text-center">
+                        <p class="text-sm text-gray-600">Overall Recovery</p>
+                        <p id="overallRecovery" class="text-3xl font-bold text-green-700">96.8%</p>
+                        <p class="text-xs text-gray-500">Treated / Raw Water</p>
+                    </div>
+                    <div class="card p-4 text-center bg-gradient-to-br from-blue-50 to-blue-100">
+                        <p class="text-sm text-gray-600">Total Losses</p>
+                        <p id="totalLosses" class="text-3xl font-bold text-blue-700">101.2 m³/day</p>
+                        <p class="text-xs text-gray-500">All streams combined</p>
+                    </div>
+                    <div class="card p-4 text-center bg-gradient-to-br from-purple-50 to-purple-100">
+                        <p class="text-sm text-gray-600">Make-up Requirement</p>
+                        <p id="makeupReq" class="text-3xl font-bold text-purple-700">0 m³/day</p>
+                        <p class="text-xs text-gray-500">If recycle enabled</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            let lossChart;
+            
+            document.addEventListener('DOMContentLoaded', () => {
+                initChart();
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.querySelectorAll('input').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function initChart() {
+                lossChart = new Chart(document.getElementById('lossChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Sludge', 'Backwash', 'Evaporation', 'Sampling'],
+                        datasets: [{
+                            data: [25, 50, 15, 10],
+                            backgroundColor: ['#ea580c', '#f59e0b', '#eab308', '#84cc16'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '55%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+                        }
+                    }
+                });
+            }
+
+            function calculate() {
+                // Inputs
+                const rawWaterFlow = parseFloat(document.getElementById('rawWaterFlow').value); // m³/hr
+                const opHours = parseFloat(document.getElementById('opHours').value);
+                const sludgeSolids = parseFloat(document.getElementById('sludgeSolids').value) / 100; // fraction
+                const sludgeProduction = parseFloat(document.getElementById('sludgeProduction').value); // kg/day dry
+                const evapLossPct = parseFloat(document.getElementById('evapLoss').value) / 100;
+                const backwashPct = parseFloat(document.getElementById('backwashPct').value) / 100;
+                const samplingLoss = parseFloat(document.getElementById('samplingLoss').value); // m³/day
+                const chemDilution = parseFloat(document.getElementById('chemDilution').value); // m³/hr
+
+                // Daily raw water
+                const rawWaterDaily = rawWaterFlow * opHours; // m³/day
+
+                // Chemical dilution water (added to process)
+                const chemDilutionDaily = chemDilution * opHours;
+
+                // Total water entering process
+                const totalWaterIn = rawWaterDaily + chemDilutionDaily;
+
+                // Sludge blowdown calculation
+                // Sludge volume = Dry solids / (solids concentration * density)
+                // Assuming sludge density ≈ 1020 kg/m³
+                const sludgeDensity = 1020; // kg/m³
+                const sludgeVolume = sludgeProduction / (sludgeSolids * sludgeDensity); // m³/day
+
+                // Evaporation loss (from clarifier and tanks)
+                const evapLoss = rawWaterDaily * evapLossPct;
+
+                // Filter backwash
+                const backwashLoss = rawWaterDaily * backwashPct;
+
+                // Total losses
+                const totalLosses = sludgeVolume + evapLoss + backwashLoss + samplingLoss;
+
+                // Treated water output
+                const treatedWaterDaily = totalWaterIn - totalLosses;
+                const treatedWaterHr = treatedWaterDaily / opHours;
+
+                // Recovery calculation
+                const recoveryPct = (treatedWaterDaily / rawWaterDaily) * 100;
+
+                // Flow through units (hourly)
+                const rapidMixFlow = rawWaterFlow + chemDilution;
+                const flocFlow = rapidMixFlow;
+                const clarifierOverflow = rapidMixFlow - (sludgeVolume / opHours);
+                const clarifierUnderflow = sludgeVolume / opHours;
+                const filterNetOutput = clarifierOverflow - (backwashLoss / opHours);
+
+                // Update UI
+                document.getElementById('rawWaterIn').textContent = rawWaterFlow.toFixed(1) + ' m³/hr';
+                document.getElementById('rapidMixFlow').textContent = rapidMixFlow.toFixed(1) + ' m³/hr';
+                document.getElementById('flocFlow').textContent = flocFlow.toFixed(1) + ' m³/hr';
+                document.getElementById('clarifierOverflow').textContent = clarifierOverflow.toFixed(1) + ' m³/hr';
+                document.getElementById('clarifierUnderflow').textContent = clarifierUnderflow.toFixed(2) + ' m³/hr';
+                document.getElementById('filterFlow').textContent = filterNetOutput.toFixed(1) + ' m³/hr';
+                document.getElementById('treatedWater').textContent = treatedWaterHr.toFixed(1) + ' m³/hr';
+
+                // Loss displays
+                document.getElementById('sludgeLoss').textContent = sludgeVolume.toFixed(2) + ' m³/day';
+                document.getElementById('backwashLoss').textContent = backwashLoss.toFixed(1) + ' m³/day';
+                document.getElementById('evapLossDisplay').textContent = evapLoss.toFixed(1) + ' m³/day';
+                document.getElementById('samplingLossDisplay').textContent = samplingLoss.toFixed(1) + ' m³/day';
+
+                // Summary
+                document.getElementById('overallRecovery').textContent = recoveryPct.toFixed(1) + '%';
+                document.getElementById('totalLosses').textContent = totalLosses.toFixed(1) + ' m³/day';
+                document.getElementById('makeupReq').textContent = '0 m³/day'; // Direct process, no recycle
+
+                // Recovery card styling
+                const recoveryCard = document.getElementById('recoveryCard');
+                recoveryCard.className = 'card p-4 text-center ';
+                if (recoveryPct >= 95) {
+                    recoveryCard.classList.add('recovery-good');
+                    document.getElementById('overallRecovery').className = 'text-3xl font-bold text-green-700';
+                } else if (recoveryPct >= 90) {
+                    recoveryCard.classList.add('recovery-medium');
+                    document.getElementById('overallRecovery').className = 'text-3xl font-bold text-yellow-700';
+                } else {
+                    recoveryCard.classList.add('recovery-poor');
+                    document.getElementById('overallRecovery').className = 'text-3xl font-bold text-red-700';
+                }
+
+                // Update chart
+                lossChart.data.datasets[0].data = [sludgeVolume, backwashLoss, evapLoss, samplingLoss];
+                lossChart.update();
+
+                // Balance table
+                const streams = [
+                    { name: 'Raw Water IN', flow: rawWaterFlow, daily: rawWaterDaily, pct: 100, type: 'in' },
+                    { name: 'Chemical Dilution IN', flow: chemDilution, daily: chemDilutionDaily, pct: (chemDilutionDaily/rawWaterDaily)*100, type: 'in' },
+                    { name: 'Sludge Blowdown OUT', flow: sludgeVolume/opHours, daily: sludgeVolume, pct: (sludgeVolume/rawWaterDaily)*100, type: 'out' },
+                    { name: 'Filter Backwash OUT', flow: backwashLoss/opHours, daily: backwashLoss, pct: (backwashLoss/rawWaterDaily)*100, type: 'out' },
+                    { name: 'Evaporation OUT', flow: evapLoss/opHours, daily: evapLoss, pct: (evapLoss/rawWaterDaily)*100, type: 'out' },
+                    { name: 'Sampling OUT', flow: samplingLoss/opHours, daily: samplingLoss, pct: (samplingLoss/rawWaterDaily)*100, type: 'out' },
+                    { name: 'Treated Water OUT', flow: treatedWaterHr, daily: treatedWaterDaily, pct: recoveryPct, type: 'product' }
+                ];
+
+                document.getElementById('balanceTable').innerHTML = streams.map(s => {
+                    let rowClass = '';
+                    if (s.type === 'in') rowClass = 'bg-green-50';
+                    else if (s.type === 'out') rowClass = 'bg-orange-50';
+                    else rowClass = 'bg-blue-100 font-bold';
+                    return `<tr class="${rowClass} border-b">
+                        <td class="py-2 px-3">${s.name}</td>
+                        <td class="py-2 px-3 text-right">${s.flow.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right">${s.daily.toFixed(1)}</td>
+                        <td class="py-2 px-3 text-right">${s.pct.toFixed(1)}%</td>
+                    </tr>`;
+                }).join('');
+            }
+        })();
+    </script>
+</body>
+</html>

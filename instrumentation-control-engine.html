@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrumentation & Control Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #0ea5e9; --secondary: #06b6d4; --accent: #8b5cf6; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0c4a6e 0%, #134e5e 50%, #1a3a4a 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .instrument-card { border-left: 4px solid var(--accent); transition: all 0.3s; }
+        .instrument-card:hover { transform: translateX(5px); }
+        .tag-io { background: #ddd6fe; color: #5b21b6; }
+        .tag-ai { background: #fce7f3; color: #be185d; }
+        .tag-ao { background: #cffafe; color: #0e7490; }
+        .tag-di { background: #d1fae5; color: #047857; }
+        .tag-do { background: #fef3c7; color: #b45309; }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">🎛️ Instrumentation & Control Engine</h1>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20"><i class="fas fa-print mr-1"></i>Print</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <!-- Plant Parameters -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-industry text-purple-500"></i> Plant Parameters
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Flow Rate (m³/hr)</label>
+                            <input type="number" id="flowRate" value="100" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Number of Clarifiers</label>
+                            <input type="number" id="numClarifiers" value="2" min="1" max="10" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Number of Filters</label>
+                            <input type="number" id="numFilters" value="4" min="1" max="20" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Chemical Dosing Pumps</label>
+                            <input type="number" id="numDosingPumps" value="4" min="2" max="10" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Philosophy -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cogs text-indigo-500"></i> Control Philosophy
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Control System</label>
+                            <select id="controlSystem" class="input-field">
+                                <option value="plc">PLC Based</option>
+                                <option value="dcs">DCS Based</option>
+                                <option value="scada">SCADA + PLC</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Redundancy Level</label>
+                            <select id="redundancy" class="input-field">
+                                <option value="none">None</option>
+                                <option value="partial" selected>Partial (Critical only)</option>
+                                <option value="full">Full Redundancy</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="remoteMonitoring" checked class="w-4 h-4">
+                            <label class="text-sm text-gray-700">Remote Monitoring (IoT)</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="historyServer" checked class="w-4 h-4">
+                            <label class="text-sm text-gray-700">Data Historian</label>
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-2.5 rounded-lg hover:from-purple-600 hover:to-indigo-600">
+                        <i class="fas fa-microchip mr-2"></i> Generate I/O List
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- I/O Summary -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-bar text-purple-500"></i> I/O Point Summary
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div class="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl text-center">
+                            <p class="text-xs text-gray-600">Analog Inputs</p>
+                            <p id="aiCount" class="text-2xl font-bold text-pink-700">0</p>
+                            <span class="tag-ai text-xs px-2 py-0.5 rounded">AI</span>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl text-center">
+                            <p class="text-xs text-gray-600">Analog Outputs</p>
+                            <p id="aoCount" class="text-2xl font-bold text-cyan-700">0</p>
+                            <span class="tag-ao text-xs px-2 py-0.5 rounded">AO</span>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl text-center">
+                            <p class="text-xs text-gray-600">Digital Inputs</p>
+                            <p id="diCount" class="text-2xl font-bold text-green-700">0</p>
+                            <span class="tag-di text-xs px-2 py-0.5 rounded">DI</span>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl text-center">
+                            <p class="text-xs text-gray-600">Digital Outputs</p>
+                            <p id="doCount" class="text-2xl font-bold text-amber-700">0</p>
+                            <span class="tag-do text-xs px-2 py-0.5 rounded">DO</span>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl text-center">
+                            <p class="text-xs text-gray-600">Total I/O</p>
+                            <p id="totalIO" class="text-2xl font-bold text-purple-700">0</p>
+                            <span class="tag-io text-xs px-2 py-0.5 rounded">Total</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instrument List -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-list text-indigo-500"></i> Instrument Schedule
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700">
+                                    <th class="text-left py-2 px-3">Tag No.</th>
+                                    <th class="text-left py-2 px-3">Description</th>
+                                    <th class="text-left py-2 px-3">Type</th>
+                                    <th class="text-left py-2 px-3">Range</th>
+                                    <th class="text-right py-2 px-3">Qty</th>
+                                    <th class="text-right py-2 px-3">Unit Cost (₹)</th>
+                                    <th class="text-right py-2 px-3">Total (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="instrumentTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-purple-100 font-bold">
+                                    <td colspan="6" class="py-2 px-3 text-right">Total Instrument Cost:</td>
+                                    <td id="totalInstrumentCost" class="py-2 px-3 text-right text-purple-700">₹0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Control Panel Sizing -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-server text-blue-500"></i> Control Panel Specifications
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- PLC/DCS -->
+                        <div class="space-y-3">
+                            <div class="instrument-card bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-microchip mr-2 text-purple-500"></i>Controller</h4>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div><span class="text-gray-500">Type:</span> <span id="controllerType" class="font-bold">PLC</span></div>
+                                    <div><span class="text-gray-500">CPU:</span> <span id="cpuModel" class="font-bold">S7-1500</span></div>
+                                    <div><span class="text-gray-500">AI Modules:</span> <span id="aiModules" class="font-bold">0</span></div>
+                                    <div><span class="text-gray-500">AO Modules:</span> <span id="aoModules" class="font-bold">0</span></div>
+                                    <div><span class="text-gray-500">DI Modules:</span> <span id="diModules" class="font-bold">0</span></div>
+                                    <div><span class="text-gray-500">DO Modules:</span> <span id="doModules" class="font-bold">0</span></div>
+                                </div>
+                            </div>
+                            <div class="instrument-card bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-desktop mr-2 text-blue-500"></i>HMI/SCADA</h4>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div><span class="text-gray-500">Panel HMI:</span> <span id="hmiSize" class="font-bold">15" Touch</span></div>
+                                    <div><span class="text-gray-500">SCADA Stations:</span> <span id="scadaStations" class="font-bold">1</span></div>
+                                    <div><span class="text-gray-500">Historian:</span> <span id="historianStatus" class="font-bold">Yes</span></div>
+                                    <div><span class="text-gray-500">Remote Access:</span> <span id="remoteStatus" class="font-bold">Yes</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Power & Enclosure -->
+                        <div class="space-y-3">
+                            <div class="instrument-card bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-bolt mr-2 text-yellow-500"></i>Power Requirements</h4>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div><span class="text-gray-500">Control Power:</span> <span id="controlPower" class="font-bold">0 W</span></div>
+                                    <div><span class="text-gray-500">Instrument Power:</span> <span id="instrumentPower" class="font-bold">0 W</span></div>
+                                    <div><span class="text-gray-500">UPS Capacity:</span> <span id="upsCapacity" class="font-bold">0 kVA</span></div>
+                                    <div><span class="text-gray-500">Battery Backup:</span> <span id="batteryBackup" class="font-bold">30 min</span></div>
+                                </div>
+                            </div>
+                            <div class="instrument-card bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-box mr-2 text-gray-500"></i>Panel Enclosure</h4>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div><span class="text-gray-500">Size (HxWxD):</span> <span id="panelSize" class="font-bold">2000x800x600</span></div>
+                                    <div><span class="text-gray-500">Protection:</span> <span class="font-bold">IP55</span></div>
+                                    <div><span class="text-gray-500">Cooling:</span> <span id="panelCooling" class="font-bold">AC Unit</span></div>
+                                    <div><span class="text-gray-500">Material:</span> <span class="font-bold">SS 304</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Summary -->
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-5 text-white">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-rupee-sign"></i> I&C Cost Summary (INR)</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/70">Field Instruments</p>
+                            <p id="fieldInstrumentCost" class="text-xl font-bold">₹0</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/70">Control Panel</p>
+                            <p id="panelCost" class="text-xl font-bold">₹0</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/70">Cabling & Trays</p>
+                            <p id="cablingCost" class="text-xl font-bold">₹0</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/70">Total I&C Budget</p>
+                            <p id="totalICCost" class="text-2xl font-bold">₹0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // Instrument database with costs in INR
+            const INSTRUMENTS = {
+                // Flow Meters
+                FIT: { desc: 'Electromagnetic Flow Meter', type: 'AI', range: '0-200 m³/hr', cost: 85000 },
+                FIS: { desc: 'Flow Indicator Switch', type: 'DI', range: 'On/Off', cost: 25000 },
+                // Level
+                LIT: { desc: 'Ultrasonic Level Transmitter', type: 'AI', range: '0-5 m', cost: 45000 },
+                LSH: { desc: 'Level Switch High', type: 'DI', range: 'On/Off', cost: 8000 },
+                LSL: { desc: 'Level Switch Low', type: 'DI', range: 'On/Off', cost: 8000 },
+                // Pressure
+                PIT: { desc: 'Pressure Transmitter', type: 'AI', range: '0-10 bar', cost: 22000 },
+                PSH: { desc: 'Pressure Switch High', type: 'DI', range: 'On/Off', cost: 6500 },
+                // Temperature
+                TIT: { desc: 'Temperature Transmitter (RTD)', type: 'AI', range: '0-100°C', cost: 15000 },
+                // Analytical
+                AIT_PH: { desc: 'pH Analyzer', type: 'AI', range: '0-14 pH', cost: 125000 },
+                AIT_TURB: { desc: 'Turbidity Meter', type: 'AI', range: '0-1000 NTU', cost: 175000 },
+                AIT_COND: { desc: 'Conductivity Analyzer', type: 'AI', range: '0-5000 µS/cm', cost: 95000 },
+                // Control Valves
+                FCV: { desc: 'Control Valve (Modulating)', type: 'AO', range: '4-20 mA', cost: 75000 },
+                // Motors
+                MOT: { desc: 'Motor Starter (VFD)', type: 'DO', range: 'On/Off/Speed', cost: 45000 },
+                MOT_DOL: { desc: 'Motor Starter (DOL)', type: 'DO', range: 'On/Off', cost: 15000 }
+            };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.querySelectorAll('input, select').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function calculate() {
+                const flowRate = parseFloat(document.getElementById('flowRate').value);
+                const numClarifiers = parseInt(document.getElementById('numClarifiers').value);
+                const numFilters = parseInt(document.getElementById('numFilters').value);
+                const numDosingPumps = parseInt(document.getElementById('numDosingPumps').value);
+                const controlSystem = document.getElementById('controlSystem').value;
+                const redundancy = document.getElementById('redundancy').value;
+                const hasRemote = document.getElementById('remoteMonitoring').checked;
+                const hasHistorian = document.getElementById('historyServer').checked;
+
+                // Build instrument list based on plant configuration
+                const instruments = [];
+                let tagCounter = 1;
+
+                // Raw Water Inlet
+                instruments.push({ tag: `FIT-${tagCounter++}`, ...INSTRUMENTS.FIT, qty: 1, location: 'Raw Water Inlet' });
+                instruments.push({ tag: `PIT-${tagCounter++}`, ...INSTRUMENTS.PIT, qty: 1, location: 'Raw Water Inlet' });
+
+                // pH Analyzers (Inlet + Outlet)
+                instruments.push({ tag: `AIT-${tagCounter++}`, ...INSTRUMENTS.AIT_PH, qty: 2, location: 'Inlet & Outlet' });
+
+                // Turbidity (Inlet + Each Filter Outlet)
+                instruments.push({ tag: `AIT-${tagCounter++}`, ...INSTRUMENTS.AIT_TURB, qty: 1 + numFilters, location: 'Inlet + Filter Outlets' });
+
+                // Conductivity
+                instruments.push({ tag: `AIT-${tagCounter++}`, ...INSTRUMENTS.AIT_COND, qty: 2, location: 'Inlet & Outlet' });
+
+                // Clarifier Instrumentation (per clarifier)
+                instruments.push({ tag: `LIT-${tagCounter++}`, ...INSTRUMENTS.LIT, qty: numClarifiers, location: 'Clarifiers' });
+                instruments.push({ tag: `LSH-${tagCounter++}`, ...INSTRUMENTS.LSH, qty: numClarifiers, location: 'Clarifier High Level' });
+                instruments.push({ tag: `LSL-${tagCounter++}`, ...INSTRUMENTS.LSL, qty: numClarifiers, location: 'Clarifier Low Level' });
+                instruments.push({ tag: `TIT-${tagCounter++}`, ...INSTRUMENTS.TIT, qty: numClarifiers, location: 'Clarifiers' });
+
+                // Chemical Tanks (Lime + Soda + 2 spare)
+                const numChemTanks = 4;
+                instruments.push({ tag: `LIT-${tagCounter++}`, ...INSTRUMENTS.LIT, qty: numChemTanks, location: 'Chemical Tanks' });
+                instruments.push({ tag: `LSL-${tagCounter++}`, ...INSTRUMENTS.LSL, qty: numChemTanks, location: 'Chemical Tank Low' });
+
+                // Dosing Pumps
+                instruments.push({ tag: `FIT-${tagCounter++}`, ...INSTRUMENTS.FIT, qty: numDosingPumps, location: 'Dosing Lines', cost: 45000 }); // Smaller flow meters
+                instruments.push({ tag: `MOT-${tagCounter++}`, ...INSTRUMENTS.MOT, qty: numDosingPumps, location: 'Dosing Pumps' });
+
+                // Filters
+                instruments.push({ tag: `PIT-${tagCounter++}`, ...INSTRUMENTS.PIT, qty: numFilters * 2, location: 'Filter DP' });
+                instruments.push({ tag: `FCV-${tagCounter++}`, ...INSTRUMENTS.FCV, qty: numFilters, location: 'Filter Valves' });
+
+                // Main Pumps (assume 2 raw water + 2 treated water)
+                const numMainPumps = 4;
+                instruments.push({ tag: `MOT-${tagCounter++}`, ...INSTRUMENTS.MOT, qty: numMainPumps, location: 'Main Pumps' });
+                instruments.push({ tag: `PIT-${tagCounter++}`, ...INSTRUMENTS.PIT, qty: numMainPumps, location: 'Pump Discharge' });
+
+                // Mixers & Agitators
+                const numMixers = 2 + numClarifiers; // Rapid mix + floc + clarifier drives
+                instruments.push({ tag: `MOT-${tagCounter++}`, ...INSTRUMENTS.MOT_DOL, qty: numMixers, location: 'Mixers' });
+
+                // Sludge Pumps
+                instruments.push({ tag: `MOT-${tagCounter++}`, ...INSTRUMENTS.MOT, qty: numClarifiers, location: 'Sludge Pumps' });
+
+                // Treated Water Flow
+                instruments.push({ tag: `FIT-${tagCounter++}`, ...INSTRUMENTS.FIT, qty: 1, location: 'Treated Water Outlet' });
+
+                // Count I/O
+                let aiCount = 0, aoCount = 0, diCount = 0, doCount = 0;
+                let totalInstrumentCost = 0;
+
+                instruments.forEach(inst => {
+                    const totalCost = inst.cost * inst.qty;
+                    inst.totalCost = totalCost;
+                    totalInstrumentCost += totalCost;
+
+                    if (inst.type === 'AI') aiCount += inst.qty;
+                    else if (inst.type === 'AO') aoCount += inst.qty;
+                    else if (inst.type === 'DI') diCount += inst.qty;
+                    else if (inst.type === 'DO') doCount += inst.qty;
+                });
+
+                // Add spare I/O (20%)
+                const spareMultiplier = 1.2;
+                aiCount = Math.ceil(aiCount * spareMultiplier);
+                aoCount = Math.ceil(aoCount * spareMultiplier);
+                diCount = Math.ceil(diCount * spareMultiplier);
+                doCount = Math.ceil(doCount * spareMultiplier);
+
+                // Redundancy
+                if (redundancy === 'full') {
+                    aiCount *= 2;
+                    aoCount *= 2;
+                }
+
+                const totalIO = aiCount + aoCount + diCount + doCount;
+
+                // Module calculation (8 points per module)
+                const pointsPerModule = 8;
+                const aiModules = Math.ceil(aiCount / pointsPerModule);
+                const aoModules = Math.ceil(aoCount / pointsPerModule);
+                const diModules = Math.ceil(diCount / 16); // 16 DI per module
+                const doModules = Math.ceil(doCount / 16);
+
+                // Power calculations
+                const controlPower = 150 + (totalIO * 2); // Base + per I/O
+                const instrumentPower = instruments.reduce((sum, i) => sum + (i.qty * 15), 0); // ~15W per instrument
+                const totalPower = controlPower + instrumentPower;
+                const upsCapacity = Math.ceil(totalPower * 1.5 / 1000 * 10) / 10; // 1.5x safety, kVA
+
+                // Cost calculations
+                const panelCost = 250000 + (totalIO * 1500); // Base + per I/O
+                const cablingCost = Math.round(totalInstrumentCost * 0.2); // 20% of instruments
+                const scadaCost = hasHistorian ? 350000 : 0;
+                const remoteCost = hasRemote ? 150000 : 0;
+                const totalICCost = totalInstrumentCost + panelCost + cablingCost + scadaCost + remoteCost;
+
+                // Update UI
+                document.getElementById('aiCount').textContent = aiCount;
+                document.getElementById('aoCount').textContent = aoCount;
+                document.getElementById('diCount').textContent = diCount;
+                document.getElementById('doCount').textContent = doCount;
+                document.getElementById('totalIO').textContent = totalIO;
+
+                document.getElementById('aiModules').textContent = aiModules;
+                document.getElementById('aoModules').textContent = aoModules;
+                document.getElementById('diModules').textContent = diModules;
+                document.getElementById('doModules').textContent = doModules;
+
+                document.getElementById('controllerType').textContent = controlSystem.toUpperCase();
+                document.getElementById('cpuModel').textContent = controlSystem === 'dcs' ? 'DeltaV' : 'S7-1500';
+                document.getElementById('hmiSize').textContent = totalIO > 100 ? '21" Touch' : '15" Touch';
+                document.getElementById('scadaStations').textContent = hasRemote ? '2' : '1';
+                document.getElementById('historianStatus').textContent = hasHistorian ? 'Yes' : 'No';
+                document.getElementById('remoteStatus').textContent = hasRemote ? 'Yes' : 'No';
+
+                document.getElementById('controlPower').textContent = controlPower + ' W';
+                document.getElementById('instrumentPower').textContent = instrumentPower + ' W';
+                document.getElementById('upsCapacity').textContent = upsCapacity + ' kVA';
+                document.getElementById('panelSize').textContent = totalIO > 100 ? '2200x1000x600' : '2000x800x600';
+                document.getElementById('panelCooling').textContent = totalPower > 500 ? 'AC Unit' : 'Fan';
+
+                // Costs
+                const fmtINR = n => '₹' + n.toLocaleString('en-IN');
+                document.getElementById('totalInstrumentCost').textContent = fmtINR(totalInstrumentCost);
+                document.getElementById('fieldInstrumentCost').textContent = fmtINR(totalInstrumentCost);
+                document.getElementById('panelCost').textContent = fmtINR(panelCost + scadaCost + remoteCost);
+                document.getElementById('cablingCost').textContent = fmtINR(cablingCost);
+                document.getElementById('totalICCost').textContent = fmtINR(totalICCost);
+
+                // Instrument table
+                document.getElementById('instrumentTable').innerHTML = instruments.map(i => `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-2 px-3 font-mono text-xs">${i.tag}</td>
+                        <td class="py-2 px-3">${i.desc}</td>
+                        <td class="py-2 px-3"><span class="tag-${i.type.toLowerCase()} text-xs px-2 py-0.5 rounded">${i.type}</span></td>
+                        <td class="py-2 px-3 text-xs">${i.range}</td>
+                        <td class="py-2 px-3 text-right">${i.qty}</td>
+                        <td class="py-2 px-3 text-right">${fmtINR(i.cost)}</td>
+                        <td class="py-2 px-3 text-right font-semibold">${fmtINR(i.totalCost)}</td>
+                    </tr>
+                `).join('');
+            }
+        })();
+    </script>
+</body>
+</html>

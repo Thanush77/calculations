@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sludge Management & Dewatering Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #dc2626; --secondary: #ea580c; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0c4a6e 0%, #134e5e 50%, #1a3a4a 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .result-gradient { background: linear-gradient(135deg, #7c2d12 0%, #9a3412 100%); }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">🗑️ Sludge Management Engine</h1>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-flask text-red-500"></i> Sludge Characteristics
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sludge Production (kg/day dry solids)</label>
+                            <input type="number" id="sludgeKgDay" value="500" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Feed Solids Concentration (%)</label>
+                            <input type="number" id="feedSolids" value="2" step="0.5" class="input-field">
+                            <p class="text-xs text-gray-500 mt-1">Typical: 1-3% from clarifier underflow</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sludge Specific Gravity</label>
+                            <input type="number" id="sludgeSG" value="1.02" step="0.01" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Hours/Day</label>
+                            <input type="number" id="opHours" value="8" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cog text-orange-500"></i> Equipment Selection
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Thickener Type</label>
+                            <select id="thickenerType" class="input-field">
+                                <option value="gravity">Gravity Thickener</option>
+                                <option value="daf">Dissolved Air Flotation (DAF)</option>
+                                <option value="belt">Belt Thickener</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Target Thickened Solids (%)</label>
+                            <input type="number" id="thickenedSolids" value="5" step="0.5" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Dewatering Equipment</label>
+                            <select id="dewateringType" class="input-field">
+                                <option value="filterpress">Filter Press</option>
+                                <option value="beltpress">Belt Filter Press</option>
+                                <option value="centrifuge">Decanter Centrifuge</option>
+                                <option value="screwpress">Screw Press</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Target Cake Solids (%)</label>
+                            <input type="number" id="cakeSolids" value="35" step="5" class="input-field">
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold py-2.5 rounded-lg hover:from-red-700 hover:to-orange-700">
+                        <i class="fas fa-calculator mr-2"></i> Calculate
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-rupee-sign text-green-500"></i> Disposal Costs (INR)
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Transport Cost (₹/tonne)</label>
+                            <input type="number" id="transportCost" value="500" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Disposal Cost (₹/tonne)</label>
+                            <input type="number" id="disposalCost" value="2000" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Polymer Cost (₹/kg)</label>
+                            <input type="number" id="polymerCost" value="350" class="input-field">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Sludge Flow -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-stream text-red-500"></i> Sludge Flow Analysis
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-red-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Feed Sludge Volume</p>
+                            <p id="feedVolume" class="text-xl font-bold text-red-700">0 m³/day</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Thickened Volume</p>
+                            <p id="thickenedVolume" class="text-xl font-bold text-orange-700">0 m³/day</p>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Cake Volume</p>
+                            <p id="cakeVolume" class="text-xl font-bold text-amber-700">0 m³/day</p>
+                        </div>
+                        <div class="p-3 bg-yellow-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Cake Weight</p>
+                            <p id="cakeWeight" class="text-xl font-bold text-yellow-700">0 kg/day</p>
+                        </div>
+                    </div>
+                    <div class="mt-4" style="height:180px"><canvas id="sludgeChart"></canvas></div>
+                </div>
+
+                <!-- Thickener Design -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-circle text-orange-500"></i> Thickener Design
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-orange-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Surface Area</p>
+                            <p id="thickenerArea" class="text-xl font-bold text-orange-700">0 m²</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Diameter</p>
+                            <p id="thickenerDia" class="text-xl font-bold text-orange-700">0 m</p>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Depth</p>
+                            <p id="thickenerDepth" class="text-xl font-bold text-amber-700">3.5 m</p>
+                        </div>
+                        <div class="p-3 bg-yellow-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Solids Loading</p>
+                            <p id="solidsLoading" class="text-xl font-bold text-yellow-700">0 kg/m²/day</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dewatering Equipment -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-compress-alt text-blue-500"></i> Dewatering Equipment Sizing
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-blue-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Feed Rate</p>
+                            <p id="dewaterFeedRate" class="text-xl font-bold text-blue-700">0 m³/hr</p>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Dry Solids Rate</p>
+                            <p id="dewaterDrySolids" class="text-xl font-bold text-blue-700">0 kg/hr</p>
+                        </div>
+                        <div class="p-3 bg-cyan-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Equipment Capacity</p>
+                            <p id="equipCapacity" class="text-xl font-bold text-cyan-700">0 kg DS/hr</p>
+                        </div>
+                        <div class="p-3 bg-teal-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Polymer Dose</p>
+                            <p id="polymerDose" class="text-xl font-bold text-teal-700">0 kg/day</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-semibold text-gray-700 mb-2" id="equipName">Filter Press Specifications</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div><span class="text-gray-600">Plate Size:</span> <span id="plateSize" class="font-bold">1500 × 1500 mm</span></div>
+                            <div><span class="text-gray-600">No. of Plates:</span> <span id="numPlates" class="font-bold">0</span></div>
+                            <div><span class="text-gray-600">Cycle Time:</span> <span id="cycleTime" class="font-bold">0 hr</span></div>
+                            <div><span class="text-gray-600">Cycles/Day:</span> <span id="cyclesDay" class="font-bold">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Economics -->
+                <div class="result-gradient rounded-2xl p-5 text-white">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-rupee-sign"></i> Disposal Economics (INR)</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/80">Transport Cost</p>
+                            <p id="dailyTransport" class="text-xl font-bold">₹0/day</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/80">Disposal Cost</p>
+                            <p id="dailyDisposal" class="text-xl font-bold">₹0/day</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/80">Polymer Cost</p>
+                            <p id="dailyPolymer" class="text-xl font-bold">₹0/day</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/80">Total Daily</p>
+                            <p id="totalDaily" class="text-2xl font-bold">₹0/day</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+                        <div class="bg-white/10 rounded-lg p-2">
+                            <p class="text-xs text-white/70">Monthly</p>
+                            <p id="monthlyCost" class="text-lg font-bold">₹0</p>
+                        </div>
+                        <div class="bg-white/10 rounded-lg p-2">
+                            <p class="text-xs text-white/70">Yearly</p>
+                            <p id="yearlyCost" class="text-lg font-bold">₹0</p>
+                        </div>
+                        <div class="bg-white/10 rounded-lg p-2">
+                            <p class="text-xs text-white/70">Cost per kg DS</p>
+                            <p id="costPerKg" class="text-lg font-bold">₹0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            let sludgeChart;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initChart();
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.querySelectorAll('input, select').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function initChart() {
+                sludgeChart = new Chart(document.getElementById('sludgeChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Feed Sludge', 'Thickened', 'Cake'],
+                        datasets: [{
+                            label: 'Volume (m³/day)',
+                            data: [0, 0, 0],
+                            backgroundColor: ['#ef4444', '#f97316', '#eab308'],
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            function calculate() {
+                const sludgeKgDay = parseFloat(document.getElementById('sludgeKgDay').value);
+                const feedSolids = parseFloat(document.getElementById('feedSolids').value) / 100;
+                const sludgeSG = parseFloat(document.getElementById('sludgeSG').value);
+                const opHours = parseFloat(document.getElementById('opHours').value);
+                const thickenedSolids = parseFloat(document.getElementById('thickenedSolids').value) / 100;
+                const cakeSolids = parseFloat(document.getElementById('cakeSolids').value) / 100;
+                const dewateringType = document.getElementById('dewateringType').value;
+
+                // Sludge volumes
+                const feedVolume = sludgeKgDay / (feedSolids * sludgeSG * 1000); // m³/day
+                const thickenedVolume = sludgeKgDay / (thickenedSolids * sludgeSG * 1000);
+                const cakeVolume = sludgeKgDay / (cakeSolids * 1.2 * 1000); // cake SG ~1.2
+                const cakeWeight = sludgeKgDay / cakeSolids;
+
+                // Thickener sizing (solids loading rate: 25-50 kg/m²/day for lime sludge)
+                const solidsLoadingRate = 35; // kg/m²/day
+                const thickenerArea = sludgeKgDay / solidsLoadingRate;
+                const thickenerDia = Math.sqrt(4 * thickenerArea / Math.PI);
+
+                // Dewatering sizing
+                const dewaterFeedRate = thickenedVolume / opHours;
+                const dewaterDrySolids = sludgeKgDay / opHours;
+
+                // Equipment specific sizing
+                let equipCapacity, numPlates, cycleTime, plateSize, cyclesDay;
+                
+                if (dewateringType === 'filterpress') {
+                    // Filter press: 5-15 kg DS/m² filter area per cycle
+                    const filterArea = sludgeKgDay / 10; // m² total area needed
+                    plateSize = '1500 × 1500 mm';
+                    const plateArea = 1.5 * 1.5 * 2; // Both sides
+                    numPlates = Math.ceil(filterArea / plateArea / 3); // 3 cycles per day
+                    cycleTime = opHours / 3;
+                    cyclesDay = 3;
+                    equipCapacity = dewaterDrySolids * 1.25;
+                } else if (dewateringType === 'centrifuge') {
+                    plateSize = 'N/A';
+                    numPlates = 'N/A';
+                    cycleTime = 'Continuous';
+                    cyclesDay = 'N/A';
+                    equipCapacity = dewaterDrySolids * 1.5;
+                } else {
+                    plateSize = 'Belt Width';
+                    numPlates = '1.5 m';
+                    cycleTime = 'Continuous';
+                    cyclesDay = 'N/A';
+                    equipCapacity = dewaterDrySolids * 1.3;
+                }
+
+                // Polymer dosing (3-8 kg/tonne DS)
+                const polymerDose = sludgeKgDay * 0.005; // 5 kg/tonne
+
+                // Costs
+                const transportCostRate = parseFloat(document.getElementById('transportCost').value);
+                const disposalCostRate = parseFloat(document.getElementById('disposalCost').value);
+                const polymerCostRate = parseFloat(document.getElementById('polymerCost').value);
+
+                const cakeTonnesDay = cakeWeight / 1000;
+                const dailyTransport = cakeTonnesDay * transportCostRate;
+                const dailyDisposal = cakeTonnesDay * disposalCostRate;
+                const dailyPolymer = polymerDose * polymerCostRate;
+                const totalDaily = dailyTransport + dailyDisposal + dailyPolymer;
+
+                // Update UI
+                const fmtINR = (n) => '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+                document.getElementById('feedVolume').textContent = feedVolume.toFixed(2) + ' m³/day';
+                document.getElementById('thickenedVolume').textContent = thickenedVolume.toFixed(2) + ' m³/day';
+                document.getElementById('cakeVolume').textContent = cakeVolume.toFixed(2) + ' m³/day';
+                document.getElementById('cakeWeight').textContent = cakeWeight.toFixed(0) + ' kg/day';
+
+                document.getElementById('thickenerArea').textContent = thickenerArea.toFixed(1) + ' m²';
+                document.getElementById('thickenerDia').textContent = thickenerDia.toFixed(2) + ' m';
+                document.getElementById('solidsLoading').textContent = solidsLoadingRate + ' kg/m²/day';
+
+                document.getElementById('dewaterFeedRate').textContent = dewaterFeedRate.toFixed(2) + ' m³/hr';
+                document.getElementById('dewaterDrySolids').textContent = dewaterDrySolids.toFixed(1) + ' kg/hr';
+                document.getElementById('equipCapacity').textContent = equipCapacity.toFixed(0) + ' kg DS/hr';
+                document.getElementById('polymerDose').textContent = polymerDose.toFixed(1) + ' kg/day';
+
+                document.getElementById('equipName').textContent = document.getElementById('dewateringType').selectedOptions[0].text + ' Specifications';
+                document.getElementById('plateSize').textContent = plateSize;
+                document.getElementById('numPlates').textContent = numPlates;
+                document.getElementById('cycleTime').textContent = cycleTime + (typeof cycleTime === 'number' ? ' hr' : '');
+                document.getElementById('cyclesDay').textContent = cyclesDay;
+
+                document.getElementById('dailyTransport').textContent = fmtINR(dailyTransport) + '/day';
+                document.getElementById('dailyDisposal').textContent = fmtINR(dailyDisposal) + '/day';
+                document.getElementById('dailyPolymer').textContent = fmtINR(dailyPolymer) + '/day';
+                document.getElementById('totalDaily').textContent = fmtINR(totalDaily) + '/day';
+                document.getElementById('monthlyCost').textContent = fmtINR(totalDaily * 30);
+                document.getElementById('yearlyCost').textContent = fmtINR(totalDaily * 365);
+                document.getElementById('costPerKg').textContent = '₹' + (totalDaily / sludgeKgDay).toFixed(2);
+
+                // Update chart
+                sludgeChart.data.datasets[0].data = [feedVolume, thickenedVolume, cakeVolume];
+                sludgeChart.update();
+            }
+        })();
+    </script>
+</body>
+</html>

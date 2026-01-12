@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Comparison & Sensitivity Analysis Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #6366f1; --secondary: #8b5cf6; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0c4a6e 0%, #134e5e 50%, #1a3a4a 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .winner { border: 3px solid #10b981; background: linear-gradient(135deg, #ecfdf5, #d1fae5) !important; }
+        .tab-active { background: #6366f1; color: white; }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">⚖️ Process Comparison Engine</h1>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <!-- Tab Navigation -->
+        <div class="flex gap-2 mb-6 no-print">
+            <button onclick="showTab('comparison')" id="tab-comparison" class="px-4 py-2 rounded-lg font-medium transition-all tab-active">
+                <i class="fas fa-balance-scale mr-1"></i> Hot vs Cold Comparison
+            </button>
+            <button onclick="showTab('ionexchange')" id="tab-ionexchange" class="px-4 py-2 rounded-lg font-medium transition-all bg-white/80">
+                <i class="fas fa-exchange-alt mr-1"></i> vs Ion Exchange
+            </button>
+            <button onclick="showTab('sensitivity')" id="tab-sensitivity" class="px-4 py-2 rounded-lg font-medium transition-all bg-white/80">
+                <i class="fas fa-sliders-h mr-1"></i> Sensitivity Analysis
+            </button>
+        </div>
+
+        <!-- Hot vs Cold Comparison -->
+        <div id="panel-comparison" class="space-y-6">
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                <!-- Input -->
+                <div class="card no-print">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cog text-indigo-500"></i> Base Parameters
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Flow Rate (m³/hr)</label>
+                            <input type="number" id="flowRate" value="100" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Total Hardness (ppm)</label>
+                            <input type="number" id="hardness" value="500" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Silica (ppm)</label>
+                            <input type="number" id="silica" value="30" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Days/Year</label>
+                            <input type="number" id="opDays" value="330" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Electricity Cost (₹/kWh)</label>
+                            <input type="number" id="elecCost" value="8" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Steam Cost (₹/tonne)</label>
+                            <input type="number" id="steamCost" value="2500" class="input-field">
+                        </div>
+                    </div>
+                    <button onclick="calculateComparison()" class="w-full mt-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-lg hover:from-indigo-700 hover:to-purple-700">
+                        <i class="fas fa-calculator mr-2"></i> Compare
+                    </button>
+                </div>
+
+                <!-- Cold Process -->
+                <div id="coldCard" class="card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-blue-800 flex items-center gap-2">
+                            <i class="fas fa-snowflake text-blue-500"></i> Cold Lime Soda
+                        </h3>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">25-30°C</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="p-2 bg-blue-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Hardness Removal</span>
+                            <span id="coldHardnessRemoval" class="font-bold text-blue-700">85-90%</span>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Silica Removal</span>
+                            <span id="coldSilicaRemoval" class="font-bold text-blue-700">20-30%</span>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Residual Hardness</span>
+                            <span id="coldResidual" class="font-bold text-blue-700">50-75 ppm</span>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Lime Consumption</span>
+                            <span id="coldLime" class="font-bold text-blue-700">0 kg/day</span>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Energy (No Steam)</span>
+                            <span id="coldEnergy" class="font-bold text-blue-700">0 kWh/day</span>
+                        </div>
+                        <div class="p-3 bg-blue-100 rounded-lg flex justify-between">
+                            <span class="text-sm font-semibold text-gray-700">Daily OPEX</span>
+                            <span id="coldOPEX" class="font-bold text-blue-800">₹0</span>
+                        </div>
+                        <div class="p-3 bg-blue-200 rounded-lg flex justify-between">
+                            <span class="text-sm font-semibold text-gray-700">Annual OPEX</span>
+                            <span id="coldAnnualOPEX" class="font-bold text-blue-900 text-lg">₹0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hot Process -->
+                <div id="hotCard" class="card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-orange-800 flex items-center gap-2">
+                            <i class="fas fa-fire text-orange-500"></i> Hot Lime Soda
+                        </h3>
+                        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">100-105°C</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="p-2 bg-orange-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Hardness Removal</span>
+                            <span id="hotHardnessRemoval" class="font-bold text-orange-700">95-99%</span>
+                        </div>
+                        <div class="p-2 bg-orange-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Silica Removal</span>
+                            <span id="hotSilicaRemoval" class="font-bold text-orange-700">80-90%</span>
+                        </div>
+                        <div class="p-2 bg-orange-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Residual Hardness</span>
+                            <span id="hotResidual" class="font-bold text-orange-700">5-15 ppm</span>
+                        </div>
+                        <div class="p-2 bg-orange-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Lime Consumption</span>
+                            <span id="hotLime" class="font-bold text-orange-700">0 kg/day</span>
+                        </div>
+                        <div class="p-2 bg-orange-50 rounded-lg flex justify-between">
+                            <span class="text-xs text-gray-600">Steam Required</span>
+                            <span id="hotSteam" class="font-bold text-orange-700">0 kg/hr</span>
+                        </div>
+                        <div class="p-3 bg-orange-100 rounded-lg flex justify-between">
+                            <span class="text-sm font-semibold text-gray-700">Daily OPEX</span>
+                            <span id="hotOPEX" class="font-bold text-orange-800">₹0</span>
+                        </div>
+                        <div class="p-3 bg-orange-200 rounded-lg flex justify-between">
+                            <span class="text-sm font-semibold text-gray-700">Annual OPEX</span>
+                            <span id="hotAnnualOPEX" class="font-bold text-orange-900 text-lg">₹0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendation -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-trophy text-yellow-500"></i> Analysis
+                    </h3>
+                    <div id="recommendation" class="space-y-3">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="mt-4" style="height:200px"><canvas id="comparisonChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ion Exchange Comparison -->
+        <div id="panel-ionexchange" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div id="limeSodaCard" class="card">
+                    <h3 class="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-flask text-blue-500"></i> Lime Soda Softening
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="p-2 bg-blue-50 rounded flex justify-between"><span>CAPEX</span><span id="lsCapex" class="font-bold">₹0</span></div>
+                        <div class="p-2 bg-blue-50 rounded flex justify-between"><span>Annual OPEX</span><span id="lsOpex" class="font-bold">₹0</span></div>
+                        <div class="p-2 bg-blue-50 rounded flex justify-between"><span>Residual Hardness</span><span class="font-bold">50-75 ppm</span></div>
+                        <div class="p-2 bg-blue-50 rounded flex justify-between"><span>Waste</span><span class="font-bold">Sludge (disposal)</span></div>
+                        <div class="p-2 bg-blue-50 rounded flex justify-between"><span>Complexity</span><span class="font-bold">Medium</span></div>
+                        <div class="p-3 bg-blue-100 rounded flex justify-between"><span>10-Year TCO</span><span id="lsTCO" class="font-bold text-lg">₹0</span></div>
+                    </div>
+                </div>
+                <div id="ixCard" class="card">
+                    <h3 class="text-lg font-bold text-green-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-exchange-alt text-green-500"></i> Ion Exchange Softener
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="p-2 bg-green-50 rounded flex justify-between"><span>CAPEX</span><span id="ixCapex" class="font-bold">₹0</span></div>
+                        <div class="p-2 bg-green-50 rounded flex justify-between"><span>Annual OPEX</span><span id="ixOpex" class="font-bold">₹0</span></div>
+                        <div class="p-2 bg-green-50 rounded flex justify-between"><span>Residual Hardness</span><span class="font-bold">&lt;5 ppm</span></div>
+                        <div class="p-2 bg-green-50 rounded flex justify-between"><span>Waste</span><span class="font-bold">Brine (saline)</span></div>
+                        <div class="p-2 bg-green-50 rounded flex justify-between"><span>Complexity</span><span class="font-bold">Low</span></div>
+                        <div class="p-3 bg-green-100 rounded flex justify-between"><span>10-Year TCO</span><span id="ixTCO" class="font-bold text-lg">₹0</span></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Selection Matrix</h3>
+                    <div id="selectionMatrix" class="space-y-2 text-sm">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensitivity Analysis -->
+        <div id="panel-sensitivity" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card no-print">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-sliders-h text-purple-500"></i> Parameter Variation
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Variable Parameter</label>
+                            <select id="sensitivityParam" class="input-field">
+                                <option value="hardness">Influent Hardness</option>
+                                <option value="flowRate">Flow Rate</option>
+                                <option value="limeCost">Lime Cost</option>
+                                <option value="energyCost">Energy Cost</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Base Value</label>
+                            <input type="number" id="sensitivityBase" value="500" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Variation Range (±%)</label>
+                            <input type="range" id="sensitivityRange" min="10" max="100" value="50" class="w-full">
+                            <div class="flex justify-between text-xs text-gray-500"><span>±10%</span><span id="rangeValue">±50%</span><span>±100%</span></div>
+                        </div>
+                        <button onclick="runSensitivity()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-2.5 rounded-lg">
+                            <i class="fas fa-chart-line mr-2"></i> Run Analysis
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Sensitivity Chart</h3>
+                    <div style="height:300px"><canvas id="sensitivityChart"></canvas></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">What-If Scenarios</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="text-left p-2">Scenario</th>
+                                <th class="text-center p-2">Parameter Value</th>
+                                <th class="text-center p-2">Daily OPEX</th>
+                                <th class="text-center p-2">Annual OPEX</th>
+                                <th class="text-center p-2">Change (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sensitivityTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            let comparisonChart, sensitivityChart;
+            const fmtINR = (n) => '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initCharts();
+                calculateComparison();
+                document.getElementById('sensitivityRange').addEventListener('input', e => {
+                    document.getElementById('rangeValue').textContent = '±' + e.target.value + '%';
+                });
+            });
+
+            window.showTab = function(tab) {
+                ['comparison', 'ionexchange', 'sensitivity'].forEach(t => {
+                    document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
+                    document.getElementById('tab-' + t).classList.toggle('tab-active', t === tab);
+                    document.getElementById('tab-' + t).classList.toggle('bg-white/80', t !== tab);
+                });
+                if (tab === 'ionexchange') calculateIonExchange();
+            };
+
+            function initCharts() {
+                comparisonChart = new Chart(document.getElementById('comparisonChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Chemical', 'Energy', 'Total'],
+                        datasets: [
+                            { label: 'Cold', data: [0,0,0], backgroundColor: '#3b82f6' },
+                            { label: 'Hot', data: [0,0,0], backgroundColor: '#f97316' }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+                });
+
+                sensitivityChart = new Chart(document.getElementById('sensitivityChart'), {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{ label: 'Annual OPEX (₹ Lakhs)', data: [], borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)', fill: true, tension: 0.4 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            window.calculateComparison = function() {
+                const flow = parseFloat(document.getElementById('flowRate').value);
+                const hardness = parseFloat(document.getElementById('hardness').value);
+                const silica = parseFloat(document.getElementById('silica').value);
+                const opDays = parseFloat(document.getElementById('opDays').value);
+                const elecCost = parseFloat(document.getElementById('elecCost').value);
+                const steamCost = parseFloat(document.getElementById('steamCost').value);
+
+                const dailyM3 = flow * 24;
+
+                // Cold Process
+                const coldLimeDose = hardness * 0.6; // ppm
+                const coldLimeKg = coldLimeDose * dailyM3 / 1000;
+                const coldChemCost = coldLimeKg * 8.5 + (hardness * 0.3 * dailyM3 / 1000) * 18; // Lime + Soda
+                const coldEnergy = flow * 0.5 * 24; // kWh - mixers only
+                const coldEnergyCost = coldEnergy * elecCost;
+                const coldDailyOPEX = coldChemCost + coldEnergyCost;
+                const coldAnnualOPEX = coldDailyOPEX * opDays;
+
+                // Hot Process
+                const hotLimeDose = hardness * 0.5; // Less lime needed
+                const hotLimeKg = hotLimeDose * dailyM3 / 1000;
+                const hotChemCost = hotLimeKg * 8.5 + (hardness * 0.2 * dailyM3 / 1000) * 18;
+                // Steam: ~50 kg steam per m³ to heat from 25 to 100°C
+                const hotSteamKgHr = flow * 50;
+                const hotSteamCost = (hotSteamKgHr * 24 / 1000) * steamCost;
+                const hotEnergy = flow * 0.8 * 24;
+                const hotEnergyCost = hotEnergy * elecCost;
+                const hotDailyOPEX = hotChemCost + hotSteamCost + hotEnergyCost;
+                const hotAnnualOPEX = hotDailyOPEX * opDays;
+
+                // Update UI
+                document.getElementById('coldLime').textContent = coldLimeKg.toFixed(0) + ' kg/day';
+                document.getElementById('coldEnergy').textContent = coldEnergy.toFixed(0) + ' kWh/day';
+                document.getElementById('coldOPEX').textContent = fmtINR(coldDailyOPEX);
+                document.getElementById('coldAnnualOPEX').textContent = fmtINR(coldAnnualOPEX);
+
+                document.getElementById('hotLime').textContent = hotLimeKg.toFixed(0) + ' kg/day';
+                document.getElementById('hotSteam').textContent = hotSteamKgHr.toFixed(0) + ' kg/hr';
+                document.getElementById('hotOPEX').textContent = fmtINR(hotDailyOPEX);
+                document.getElementById('hotAnnualOPEX').textContent = fmtINR(hotAnnualOPEX);
+
+                // Winner highlight
+                document.getElementById('coldCard').classList.toggle('winner', coldAnnualOPEX < hotAnnualOPEX);
+                document.getElementById('hotCard').classList.toggle('winner', hotAnnualOPEX < coldAnnualOPEX);
+
+                // Recommendation
+                const savings = Math.abs(coldAnnualOPEX - hotAnnualOPEX);
+                const winner = coldAnnualOPEX < hotAnnualOPEX ? 'Cold' : 'Hot';
+                const silicaNote = silica > 20 ? 'Hot process recommended for high silica removal.' : '';
+                
+                document.getElementById('recommendation').innerHTML = `
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <p class="font-bold text-green-800"><i class="fas fa-trophy mr-1"></i> ${winner} Lime Soda is More Economical</p>
+                        <p class="text-sm text-green-700">Annual savings: ${fmtINR(savings)}</p>
+                    </div>
+                    ${silicaNote ? `<div class="p-3 bg-yellow-100 rounded-lg text-sm text-yellow-800"><i class="fas fa-exclamation-triangle mr-1"></i> ${silicaNote}</div>` : ''}
+                    <div class="p-3 bg-gray-100 rounded-lg text-sm">
+                        <p class="font-semibold">Key Factors:</p>
+                        <ul class="list-disc list-inside text-gray-600 mt-1">
+                            <li>Steam cost: ₹${steamCost}/tonne</li>
+                            <li>Hot process needs ${(hotSteamKgHr*24/1000).toFixed(1)} tonnes steam/day</li>
+                            <li>Cold requires polishing for &lt;10 ppm hardness</li>
+                        </ul>
+                    </div>
+                `;
+
+                // Chart
+                comparisonChart.data.datasets[0].data = [coldChemCost/1000, coldEnergyCost/1000, coldDailyOPEX/1000];
+                comparisonChart.data.datasets[1].data = [hotChemCost/1000, hotSteamCost/1000 + hotEnergyCost/1000, hotDailyOPEX/1000];
+                comparisonChart.options.scales = { y: { title: { display: true, text: '₹ (Thousands/day)' } } };
+                comparisonChart.update();
+            };
+
+            window.calculateIonExchange = function() {
+                const flow = parseFloat(document.getElementById('flowRate').value);
+                const hardness = parseFloat(document.getElementById('hardness').value);
+                const opDays = parseFloat(document.getElementById('opDays').value);
+
+                // Lime Soda
+                const lsCapex = flow * 50000; // ₹50,000 per m³/hr
+                const lsDailyOpex = flow * 24 * hardness * 0.03; // Simplified
+                const lsAnnualOpex = lsDailyOpex * opDays;
+                const lsTCO = lsCapex + lsAnnualOpex * 10;
+
+                // Ion Exchange
+                const ixCapex = flow * 80000; // ₹80,000 per m³/hr
+                const saltKgDay = flow * 24 * hardness * 0.001 * 6; // 6 kg salt per kg hardness removed
+                const saltCost = saltKgDay * 8; // ₹8/kg salt
+                const resinReplace = ixCapex * 0.15 / 365; // 15% resin replacement annually
+                const ixDailyOpex = saltCost + resinReplace + flow * 0.2 * 8; // Salt + resin + power
+                const ixAnnualOpex = ixDailyOpex * opDays;
+                const ixTCO = ixCapex + ixAnnualOpex * 10;
+
+                document.getElementById('lsCapex').textContent = fmtINR(lsCapex);
+                document.getElementById('lsOpex').textContent = fmtINR(lsAnnualOpex);
+                document.getElementById('lsTCO').textContent = fmtINR(lsTCO);
+
+                document.getElementById('ixCapex').textContent = fmtINR(ixCapex);
+                document.getElementById('ixOpex').textContent = fmtINR(ixAnnualOpex);
+                document.getElementById('ixTCO').textContent = fmtINR(ixTCO);
+
+                document.getElementById('limeSodaCard').classList.toggle('winner', lsTCO < ixTCO);
+                document.getElementById('ixCard').classList.toggle('winner', ixTCO < lsTCO);
+
+                document.getElementById('selectionMatrix').innerHTML = `
+                    <div class="p-2 rounded ${hardness > 300 ? 'bg-blue-100' : 'bg-green-100'} flex justify-between">
+                        <span>High Hardness (>300 ppm)</span>
+                        <span class="font-bold">${hardness > 300 ? 'Lime Soda ✓' : 'IX Possible'}</span>
+                    </div>
+                    <div class="p-2 rounded ${flow > 50 ? 'bg-blue-100' : 'bg-green-100'} flex justify-between">
+                        <span>Large Flow (>50 m³/hr)</span>
+                        <span class="font-bold">${flow > 50 ? 'Lime Soda ✓' : 'IX Suitable'}</span>
+                    </div>
+                    <div class="p-2 rounded bg-green-100 flex justify-between">
+                        <span>Zero Hardness Needed</span>
+                        <span class="font-bold">Ion Exchange ✓</span>
+                    </div>
+                    <div class="p-2 rounded bg-blue-100 flex justify-between">
+                        <span>Silica Removal</span>
+                        <span class="font-bold">Lime Soda (Hot) ✓</span>
+                    </div>
+                `;
+            };
+
+            window.runSensitivity = function() {
+                const param = document.getElementById('sensitivityParam').value;
+                const baseValue = parseFloat(document.getElementById('sensitivityBase').value);
+                const range = parseFloat(document.getElementById('sensitivityRange').value);
+
+                const points = 11;
+                const labels = [];
+                const data = [];
+                const tableRows = [];
+
+                const flow = parseFloat(document.getElementById('flowRate').value);
+                const opDays = parseFloat(document.getElementById('opDays').value);
+
+                for (let i = 0; i < points; i++) {
+                    const factor = 1 - range/100 + (2 * range/100) * (i / (points - 1));
+                    const value = baseValue * factor;
+                    labels.push(value.toFixed(0));
+
+                    // Calculate OPEX based on varied parameter
+                    let hardness = 500, elecCost = 8, limeCostPerKg = 8.5;
+                    if (param === 'hardness') hardness = value;
+                    if (param === 'flowRate') { /* Use value as flow */ }
+                    if (param === 'energyCost') elecCost = value;
+                    if (param === 'limeCost') limeCostPerKg = value;
+
+                    const actualFlow = param === 'flowRate' ? value : flow;
+                    const limeKg = hardness * 0.6 * actualFlow * 24 / 1000;
+                    const sodaKg = hardness * 0.3 * actualFlow * 24 / 1000;
+                    const dailyOpex = limeKg * limeCostPerKg + sodaKg * 18 + actualFlow * 0.5 * 24 * elecCost;
+                    const annualOpex = dailyOpex * opDays;
+
+                    data.push(annualOpex / 100000); // In lakhs
+
+                    const baseAnnual = (500 * 0.6 * flow * 24 / 1000 * 8.5 + 500 * 0.3 * flow * 24 / 1000 * 18 + flow * 0.5 * 24 * 8) * opDays;
+                    const change = ((annualOpex - baseAnnual) / baseAnnual * 100).toFixed(1);
+
+                    tableRows.push(`
+                        <tr class="border-b">
+                            <td class="p-2">${factor < 1 ? 'Low' : factor > 1 ? 'High' : 'Base'} ${param}</td>
+                            <td class="p-2 text-center">${value.toFixed(1)}</td>
+                            <td class="p-2 text-center">${fmtINR(dailyOpex)}</td>
+                            <td class="p-2 text-center">${fmtINR(annualOpex)}</td>
+                            <td class="p-2 text-center ${change > 0 ? 'text-red-600' : 'text-green-600'}">${change > 0 ? '+' : ''}${change}%</td>
+                        </tr>
+                    `);
+                }
+
+                sensitivityChart.data.labels = labels;
+                sensitivityChart.data.datasets[0].data = data;
+                sensitivityChart.options.scales = { 
+                    x: { title: { display: true, text: param } },
+                    y: { title: { display: true, text: 'Annual OPEX (₹ Lakhs)' } }
+                };
+                sensitivityChart.update();
+
+                document.getElementById('sensitivityTable').innerHTML = tableRows.join('');
+            };
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAPEX Estimator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #059669; --secondary: #10b981; --accent: #34d399; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(5,150,105,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .cost-civil { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #f59e0b; }
+        .cost-mech { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-left: 4px solid #3b82f6; }
+        .cost-elec { background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); border-left: 4px solid #ec4899; }
+        .cost-pipe { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid #10b981; }
+        .cost-other { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border-left: 4px solid #6366f1; }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">💰 CAPEX Estimator</h1>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20"><i class="fas fa-print mr-1"></i>Print</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <!-- Plant Capacity -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-industry text-emerald-500"></i> Plant Capacity
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Design Flow Rate (m³/hr)</label>
+                            <input type="number" id="flowRate" value="100" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Peak Factor</label>
+                            <input type="number" id="peakFactor" value="1.5" step="0.1" min="1" max="3" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Location Factor</label>
+                            <select id="locationFactor" class="input-field">
+                                <option value="0.85">Tier-3 City (0.85x)</option>
+                                <option value="1.0" selected>Tier-2 City (1.0x)</option>
+                                <option value="1.15">Tier-1 City (1.15x)</option>
+                                <option value="1.3">Metro City (1.3x)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment Selection -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cogs text-blue-500"></i> Equipment Configuration
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Number of Clarifiers</label>
+                            <input type="number" id="numClarifiers" value="2" min="1" max="10" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Clarifier Type</label>
+                            <select id="clarifierType" class="input-field">
+                                <option value="conventional">Conventional</option>
+                                <option value="lamella" selected>Lamella Settler</option>
+                                <option value="pulsator">Pulsator</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Number of Filters</label>
+                            <input type="number" id="numFilters" value="4" min="2" max="20" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Filter Type</label>
+                            <select id="filterType" class="input-field">
+                                <option value="gravity">Gravity Sand Filter</option>
+                                <option value="pressure" selected>Pressure Filter</option>
+                                <option value="multimedia">Multimedia Filter</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sludge Handling</label>
+                            <select id="sludgeType" class="input-field">
+                                <option value="none">None (Truck Away)</option>
+                                <option value="thickener" selected>Thickener Only</option>
+                                <option value="filterpress">Thickener + Filter Press</option>
+                                <option value="centrifuge">Thickener + Centrifuge</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Factors -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-percentage text-purple-500"></i> Project Factors
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Contingency (%)</label>
+                            <input type="number" id="contingency" value="10" min="5" max="25" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Engineering & Design (%)</label>
+                            <input type="number" id="engineering" value="8" min="5" max="15" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Project Management (%)</label>
+                            <input type="number" id="projectMgmt" value="5" min="3" max="10" class="input-field">
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-2.5 rounded-lg hover:from-emerald-600 hover:to-teal-600">
+                        <i class="fas fa-calculator mr-2"></i> Estimate CAPEX
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Total Project Cost -->
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-white">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <p class="text-sm opacity-80">Total Project Cost</p>
+                            <p id="totalCost" class="text-4xl font-bold my-2">₹0</p>
+                            <p class="text-xs opacity-70">Including all overheads</p>
+                        </div>
+                        <div class="text-center border-l border-white/20">
+                            <p class="text-sm opacity-80">Cost per MLD</p>
+                            <p id="costPerMLD" class="text-3xl font-bold my-2">₹0 Cr</p>
+                            <p class="text-xs opacity-70">Industry: ₹2-4 Cr/MLD</p>
+                        </div>
+                        <div class="text-center border-l border-white/20">
+                            <p class="text-sm opacity-80">Cost per m³/hr</p>
+                            <p id="costPerM3hr" class="text-3xl font-bold my-2">₹0 L</p>
+                            <p class="text-xs opacity-70">Capacity basis</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Breakdown by Category -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-emerald-500"></i> Cost Breakdown by Category
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Civil -->
+                        <div class="cost-civil rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-gray-700"><i class="fas fa-building mr-2"></i>Civil Works</h4>
+                                <span id="civilPct" class="text-xs bg-amber-200 px-2 py-0.5 rounded">0%</span>
+                            </div>
+                            <p id="civilCost" class="text-2xl font-bold text-amber-700">₹0</p>
+                            <div class="mt-2 text-xs text-gray-600 space-y-1">
+                                <div class="flex justify-between"><span>Clarifier RCC</span><span id="civilClarifier">₹0</span></div>
+                                <div class="flex justify-between"><span>Filter Foundation</span><span id="civilFilter">₹0</span></div>
+                                <div class="flex justify-between"><span>Chemical Area</span><span id="civilChem">₹0</span></div>
+                                <div class="flex justify-between"><span>Control Room</span><span id="civilControl">₹0</span></div>
+                            </div>
+                        </div>
+                        <!-- Mechanical -->
+                        <div class="cost-mech rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-gray-700"><i class="fas fa-cog mr-2"></i>Mechanical</h4>
+                                <span id="mechPct" class="text-xs bg-blue-200 px-2 py-0.5 rounded">0%</span>
+                            </div>
+                            <p id="mechCost" class="text-2xl font-bold text-blue-700">₹0</p>
+                            <div class="mt-2 text-xs text-gray-600 space-y-1">
+                                <div class="flex justify-between"><span>Clarifiers</span><span id="mechClarifier">₹0</span></div>
+                                <div class="flex justify-between"><span>Filters</span><span id="mechFilter">₹0</span></div>
+                                <div class="flex justify-between"><span>Pumps & Motors</span><span id="mechPumps">₹0</span></div>
+                                <div class="flex justify-between"><span>Mixers & Tanks</span><span id="mechMixers">₹0</span></div>
+                                <div class="flex justify-between"><span>Sludge Equipment</span><span id="mechSludge">₹0</span></div>
+                            </div>
+                        </div>
+                        <!-- Electrical -->
+                        <div class="cost-elec rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-gray-700"><i class="fas fa-bolt mr-2"></i>Electrical</h4>
+                                <span id="elecPct" class="text-xs bg-pink-200 px-2 py-0.5 rounded">0%</span>
+                            </div>
+                            <p id="elecCost" class="text-2xl font-bold text-pink-700">₹0</p>
+                            <div class="mt-2 text-xs text-gray-600 space-y-1">
+                                <div class="flex justify-between"><span>MCC/PCC Panels</span><span id="elecPanels">₹0</span></div>
+                                <div class="flex justify-between"><span>Cables & Trays</span><span id="elecCables">₹0</span></div>
+                                <div class="flex justify-between"><span>Transformer/DG</span><span id="elecTransformer">₹0</span></div>
+                                <div class="flex justify-between"><span>Lighting</span><span id="elecLighting">₹0</span></div>
+                            </div>
+                        </div>
+                        <!-- Piping -->
+                        <div class="cost-pipe rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-gray-700"><i class="fas fa-project-diagram mr-2"></i>Piping & Valves</h4>
+                                <span id="pipePct" class="text-xs bg-emerald-200 px-2 py-0.5 rounded">0%</span>
+                            </div>
+                            <p id="pipeCost" class="text-2xl font-bold text-emerald-700">₹0</p>
+                            <div class="mt-2 text-xs text-gray-600 space-y-1">
+                                <div class="flex justify-between"><span>MS/SS Piping</span><span id="pipePiping">₹0</span></div>
+                                <div class="flex justify-between"><span>Valves</span><span id="pipeValves">₹0</span></div>
+                                <div class="flex justify-between"><span>Supports & Fittings</span><span id="pipeSupports">₹0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instrumentation & Overheads -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="cost-other rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-semibold text-gray-700"><i class="fas fa-microchip mr-2"></i>Instrumentation & Control</h4>
+                        </div>
+                        <p id="instCost" class="text-2xl font-bold text-indigo-700">₹0</p>
+                        <div class="mt-2 text-xs text-gray-600 space-y-1">
+                            <div class="flex justify-between"><span>Field Instruments</span><span id="instField">₹0</span></div>
+                            <div class="flex justify-between"><span>PLC/SCADA</span><span id="instPlc">₹0</span></div>
+                        </div>
+                    </div>
+                    <div class="card bg-gray-50 p-4">
+                        <h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-plus-circle mr-2 text-gray-500"></i>Project Overheads</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <div class="flex justify-between"><span>Contingency</span><span id="overheadContingency" class="font-semibold">₹0</span></div>
+                            <div class="flex justify-between"><span>Engineering & Design</span><span id="overheadEng" class="font-semibold">₹0</span></div>
+                            <div class="flex justify-between"><span>Project Management</span><span id="overheadPM" class="font-semibold">₹0</span></div>
+                            <hr>
+                            <div class="flex justify-between font-bold"><span>Total Overheads</span><span id="totalOverheads">₹0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart & Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h4 class="font-semibold text-gray-800 mb-3">Cost Distribution</h4>
+                        <div style="height: 250px;"><canvas id="costChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <h4 class="font-semibold text-gray-800 mb-3">Detailed Cost Summary</h4>
+                        <div class="overflow-y-auto max-h-64">
+                            <table class="w-full text-sm">
+                                <thead class="sticky top-0 bg-white">
+                                    <tr class="border-b">
+                                        <th class="text-left py-2">Category</th>
+                                        <th class="text-right py-2">Amount (₹)</th>
+                                        <th class="text-right py-2">%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summaryTable">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Timeline -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-teal-500"></i> Estimated Project Timeline
+                    </h3>
+                    <div class="grid grid-cols-5 gap-2 text-center text-sm">
+                        <div class="p-3 bg-blue-50 rounded-lg">
+                            <p class="font-bold text-blue-700" id="timeDesign">2-3</p>
+                            <p class="text-xs text-gray-600">Months<br>Design</p>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-lg">
+                            <p class="font-bold text-amber-700" id="timeProcure">3-4</p>
+                            <p class="text-xs text-gray-600">Months<br>Procurement</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg">
+                            <p class="font-bold text-orange-700" id="timeCivil">4-6</p>
+                            <p class="text-xs text-gray-600">Months<br>Civil</p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-lg">
+                            <p class="font-bold text-green-700" id="timeInstall">2-3</p>
+                            <p class="text-xs text-gray-600">Months<br>Installation</p>
+                        </div>
+                        <div class="p-3 bg-purple-50 rounded-lg">
+                            <p class="font-bold text-purple-700" id="timeCommission">1-2</p>
+                            <p class="text-xs text-gray-600">Months<br>Commissioning</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-gray-100 rounded-lg text-center">
+                        <p class="text-sm text-gray-600">Total Estimated Duration</p>
+                        <p class="text-2xl font-bold text-gray-800" id="totalDuration">12-18 Months</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // Base costs per unit (INR) - 2024 estimates
+            const BASE_COSTS = {
+                // Civil (per m³/hr capacity)
+                civil: {
+                    clarifierRCC: 25000,      // per m²
+                    filterFoundation: 15000,  // per filter
+                    chemicalArea: 8000,       // per m²
+                    controlRoom: 35000        // per m² (30 m² min)
+                },
+                // Mechanical Equipment
+                mech: {
+                    clarifier: {
+                        conventional: 1500000, // base per clarifier
+                        lamella: 2000000,
+                        pulsator: 2500000
+                    },
+                    filter: {
+                        gravity: 300000,       // per filter
+                        pressure: 450000,
+                        multimedia: 550000
+                    },
+                    pump: 85000,               // per kW
+                    mixer: 150000,             // per mixer
+                    tank: 50000,               // per m³ (SS)
+                    thickener: 800000,         // base
+                    filterPress: 2500000,
+                    centrifuge: 4500000
+                },
+                // Electrical
+                elec: {
+                    panelPerKw: 8000,
+                    cablesPerMeter: 1500,
+                    transformerPerKva: 2500,
+                    lighting: 250000           // lumpsum
+                },
+                // Piping (per m³/hr)
+                pipe: {
+                    pipingPerFlow: 15000,
+                    valvesPerFlow: 8000,
+                    supports: 0.15             // % of piping
+                },
+                // Instrumentation
+                inst: {
+                    fieldPerFlow: 12000,
+                    plcScada: 500000           // base
+                }
+            };
+
+            let costChart;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initChart();
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.querySelectorAll('input, select').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function initChart() {
+                costChart = new Chart(document.getElementById('costChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Civil', 'Mechanical', 'Electrical', 'Piping', 'I&C', 'Overheads'],
+                        datasets: [{ 
+                            data: [25, 35, 12, 10, 8, 10], 
+                            backgroundColor: ['#f59e0b', '#3b82f6', '#ec4899', '#10b981', '#6366f1', '#6b7280'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '55%',
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+                    }
+                });
+            }
+
+            function calculate() {
+                const flowRate = parseFloat(document.getElementById('flowRate').value);
+                const peakFactor = parseFloat(document.getElementById('peakFactor').value);
+                const locationFactor = parseFloat(document.getElementById('locationFactor').value);
+                const numClarifiers = parseInt(document.getElementById('numClarifiers').value);
+                const clarifierType = document.getElementById('clarifierType').value;
+                const numFilters = parseInt(document.getElementById('numFilters').value);
+                const filterType = document.getElementById('filterType').value;
+                const sludgeType = document.getElementById('sludgeType').value;
+                const contingencyPct = parseFloat(document.getElementById('contingency').value) / 100;
+                const engineeringPct = parseFloat(document.getElementById('engineering').value) / 100;
+                const projectMgmtPct = parseFloat(document.getElementById('projectMgmt').value) / 100;
+
+                const designFlow = flowRate * peakFactor;
+
+                // CIVIL COSTS
+                const clarifierArea = (designFlow / 1.0) / numClarifiers; // SOR = 1 m/hr
+                const civilClarifier = clarifierArea * numClarifiers * BASE_COSTS.civil.clarifierRCC;
+                const civilFilter = numFilters * BASE_COSTS.civil.filterFoundation * 50; // 50 m² per filter
+                const civilChem = 100 * BASE_COSTS.civil.chemicalArea; // 100 m² chemical area
+                const civilControl = 40 * BASE_COSTS.civil.controlRoom; // 40 m² control room
+                const civilTotal = (civilClarifier + civilFilter + civilChem + civilControl) * locationFactor;
+
+                // MECHANICAL COSTS
+                const mechClarifier = numClarifiers * BASE_COSTS.mech.clarifier[clarifierType] * (designFlow / 100);
+                const mechFilter = numFilters * BASE_COSTS.mech.filter[filterType] * (designFlow / 100);
+                const totalKw = designFlow * 0.5; // ~0.5 kW per m³/hr
+                const mechPumps = totalKw * BASE_COSTS.mech.pump;
+                const numMixers = 2 + numClarifiers;
+                const mechMixers = numMixers * BASE_COSTS.mech.mixer + 4 * 50 * BASE_COSTS.mech.tank; // 4 tanks of 50 m³
+                let mechSludge = 0;
+                if (sludgeType === 'thickener') mechSludge = BASE_COSTS.mech.thickener * (designFlow / 100);
+                else if (sludgeType === 'filterpress') mechSludge = BASE_COSTS.mech.thickener * (designFlow / 100) + BASE_COSTS.mech.filterPress;
+                else if (sludgeType === 'centrifuge') mechSludge = BASE_COSTS.mech.thickener * (designFlow / 100) + BASE_COSTS.mech.centrifuge;
+                const mechTotal = (mechClarifier + mechFilter + mechPumps + mechMixers + mechSludge) * locationFactor;
+
+                // ELECTRICAL COSTS
+                const elecPanels = totalKw * BASE_COSTS.elec.panelPerKw * 2; // MCC + PCC
+                const elecCables = designFlow * 5 * BASE_COSTS.elec.cablesPerMeter; // 5m per m³/hr
+                const elecTransformer = totalKw * 1.2 * BASE_COSTS.elec.transformerPerKva;
+                const elecLighting = BASE_COSTS.elec.lighting;
+                const elecTotal = (elecPanels + elecCables + elecTransformer + elecLighting) * locationFactor;
+
+                // PIPING COSTS
+                const pipePiping = designFlow * BASE_COSTS.pipe.pipingPerFlow;
+                const pipeValves = designFlow * BASE_COSTS.pipe.valvesPerFlow;
+                const pipeSupports = (pipePiping + pipeValves) * BASE_COSTS.pipe.supports;
+                const pipeTotal = (pipePiping + pipeValves + pipeSupports) * locationFactor;
+
+                // INSTRUMENTATION COSTS
+                const instField = designFlow * BASE_COSTS.inst.fieldPerFlow;
+                const instPlc = BASE_COSTS.inst.plcScada * (1 + designFlow / 200);
+                const instTotal = (instField + instPlc) * locationFactor;
+
+                // BASE COST
+                const baseTotal = civilTotal + mechTotal + elecTotal + pipeTotal + instTotal;
+
+                // OVERHEADS
+                const overheadContingency = baseTotal * contingencyPct;
+                const overheadEng = baseTotal * engineeringPct;
+                const overheadPM = baseTotal * projectMgmtPct;
+                const totalOverheads = overheadContingency + overheadEng + overheadPM;
+
+                // TOTAL PROJECT COST
+                const totalCost = baseTotal + totalOverheads;
+
+                // Key metrics
+                const mld = (flowRate * 24) / 1000; // MLD
+                const costPerMLD = totalCost / mld;
+                const costPerM3hr = totalCost / flowRate;
+
+                // Percentages
+                const grandTotal = totalCost;
+                const civilPct = (civilTotal / grandTotal * 100).toFixed(1);
+                const mechPct = (mechTotal / grandTotal * 100).toFixed(1);
+                const elecPct = (elecTotal / grandTotal * 100).toFixed(1);
+                const pipePct = (pipeTotal / grandTotal * 100).toFixed(1);
+                const instPct = (instTotal / grandTotal * 100).toFixed(1);
+                const overPct = (totalOverheads / grandTotal * 100).toFixed(1);
+
+                // Format helpers
+                const fmtINR = n => '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+                const fmtCr = n => (n / 10000000).toFixed(2) + ' Cr';
+                const fmtL = n => (n / 100000).toFixed(1) + ' L';
+
+                // Update UI
+                document.getElementById('totalCost').textContent = fmtCr(totalCost);
+                document.getElementById('costPerMLD').textContent = fmtCr(costPerMLD);
+                document.getElementById('costPerM3hr').textContent = fmtL(costPerM3hr);
+
+                // Civil
+                document.getElementById('civilCost').textContent = fmtL(civilTotal);
+                document.getElementById('civilPct').textContent = civilPct + '%';
+                document.getElementById('civilClarifier').textContent = fmtINR(civilClarifier * locationFactor);
+                document.getElementById('civilFilter').textContent = fmtINR(civilFilter * locationFactor);
+                document.getElementById('civilChem').textContent = fmtINR(civilChem * locationFactor);
+                document.getElementById('civilControl').textContent = fmtINR(civilControl * locationFactor);
+
+                // Mechanical
+                document.getElementById('mechCost').textContent = fmtL(mechTotal);
+                document.getElementById('mechPct').textContent = mechPct + '%';
+                document.getElementById('mechClarifier').textContent = fmtINR(mechClarifier * locationFactor);
+                document.getElementById('mechFilter').textContent = fmtINR(mechFilter * locationFactor);
+                document.getElementById('mechPumps').textContent = fmtINR(mechPumps * locationFactor);
+                document.getElementById('mechMixers').textContent = fmtINR(mechMixers * locationFactor);
+                document.getElementById('mechSludge').textContent = fmtINR(mechSludge * locationFactor);
+
+                // Electrical
+                document.getElementById('elecCost').textContent = fmtL(elecTotal);
+                document.getElementById('elecPct').textContent = elecPct + '%';
+                document.getElementById('elecPanels').textContent = fmtINR(elecPanels * locationFactor);
+                document.getElementById('elecCables').textContent = fmtINR(elecCables * locationFactor);
+                document.getElementById('elecTransformer').textContent = fmtINR(elecTransformer * locationFactor);
+                document.getElementById('elecLighting').textContent = fmtINR(elecLighting * locationFactor);
+
+                // Piping
+                document.getElementById('pipeCost').textContent = fmtL(pipeTotal);
+                document.getElementById('pipePct').textContent = pipePct + '%';
+                document.getElementById('pipePiping').textContent = fmtINR(pipePiping * locationFactor);
+                document.getElementById('pipeValves').textContent = fmtINR(pipeValves * locationFactor);
+                document.getElementById('pipeSupports').textContent = fmtINR(pipeSupports * locationFactor);
+
+                // Instrumentation
+                document.getElementById('instCost').textContent = fmtL(instTotal);
+                document.getElementById('instField').textContent = fmtINR(instField * locationFactor);
+                document.getElementById('instPlc').textContent = fmtINR(instPlc * locationFactor);
+
+                // Overheads
+                document.getElementById('overheadContingency').textContent = fmtINR(overheadContingency);
+                document.getElementById('overheadEng').textContent = fmtINR(overheadEng);
+                document.getElementById('overheadPM').textContent = fmtINR(overheadPM);
+                document.getElementById('totalOverheads').textContent = fmtINR(totalOverheads);
+
+                // Timeline estimation based on flow
+                const scale = flowRate / 100;
+                document.getElementById('timeDesign').textContent = scale > 1.5 ? '3-4' : '2-3';
+                document.getElementById('timeCivil').textContent = scale > 1.5 ? '6-8' : '4-6';
+                document.getElementById('totalDuration').textContent = scale > 1.5 ? '16-24 Months' : '12-18 Months';
+
+                // Update chart
+                costChart.data.datasets[0].data = [civilTotal, mechTotal, elecTotal, pipeTotal, instTotal, totalOverheads];
+                costChart.update();
+
+                // Summary table
+                const summary = [
+                    { cat: 'Civil Works', amt: civilTotal, pct: civilPct },
+                    { cat: 'Mechanical Equipment', amt: mechTotal, pct: mechPct },
+                    { cat: 'Electrical', amt: elecTotal, pct: elecPct },
+                    { cat: 'Piping & Valves', amt: pipeTotal, pct: pipePct },
+                    { cat: 'Instrumentation & Control', amt: instTotal, pct: instPct },
+                    { cat: 'Project Overheads', amt: totalOverheads, pct: overPct },
+                    { cat: 'TOTAL', amt: totalCost, pct: '100', bold: true }
+                ];
+                document.getElementById('summaryTable').innerHTML = summary.map(s => `
+                    <tr class="border-b ${s.bold ? 'bg-emerald-100 font-bold' : ''}">
+                        <td class="py-2">${s.cat}</td>
+                        <td class="py-2 text-right">${fmtINR(s.amt)}</td>
+                        <td class="py-2 text-right">${s.pct}%</td>
+                    </tr>
+                `).join('');
+            }
+        })();
+    </script>
+</body>
+</html>

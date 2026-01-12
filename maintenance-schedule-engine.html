@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Schedule Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #6366f1; --secondary: #8b5cf6; --accent: #a855f7; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #581c87 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .freq-daily { background: #dbeafe; color: #1e40af; }
+        .freq-weekly { background: #dcfce7; color: #166534; }
+        .freq-monthly { background: #fef3c7; color: #92400e; }
+        .freq-quarterly { background: #fce7f3; color: #9d174d; }
+        .freq-annual { background: #e0e7ff; color: #3730a3; }
+        .priority-high { border-left: 4px solid #ef4444; }
+        .priority-medium { border-left: 4px solid #f59e0b; }
+        .priority-low { border-left: 4px solid #22c55e; }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">🔧 Maintenance Schedule Generator</h1>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20"><i class="fas fa-print mr-1"></i>Print</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <!-- Equipment Selection -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cogs text-indigo-500"></i> Equipment Inventory
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Flow Rate (m³/hr)</label>
+                            <input type="number" id="flowRate" value="100" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Number of Clarifiers</label>
+                            <input type="number" id="numClarifiers" value="2" min="1" max="10" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Number of Filters</label>
+                            <input type="number" id="numFilters" value="4" min="1" max="20" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Number of Pumps</label>
+                            <input type="number" id="numPumps" value="8" min="4" max="30" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Chemical Tanks</label>
+                            <input type="number" id="numTanks" value="4" min="2" max="10" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operating Parameters -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-clock text-purple-500"></i> Operating Parameters
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Hours/Day</label>
+                            <input type="number" id="opHours" value="24" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Days/Year</label>
+                            <input type="number" id="opDays" value="330" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Labor Rate (₹/hr)</label>
+                            <input type="number" id="laborRate" value="250" class="input-field">
+                        </div>
+                    </div>
+                    <button id="generateBtn" class="w-full mt-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-2.5 rounded-lg hover:from-indigo-600 hover:to-purple-600">
+                        <i class="fas fa-calendar-alt mr-2"></i> Generate Schedule
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="card p-4 text-center bg-gradient-to-br from-indigo-50 to-indigo-100">
+                        <p class="text-xs text-gray-600">Total Equipment</p>
+                        <p id="totalEquipment" class="text-2xl font-bold text-indigo-700">0</p>
+                    </div>
+                    <div class="card p-4 text-center bg-gradient-to-br from-purple-50 to-purple-100">
+                        <p class="text-xs text-gray-600">Annual Tasks</p>
+                        <p id="totalTasks" class="text-2xl font-bold text-purple-700">0</p>
+                    </div>
+                    <div class="card p-4 text-center bg-gradient-to-br from-pink-50 to-pink-100">
+                        <p class="text-xs text-gray-600">Annual Labor Hours</p>
+                        <p id="totalHours" class="text-2xl font-bold text-pink-700">0</p>
+                    </div>
+                    <div class="card p-4 text-center bg-gradient-to-br from-amber-50 to-amber-100">
+                        <p class="text-xs text-gray-600">Annual Cost</p>
+                        <p id="totalCost" class="text-2xl font-bold text-amber-700">₹0</p>
+                    </div>
+                </div>
+
+                <!-- Maintenance Calendar Overview -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-calendar text-indigo-500"></i> Maintenance Frequency Distribution
+                    </h3>
+                    <div class="grid grid-cols-5 gap-2 text-center text-sm">
+                        <div class="p-3 rounded-lg freq-daily">
+                            <p class="font-bold text-lg" id="dailyCount">0</p>
+                            <p class="text-xs">Daily</p>
+                        </div>
+                        <div class="p-3 rounded-lg freq-weekly">
+                            <p class="font-bold text-lg" id="weeklyCount">0</p>
+                            <p class="text-xs">Weekly</p>
+                        </div>
+                        <div class="p-3 rounded-lg freq-monthly">
+                            <p class="font-bold text-lg" id="monthlyCount">0</p>
+                            <p class="text-xs">Monthly</p>
+                        </div>
+                        <div class="p-3 rounded-lg freq-quarterly">
+                            <p class="font-bold text-lg" id="quarterlyCount">0</p>
+                            <p class="text-xs">Quarterly</p>
+                        </div>
+                        <div class="p-3 rounded-lg freq-annual">
+                            <p class="font-bold text-lg" id="annualCount">0</p>
+                            <p class="text-xs">Annual</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance Schedule Table -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-list-check text-purple-500"></i> Maintenance Schedule
+                    </h3>
+                    <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                        <table class="w-full text-sm">
+                            <thead class="sticky top-0 bg-white">
+                                <tr class="bg-gray-100 text-gray-700">
+                                    <th class="text-left py-2 px-3">Equipment</th>
+                                    <th class="text-left py-2 px-3">Task</th>
+                                    <th class="text-left py-2 px-3">Frequency</th>
+                                    <th class="text-right py-2 px-3">Duration</th>
+                                    <th class="text-right py-2 px-3">Tasks/Year</th>
+                                    <th class="text-right py-2 px-3">Hours/Year</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Spare Parts List -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-boxes text-amber-500"></i> Recommended Spare Parts Inventory
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700">
+                                    <th class="text-left py-2 px-3">Part Description</th>
+                                    <th class="text-left py-2 px-3">Equipment</th>
+                                    <th class="text-right py-2 px-3">Qty</th>
+                                    <th class="text-right py-2 px-3">Unit Cost (₹)</th>
+                                    <th class="text-right py-2 px-3">Total (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sparePartsTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-amber-100 font-bold">
+                                    <td colspan="4" class="py-2 px-3 text-right">Total Spare Parts Value:</td>
+                                    <td id="totalSparesCost" class="py-2 px-3 text-right text-amber-700">₹0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cost Breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Chart -->
+                    <div class="card">
+                        <h4 class="font-semibold text-gray-800 mb-3">Annual Cost Distribution</h4>
+                        <div style="height: 200px;"><canvas id="costChart"></canvas></div>
+                    </div>
+                    <!-- Cost Summary -->
+                    <div class="card bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                        <h4 class="font-semibold mb-4">Annual Maintenance Budget (INR)</h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/80">Preventive Labor</span>
+                                <span id="preventiveLaborCost" class="font-bold">₹0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/80">Spare Parts</span>
+                                <span id="sparePartsCost" class="font-bold">₹0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/80">Corrective (Est. 20%)</span>
+                                <span id="correctiveCost" class="font-bold">₹0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/80">External Services</span>
+                                <span id="externalCost" class="font-bold">₹0</span>
+                            </div>
+                            <hr class="border-white/30">
+                            <div class="flex justify-between items-center text-lg">
+                                <span class="font-semibold">Total Budget</span>
+                                <span id="totalBudget" class="font-bold">₹0</span>
+                            </div>
+                            <div class="mt-2 p-2 bg-white/20 rounded-lg text-center">
+                                <p class="text-xs text-white/70">Cost per m³ treated</p>
+                                <p id="costPerM3" class="text-xl font-bold">₹0.00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // Maintenance task database
+            const MAINTENANCE_TASKS = {
+                pump: [
+                    { task: 'Check for leaks, vibration, noise', freq: 'daily', duration: 0.25, priority: 'high' },
+                    { task: 'Check bearing temperature', freq: 'daily', duration: 0.1, priority: 'medium' },
+                    { task: 'Lubricate bearings', freq: 'weekly', duration: 0.5, priority: 'medium' },
+                    { task: 'Check mechanical seal', freq: 'monthly', duration: 0.5, priority: 'high' },
+                    { task: 'Alignment check', freq: 'quarterly', duration: 1, priority: 'medium' },
+                    { task: 'Replace mechanical seal', freq: 'annual', duration: 4, priority: 'high' },
+                    { task: 'Overhaul (bearings, impeller)', freq: 'annual', duration: 8, priority: 'high' }
+                ],
+                clarifier: [
+                    { task: 'Check sludge blanket level', freq: 'daily', duration: 0.25, priority: 'high' },
+                    { task: 'Inspect weir cleanliness', freq: 'daily', duration: 0.25, priority: 'medium' },
+                    { task: 'Check rake drive operation', freq: 'weekly', duration: 0.5, priority: 'high' },
+                    { task: 'Grease rake mechanism', freq: 'weekly', duration: 0.5, priority: 'medium' },
+                    { task: 'Clean launder channels', freq: 'monthly', duration: 2, priority: 'medium' },
+                    { task: 'Inspect rake arms & blades', freq: 'quarterly', duration: 2, priority: 'high' },
+                    { task: 'Drain and clean tank', freq: 'annual', duration: 16, priority: 'high' }
+                ],
+                filter: [
+                    { task: 'Check filter head loss', freq: 'daily', duration: 0.1, priority: 'high' },
+                    { task: 'Initiate backwash cycle', freq: 'daily', duration: 0.5, priority: 'high' },
+                    { task: 'Inspect media surface', freq: 'weekly', duration: 0.25, priority: 'medium' },
+                    { task: 'Check valve operation', freq: 'monthly', duration: 1, priority: 'medium' },
+                    { task: 'Air scour nozzle inspection', freq: 'quarterly', duration: 2, priority: 'medium' },
+                    { task: 'Media depth measurement', freq: 'annual', duration: 2, priority: 'low' },
+                    { task: 'Media replacement (partial)', freq: 'annual', duration: 8, priority: 'low' }
+                ],
+                mixer: [
+                    { task: 'Check motor current', freq: 'daily', duration: 0.1, priority: 'medium' },
+                    { task: 'Lubricate gearbox', freq: 'monthly', duration: 0.5, priority: 'medium' },
+                    { task: 'Check impeller condition', freq: 'quarterly', duration: 1, priority: 'medium' },
+                    { task: 'Gearbox oil change', freq: 'annual', duration: 2, priority: 'high' }
+                ],
+                tank: [
+                    { task: 'Check tank level', freq: 'daily', duration: 0.1, priority: 'high' },
+                    { task: 'Clean agitator blades', freq: 'monthly', duration: 1, priority: 'low' },
+                    { task: 'Inspect tank lining', freq: 'annual', duration: 4, priority: 'medium' },
+                    { task: 'Full tank cleaning', freq: 'annual', duration: 8, priority: 'medium' }
+                ],
+                instrument: [
+                    { task: 'Calibration check (pH, flow)', freq: 'weekly', duration: 1, priority: 'high' },
+                    { task: 'Clean sensors', freq: 'weekly', duration: 0.5, priority: 'medium' },
+                    { task: 'Recalibrate analyzers', freq: 'monthly', duration: 2, priority: 'high' },
+                    { task: 'Replace pH probe', freq: 'annual', duration: 1, priority: 'high' }
+                ],
+                electrical: [
+                    { task: 'Check panel temperatures', freq: 'daily', duration: 0.1, priority: 'medium' },
+                    { task: 'Thermal imaging scan', freq: 'quarterly', duration: 2, priority: 'high' },
+                    { task: 'Tighten connections', freq: 'annual', duration: 4, priority: 'high' },
+                    { task: 'Protective relay testing', freq: 'annual', duration: 4, priority: 'high' }
+                ]
+            };
+
+            // Spare parts database
+            const SPARE_PARTS = {
+                pump: [
+                    { part: 'Mechanical Seal', unitCost: 8500, qtyPerUnit: 1 },
+                    { part: 'Bearing Set', unitCost: 4500, qtyPerUnit: 2 },
+                    { part: 'Impeller', unitCost: 12000, qtyPerUnit: 0.5 },
+                    { part: 'Coupling', unitCost: 3500, qtyPerUnit: 0.5 }
+                ],
+                clarifier: [
+                    { part: 'Rake Arm Blade', unitCost: 25000, qtyPerUnit: 2 },
+                    { part: 'Drive Shear Pin', unitCost: 500, qtyPerUnit: 10 },
+                    { part: 'Weir Plate', unitCost: 8000, qtyPerUnit: 1 }
+                ],
+                filter: [
+                    { part: 'Valve Actuator', unitCost: 35000, qtyPerUnit: 0.5 },
+                    { part: 'Air Scour Nozzle Set', unitCost: 15000, qtyPerUnit: 0.25 },
+                    { part: 'Filter Media (per ton)', unitCost: 18000, qtyPerUnit: 0.5 }
+                ],
+                mixer: [
+                    { part: 'Gearbox Oil', unitCost: 2500, qtyPerUnit: 1 },
+                    { part: 'Impeller Blade', unitCost: 18000, qtyPerUnit: 0.5 }
+                ],
+                instrument: [
+                    { part: 'pH Sensor', unitCost: 25000, qtyPerUnit: 2 },
+                    { part: 'Flow Tube O-Ring', unitCost: 1500, qtyPerUnit: 2 },
+                    { part: 'Turbidity Sensor', unitCost: 45000, qtyPerUnit: 0.5 }
+                ]
+            };
+
+            let costChart;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initChart();
+                document.getElementById('generateBtn').addEventListener('click', generate);
+                document.querySelectorAll('input').forEach(el => el.addEventListener('change', generate));
+                generate();
+            });
+
+            function initChart() {
+                costChart = new Chart(document.getElementById('costChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Preventive Labor', 'Spare Parts', 'Corrective', 'External'],
+                        datasets: [{ data: [40, 30, 20, 10], backgroundColor: ['#6366f1', '#f59e0b', '#ef4444', '#8b5cf6'], borderWidth: 0 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '55%',
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+                    }
+                });
+            }
+
+            function generate() {
+                const flowRate = parseFloat(document.getElementById('flowRate').value);
+                const numClarifiers = parseInt(document.getElementById('numClarifiers').value);
+                const numFilters = parseInt(document.getElementById('numFilters').value);
+                const numPumps = parseInt(document.getElementById('numPumps').value);
+                const numTanks = parseInt(document.getElementById('numTanks').value);
+                const opHours = parseFloat(document.getElementById('opHours').value);
+                const opDays = parseFloat(document.getElementById('opDays').value);
+                const laborRate = parseFloat(document.getElementById('laborRate').value);
+
+                // Build equipment list
+                const equipment = [
+                    { type: 'pump', name: 'Centrifugal Pump', qty: numPumps },
+                    { type: 'clarifier', name: 'Clarifier', qty: numClarifiers },
+                    { type: 'filter', name: 'Pressure Filter', qty: numFilters },
+                    { type: 'mixer', name: 'Mixer/Agitator', qty: 2 + numClarifiers },
+                    { type: 'tank', name: 'Chemical Tank', qty: numTanks },
+                    { type: 'instrument', name: 'Instruments', qty: 1 }, // Treated as one set
+                    { type: 'electrical', name: 'Electrical Panel', qty: 1 }
+                ];
+
+                const totalEquipment = equipment.reduce((sum, e) => sum + e.qty, 0);
+
+                // Generate schedule
+                const schedule = [];
+                let dailyCount = 0, weeklyCount = 0, monthlyCount = 0, quarterlyCount = 0, annualCount = 0;
+                let totalHours = 0;
+
+                equipment.forEach(eq => {
+                    const tasks = MAINTENANCE_TASKS[eq.type] || [];
+                    tasks.forEach(t => {
+                        const tasksPerYear = getTasksPerYear(t.freq);
+                        const hoursPerYear = t.duration * eq.qty * tasksPerYear;
+                        totalHours += hoursPerYear;
+
+                        schedule.push({
+                            equipment: eq.name,
+                            task: t.task,
+                            freq: t.freq,
+                            duration: t.duration,
+                            qty: eq.qty,
+                            tasksPerYear: tasksPerYear * eq.qty,
+                            hoursPerYear: hoursPerYear,
+                            priority: t.priority
+                        });
+
+                        switch(t.freq) {
+                            case 'daily': dailyCount++; break;
+                            case 'weekly': weeklyCount++; break;
+                            case 'monthly': monthlyCount++; break;
+                            case 'quarterly': quarterlyCount++; break;
+                            case 'annual': annualCount++; break;
+                        }
+                    });
+                });
+
+                // Calculate spare parts
+                const spareParts = [];
+                let totalSparesCost = 0;
+
+                equipment.forEach(eq => {
+                    const parts = SPARE_PARTS[eq.type] || [];
+                    parts.forEach(p => {
+                        const qty = Math.ceil(p.qtyPerUnit * eq.qty);
+                        const total = qty * p.unitCost;
+                        totalSparesCost += total;
+                        spareParts.push({
+                            part: p.part,
+                            equipment: eq.name,
+                            qty: qty,
+                            unitCost: p.unitCost,
+                            total: total
+                        });
+                    });
+                });
+
+                // Cost calculations
+                const preventiveLaborCost = totalHours * laborRate;
+                const correctiveCost = preventiveLaborCost * 0.2; // 20% of preventive
+                const externalCost = 50000 + (numPumps * 5000); // Base + per pump for AMC
+                const totalBudget = preventiveLaborCost + totalSparesCost + correctiveCost + externalCost;
+                const annualWater = flowRate * opHours * opDays;
+                const costPerM3 = annualWater > 0 ? totalBudget / annualWater : 0;
+
+                // Update UI
+                const fmtINR = n => '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+                document.getElementById('totalEquipment').textContent = totalEquipment;
+                document.getElementById('totalTasks').textContent = schedule.reduce((s, t) => s + t.tasksPerYear, 0).toFixed(0);
+                document.getElementById('totalHours').textContent = totalHours.toFixed(0);
+                document.getElementById('totalCost').textContent = fmtINR(totalBudget);
+
+                document.getElementById('dailyCount').textContent = dailyCount;
+                document.getElementById('weeklyCount').textContent = weeklyCount;
+                document.getElementById('monthlyCount').textContent = monthlyCount;
+                document.getElementById('quarterlyCount').textContent = quarterlyCount;
+                document.getElementById('annualCount').textContent = annualCount;
+
+                document.getElementById('preventiveLaborCost').textContent = fmtINR(preventiveLaborCost);
+                document.getElementById('sparePartsCost').textContent = fmtINR(totalSparesCost);
+                document.getElementById('correctiveCost').textContent = fmtINR(correctiveCost);
+                document.getElementById('externalCost').textContent = fmtINR(externalCost);
+                document.getElementById('totalBudget').textContent = fmtINR(totalBudget);
+                document.getElementById('costPerM3').textContent = '₹' + costPerM3.toFixed(2);
+                document.getElementById('totalSparesCost').textContent = fmtINR(totalSparesCost);
+
+                // Update chart
+                costChart.data.datasets[0].data = [preventiveLaborCost, totalSparesCost, correctiveCost, externalCost];
+                costChart.update();
+
+                // Populate schedule table
+                document.getElementById('scheduleTable').innerHTML = schedule.map(s => `
+                    <tr class="border-b hover:bg-gray-50 priority-${s.priority}">
+                        <td class="py-2 px-3">${s.equipment}</td>
+                        <td class="py-2 px-3 text-xs">${s.task}</td>
+                        <td class="py-2 px-3"><span class="freq-${s.freq} text-xs px-2 py-0.5 rounded">${s.freq}</span></td>
+                        <td class="py-2 px-3 text-right">${s.duration}h</td>
+                        <td class="py-2 px-3 text-right">${s.tasksPerYear}</td>
+                        <td class="py-2 px-3 text-right font-semibold">${s.hoursPerYear.toFixed(1)}</td>
+                    </tr>
+                `).join('');
+
+                // Populate spare parts table
+                document.getElementById('sparePartsTable').innerHTML = spareParts.map(p => `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-2 px-3">${p.part}</td>
+                        <td class="py-2 px-3 text-xs">${p.equipment}</td>
+                        <td class="py-2 px-3 text-right">${p.qty}</td>
+                        <td class="py-2 px-3 text-right">${fmtINR(p.unitCost)}</td>
+                        <td class="py-2 px-3 text-right font-semibold">${fmtINR(p.total)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            function getTasksPerYear(freq) {
+                switch(freq) {
+                    case 'daily': return 365;
+                    case 'weekly': return 52;
+                    case 'monthly': return 12;
+                    case 'quarterly': return 4;
+                    case 'annual': return 1;
+                    default: return 1;
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

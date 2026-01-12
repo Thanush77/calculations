@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapid Mix & Flocculation Design Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #0ea5e9; --secondary: #06b6d4; --accent: #10b981; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0c4a6e 0%, #134e5e 50%, #1a3a4a 100%); min-height: 100vh; }
+        .glass { backdrop-filter: blur(20px); background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 15px 50px rgba(0,0,0,0.15); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; transition: all 0.2s; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .result-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); }
+        .stage-card { border-left: 4px solid var(--primary); }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+                    <i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span>
+                </a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">🌀 Rapid Mix & Flocculation Engine</h1>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20">
+                <i class="fas fa-print mr-1"></i> Print
+            </button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <!-- Theory Section -->
+        <div class="card mb-6 no-print">
+            <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <i class="fas fa-book text-blue-500"></i> Design Theory
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="p-3 bg-blue-50 rounded-lg">
+                    <p class="font-semibold text-blue-800 mb-1">Rapid Mix (Flash Mixing)</p>
+                    <p class="text-gray-600">High-intensity mixing (G = 300-1000 s⁻¹) for chemical dispersion. Detention: 10-60 seconds.</p>
+                    <p class="text-xs text-gray-500 mt-1 font-mono">Power: P = μ × G² × V</p>
+                </div>
+                <div class="p-3 bg-cyan-50 rounded-lg">
+                    <p class="font-semibold text-cyan-800 mb-1">Flocculation</p>
+                    <p class="text-gray-600">Gentle mixing (G = 20-80 s⁻¹) for particle aggregation. Detention: 20-45 minutes.</p>
+                    <p class="text-xs text-gray-500 mt-1 font-mono">Gt Product: 10⁴ - 10⁵</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <!-- Flow Parameters -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-water text-sky-500"></i> Flow Parameters
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Flow Rate (m³/hr)</label>
+                            <input type="number" id="flowRate" value="50" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Temperature (°C)</label>
+                            <input type="number" id="temperature" value="25" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Water Density (kg/m³)</label>
+                            <input type="number" id="density" value="998" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rapid Mix Settings -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt text-yellow-500"></i> Rapid Mix Design
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Detention Time (seconds)</label>
+                            <input type="number" id="rapidMixTime" value="30" min="10" max="120" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">G-Value (s⁻¹)</label>
+                            <input type="number" id="rapidMixG" value="700" min="300" max="1500" class="input-field">
+                            <p class="text-xs text-gray-500 mt-1">Typical: 300-1000 s⁻¹</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Mixer Type</label>
+                            <select id="rapidMixerType" class="input-field">
+                                <option value="mechanical">Mechanical (Propeller)</option>
+                                <option value="static">Static Mixer</option>
+                                <option value="hydraulic">Hydraulic Jump</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flocculation Settings -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-sync-alt text-green-500"></i> Flocculation Design
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Number of Stages</label>
+                            <select id="flocStages" class="input-field">
+                                <option value="2">2 Stages</option>
+                                <option value="3" selected>3 Stages (Tapered)</option>
+                                <option value="4">4 Stages</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Total Detention Time (min)</label>
+                            <input type="number" id="flocTime" value="30" min="15" max="60" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Initial G-Value (s⁻¹)</label>
+                            <input type="number" id="flocGStart" value="70" min="40" max="100" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Final G-Value (s⁻¹)</label>
+                            <input type="number" id="flocGEnd" value="20" min="10" max="40" class="input-field">
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-sky-600 to-cyan-600 text-white font-bold py-2.5 rounded-lg hover:from-sky-700 hover:to-cyan-700 transition-all">
+                        <i class="fas fa-calculator mr-2"></i> Calculate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Rapid Mix Results -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt text-yellow-500"></i> Rapid Mix Chamber Results
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-3 bg-yellow-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Chamber Volume</p>
+                            <p id="rapidVolume" class="text-xl font-bold text-yellow-700">0 L</p>
+                        </div>
+                        <div class="p-3 bg-yellow-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Dimensions (L×W×H)</p>
+                            <p id="rapidDimensions" class="text-lg font-bold text-yellow-700">0 × 0 × 0 m</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Mixing Power</p>
+                            <p id="rapidPower" class="text-xl font-bold text-orange-700">0 kW</p>
+                        </div>
+                        <div class="p-3 bg-red-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Motor Size (with 1.25 SF)</p>
+                            <p id="rapidMotor" class="text-xl font-bold text-red-700">0 kW</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-3 gap-3 text-sm">
+                        <div class="p-2 bg-gray-50 rounded-lg"><span class="text-gray-600">Gt Product:</span> <span id="rapidGt" class="font-bold">0</span></div>
+                        <div class="p-2 bg-gray-50 rounded-lg"><span class="text-gray-600">Impeller Dia:</span> <span id="impellerDia" class="font-bold">0 m</span></div>
+                        <div class="p-2 bg-gray-50 rounded-lg"><span class="text-gray-600">Tip Speed:</span> <span id="tipSpeed" class="font-bold">0 m/s</span></div>
+                    </div>
+                </div>
+
+                <!-- Flocculation Results -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-sync-alt text-green-500"></i> Flocculation Basin Design
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="p-3 bg-green-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Total Volume</p>
+                            <p id="flocVolume" class="text-xl font-bold text-green-700">0 m³</p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Basin Dimensions</p>
+                            <p id="flocDimensions" class="text-lg font-bold text-green-700">0 × 0 × 0 m</p>
+                        </div>
+                        <div class="p-3 bg-emerald-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Total Power</p>
+                            <p id="flocTotalPower" class="text-xl font-bold text-emerald-700">0 kW</p>
+                        </div>
+                        <div class="p-3 bg-teal-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Gt Product (Total)</p>
+                            <p id="flocGtTotal" class="text-xl font-bold text-teal-700">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Stage Details -->
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Stage Details (Tapered G)</h4>
+                    <div id="stageDetails" class="space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Power Summary -->
+                <div class="result-gradient rounded-2xl p-5 text-white">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt"></i> Total Power Requirement
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/80">Rapid Mix</p>
+                            <p id="powerRapid" class="text-xl font-bold">0 kW</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/80">Flocculation</p>
+                            <p id="powerFloc" class="text-xl font-bold">0 kW</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/80">Total Installed</p>
+                            <p id="powerTotal" class="text-2xl font-bold">0 kW</p>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3 text-center">
+                            <p class="text-xs text-white/80">Annual Energy</p>
+                            <p id="annualEnergy" class="text-xl font-bold">0 kWh</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- G-Value Chart -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">G-Value Profile</h3>
+                    <div style="height: 200px;"><canvas id="gValueChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // Dynamic viscosity (Pa·s) based on temperature
+            const getViscosity = (temp) => {
+                // Simplified formula for water viscosity
+                return 0.001 * Math.exp(-0.0239 * (temp - 20));
+            };
+
+            let gValueChart;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initChart();
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.querySelectorAll('input, select').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function initChart() {
+                const ctx = document.getElementById('gValueChart').getContext('2d');
+                gValueChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Rapid Mix', 'Floc Stage 1', 'Floc Stage 2', 'Floc Stage 3'],
+                        datasets: [{
+                            label: 'G-Value (s⁻¹)',
+                            data: [0, 0, 0, 0],
+                            backgroundColor: ['#eab308', '#22c55e', '#14b8a6', '#06b6d4'],
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'G-Value (s⁻¹)' } } }
+                    }
+                });
+            }
+
+            function calculate() {
+                const Q = parseFloat(document.getElementById('flowRate').value) / 3600; // m³/s
+                const temp = parseFloat(document.getElementById('temperature').value);
+                const density = parseFloat(document.getElementById('density').value);
+                const mu = getViscosity(temp); // Dynamic viscosity
+
+                // Rapid Mix
+                const rapidT = parseFloat(document.getElementById('rapidMixTime').value); // seconds
+                const rapidG = parseFloat(document.getElementById('rapidMixG').value);
+                const rapidV = Q * rapidT; // m³
+                const rapidVLiters = rapidV * 1000;
+                
+                // Power: P = μ × G² × V
+                const rapidPower = mu * Math.pow(rapidG, 2) * rapidV / 1000; // kW
+                const rapidMotor = rapidPower * 1.25; // 25% safety factor
+                const rapidGt = rapidG * rapidT;
+
+                // Dimensions (cubic tank)
+                const rapidSide = Math.pow(rapidV, 1/3);
+                
+                // Impeller (D = 0.3-0.5 × tank width)
+                const impellerD = rapidSide * 0.4;
+                // Tip speed = π × D × N, assume N for target G
+                const tipSpeed = 3.5; // typical 3-5 m/s
+
+                // Flocculation
+                const flocStages = parseInt(document.getElementById('flocStages').value);
+                const flocTime = parseFloat(document.getElementById('flocTime').value) * 60; // seconds
+                const flocGStart = parseFloat(document.getElementById('flocGStart').value);
+                const flocGEnd = parseFloat(document.getElementById('flocGEnd').value);
+                
+                const flocV = Q * flocTime; // m³
+                const stageTime = flocTime / flocStages;
+                const stageV = flocV / flocStages;
+
+                // Tapered G-values (geometric progression)
+                const gRatio = Math.pow(flocGEnd / flocGStart, 1 / (flocStages - 1));
+                const stageData = [];
+                let flocTotalPower = 0;
+                let flocGtTotal = 0;
+                const chartLabels = ['Rapid Mix'];
+                const chartData = [rapidG];
+
+                for (let i = 0; i < flocStages; i++) {
+                    const stageG = flocGStart * Math.pow(gRatio, i);
+                    const stagePower = mu * Math.pow(stageG, 2) * stageV / 1000;
+                    const stageGt = stageG * stageTime;
+                    flocTotalPower += stagePower;
+                    flocGtTotal += stageGt;
+
+                    stageData.push({
+                        stage: i + 1,
+                        g: stageG,
+                        time: stageTime / 60,
+                        volume: stageV,
+                        power: stagePower,
+                        gt: stageGt
+                    });
+
+                    chartLabels.push(`Floc Stage ${i + 1}`);
+                    chartData.push(Math.round(stageG));
+                }
+
+                const flocMotorTotal = flocTotalPower * 1.25;
+
+                // Basin dimensions (rectangular, L:W = 2:1, depth 3-4m)
+                const flocDepth = 3.5;
+                const flocArea = flocV / flocDepth;
+                const flocWidth = Math.sqrt(flocArea / 2);
+                const flocLength = flocWidth * 2;
+
+                // Power summary
+                const totalPower = rapidMotor + flocMotorTotal;
+                const annualEnergy = totalPower * 0.8 * 8760; // 80% load factor
+
+                // Update UI
+                document.getElementById('rapidVolume').textContent = rapidVLiters.toFixed(0) + ' L';
+                document.getElementById('rapidDimensions').textContent = `${rapidSide.toFixed(2)} × ${rapidSide.toFixed(2)} × ${rapidSide.toFixed(2)} m`;
+                document.getElementById('rapidPower').textContent = rapidPower.toFixed(3) + ' kW';
+                document.getElementById('rapidMotor').textContent = rapidMotor.toFixed(2) + ' kW';
+                document.getElementById('rapidGt').textContent = rapidGt.toFixed(0);
+                document.getElementById('impellerDia').textContent = impellerD.toFixed(2) + ' m';
+                document.getElementById('tipSpeed').textContent = tipSpeed.toFixed(1) + ' m/s';
+
+                document.getElementById('flocVolume').textContent = flocV.toFixed(1) + ' m³';
+                document.getElementById('flocDimensions').textContent = `${flocLength.toFixed(1)} × ${flocWidth.toFixed(1)} × ${flocDepth} m`;
+                document.getElementById('flocTotalPower').textContent = flocTotalPower.toFixed(3) + ' kW';
+                document.getElementById('flocGtTotal').textContent = flocGtTotal.toFixed(0);
+
+                // Stage details
+                const stageContainer = document.getElementById('stageDetails');
+                stageContainer.innerHTML = stageData.map(s => `
+                    <div class="stage-card bg-gray-50 p-3 rounded-lg grid grid-cols-5 gap-2 text-sm">
+                        <div><span class="text-gray-500">Stage ${s.stage}</span></div>
+                        <div><span class="text-gray-600">G:</span> <span class="font-bold text-green-700">${s.g.toFixed(0)} s⁻¹</span></div>
+                        <div><span class="text-gray-600">Time:</span> <span class="font-bold">${s.time.toFixed(1)} min</span></div>
+                        <div><span class="text-gray-600">Power:</span> <span class="font-bold text-orange-600">${(s.power * 1000).toFixed(1)} W</span></div>
+                        <div><span class="text-gray-600">Gt:</span> <span class="font-bold">${s.gt.toFixed(0)}</span></div>
+                    </div>
+                `).join('');
+
+                // Power summary
+                document.getElementById('powerRapid').textContent = rapidMotor.toFixed(2) + ' kW';
+                document.getElementById('powerFloc').textContent = flocMotorTotal.toFixed(2) + ' kW';
+                document.getElementById('powerTotal').textContent = totalPower.toFixed(2) + ' kW';
+                document.getElementById('annualEnergy').textContent = (annualEnergy / 1000).toFixed(0) + ' MWh';
+
+                // Update chart
+                gValueChart.data.labels = chartLabels;
+                gValueChart.data.datasets[0].data = chartData;
+                gValueChart.update();
+            }
+        })();
+    </script>
+</body>
+</html>
