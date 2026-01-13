@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBR Calculator Engine | EEPL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --secondary: #64748b;
+            --accent: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f0fdf4;
+            --card-bg: #ffffff;
+            --border-color: #d1fae5;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            margin: 0;
+            padding: 20px;
+            color: var(--accent);
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: white;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 8px 0 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+        }
+
+        .design-studio {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 2px solid var(--border-color);
+            background: linear-gradient(to right, #f0fdf4, #ffffff);
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 14px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            pointer-events: none;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: var(--primary-dark);
+        }
+
+        .preset-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
+        }
+
+        .result-block {
+            background: linear-gradient(135deg, #f0fdf4, #ffffff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-label {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff, #f0fdf4);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
+            border-color: var(--primary);
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border: 2px solid #fed7aa;
+            color: #c2410c;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .warning-item {
+            margin-bottom: 6px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-weight: 500;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #bbf7d0;
+            color: #166534;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .info-badge {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent);
+        }
+
+        table tr:hover {
+            background: #f0fdf4;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1><i class="fas fa-filter"></i> MBR Calculator Engine</h1>
+        <p>Membrane Bioreactor Design | F/M Ratio | Membrane Flux | Aeration Optimization</p>
+    </div>
+
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-sliders-h"></i> Design Parameters</div>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Presets -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-magic"></i> Quick Presets</div>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="MBREngine.loadPreset('municipal')">Municipal WW</button>
+                            <button class="preset-btn" onclick="MBREngine.loadPreset('industrial')">Industrial</button>
+                            <button class="preset-btn" onclick="MBREngine.loadPreset('high_strength')">High Strength</button>
+                            <button class="preset-btn" onclick="MBREngine.loadPreset('low_strength')">Low Strength</button>
+                        </div>
+                    </div>
+
+                    <!-- Flow & Loading -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-tint"></i> Flow & Loading</div>
+                        <div class="input-group">
+                            <label>Design Flow Rate</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="flow" value="100" step="1">
+                                <span class="unit-badge">m³/day</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Influent BOD</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="bod_in" value="250" step="10">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Influent COD</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="cod_in" value="500" step="10">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Influent TSS</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="tss_in" value="200" step="10">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MBR Operating Parameters -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-cogs"></i> MBR Operation</div>
+                        <div class="input-group">
+                            <label>Target F/M Ratio</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="fm_ratio" value="0.1" step="0.01">
+                                <span class="unit-badge">kg/kg/d</span>
+                            </div>
+                            <div class="info-badge">Typical: 0.05-0.15</div>
+                        </div>
+                        <div class="input-group">
+                            <label>MLSS Concentration</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="mlss" value="10000" step="100">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                            <div class="info-badge">Typical: 8,000-12,000</div>
+                        </div>
+                        <div class="input-group">
+                            <label>SRT (Sludge Retention Time)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="srt" value="20" step="1">
+                                <span class="unit-badge">days</span>
+                            </div>
+                            <div class="info-badge">Typical: 15-30 days</div>
+                        </div>
+                        <div class="input-group">
+                            <label>MLVSS/MLSS Ratio</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="mlvss_ratio" value="0.75" step="0.01">
+                                <span class="unit-badge">ratio</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Membrane Parameters -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-layer-group"></i> Membrane Design</div>
+                        <div class="input-group">
+                            <label>Target Net Flux</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="flux" value="20" step="1">
+                                <span class="unit-badge">LMH</span>
+                            </div>
+                            <div class="info-badge">Typical: 15-25 LMH</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Operating Pressure (TMP)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="tmp" value="0.3" step="0.05">
+                                <span class="unit-badge">bar</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Membrane Cleaning Frequency</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="clean_freq" value="30" step="5">
+                                <span class="unit-badge">days</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aeration -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-wind"></i> Aeration System</div>
+                        <div class="input-group">
+                            <label>DO Target</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="do_target" value="2" step="0.1">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Temperature</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="temp" value="25" step="1">
+                                <span class="unit-badge">°C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="action-btn" onclick="MBREngine.calculate()">
+                        <i class="fas fa-calculator"></i> Design MBR System
+                    </button>
+                    <br>
+                    <button class="action-btn secondary" onclick="MBREngine.exportPDF()">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div id="results-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-chart-line"></i> Design Results</div>
+                </div>
+                <div class="panel-body">
+                    <div class="warning-box" id="warnings"></div>
+                    <div class="success-box" id="success"></div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_tank_vol">--</div>
+                            <div class="kpi-label">Tank Volume (m³)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_membrane_area">--</div>
+                            <div class="kpi-label">Membrane Area (m²)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_air_req">--</div>
+                            <div class="kpi-label">Total Air (Nm³/hr)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_waste_sludge">--</div>
+                            <div class="kpi-label">Waste Sludge (m³/d)</div>
+                        </div>
+                    </div>
+
+                    <!-- Biological Design -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 1</span> Biological Design (F/M Ratio)</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">BOD Loading</span>
+                            <span class="calc-val" id="res_bod_load">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Required MLVSS Mass</span>
+                            <span class="calc-val" id="res_mlvss_mass">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Required MLSS Mass</span>
+                            <span class="calc-val" id="res_mlss_mass">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Bioreactor Volume</span>
+                            <span class="calc-val" id="res_tank_vol">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Hydraulic Retention Time (HRT)</span>
+                            <span class="calc-val" id="res_hrt">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual F/M Ratio</span>
+                            <span class="calc-val" id="res_fm_actual">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Volumetric Loading</span>
+                            <span class="calc-val" id="res_vol_load">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Membrane System -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 2</span> Membrane System Design</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Permeate Flow</span>
+                            <span class="calc-val" id="res_permeate_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Membrane Area Required</span>
+                            <span class="calc-val" id="res_membrane_area">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Number of Membrane Modules (40 m² ea.)</span>
+                            <span class="calc-val" id="res_modules">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual Operating Flux</span>
+                            <span class="calc-val" id="res_actual_flux">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Membrane Cleaning Schedule</span>
+                            <span class="calc-val" id="res_cleaning">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">CEB (Chemically Enhanced Backwash)</span>
+                            <span class="calc-val" id="res_ceb">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">CIP (Clean-In-Place)</span>
+                            <span class="calc-val" id="res_cip">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Aeration Requirements -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 3</span> Aeration Requirements</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">O₂ Required for BOD Removal</span>
+                            <span class="calc-val" id="res_o2_bod">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">O₂ Required for Nitrification</span>
+                            <span class="calc-val" id="res_o2_nit">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total O₂ Requirement</span>
+                            <span class="calc-val" id="res_o2_total">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Fine Bubble Aeration (Process)</span>
+                            <span class="calc-val" id="res_air_fine">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Coarse Bubble Aeration (Membrane Scouring)</span>
+                            <span class="calc-val" id="res_air_coarse">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Air Requirement</span>
+                            <span class="calc-val" id="res_air_total">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Blower Power (Estimated)</span>
+                            <span class="calc-val" id="res_blower_power">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Sludge Production -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 4</span> Sludge Production & Wasting</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Observed Yield (Yobs)</span>
+                            <span class="calc-val" id="res_yobs">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Net Sludge Production</span>
+                            <span class="calc-val" id="res_sludge_prod">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Waste Sludge Flow Rate</span>
+                            <span class="calc-val" id="res_waste_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Waste Sludge Daily Volume</span>
+                            <span class="calc-val" id="res_waste_daily">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual SRT (Verification)</span>
+                            <span class="calc-val" id="res_srt_actual">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Equipment Summary -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 5</span> Equipment Summary</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Equipment</th>
+                                    <th>Specification</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipment_table">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #94a3b8;">Run calculation to generate</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Performance Chart -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Analysis</span> MBR Performance Metrics</h4>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.MBREngine = {
+            val: function(id) {
+                return parseFloat(document.getElementById(id).value) || 0;
+            },
+            set: function(id, text) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            },
+
+            loadPreset: function(type) {
+                const presets = {
+                    municipal: {
+                        flow: 100, bod_in: 250, cod_in: 500, tss_in: 200,
+                        fm_ratio: 0.1, mlss: 10000, srt: 20, mlvss_ratio: 0.75,
+                        flux: 20, tmp: 0.3, clean_freq: 30, do_target: 2, temp: 25
+                    },
+                    industrial: {
+                        flow: 150, bod_in: 400, cod_in: 800, tss_in: 300,
+                        fm_ratio: 0.08, mlss: 12000, srt: 25, mlvss_ratio: 0.7,
+                        flux: 18, tmp: 0.35, clean_freq: 25, do_target: 2.5, temp: 30
+                    },
+                    high_strength: {
+                        flow: 80, bod_in: 600, cod_in: 1200, tss_in: 400,
+                        fm_ratio: 0.06, mlss: 12000, srt: 30, mlvss_ratio: 0.7,
+                        flux: 15, tmp: 0.4, clean_freq: 20, do_target: 3, temp: 28
+                    },
+                    low_strength: {
+                        flow: 200, bod_in: 150, cod_in: 300, tss_in: 150,
+                        fm_ratio: 0.12, mlss: 8000, srt: 15, mlvss_ratio: 0.8,
+                        flux: 22, tmp: 0.25, clean_freq: 35, do_target: 1.5, temp: 22
+                    }
+                };
+
+                const preset = presets[type];
+                if (preset) {
+                    Object.keys(preset).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = preset[key];
+                    });
+                    this.calculate();
+                }
+            },
+
+            calculate: function() {
+                try {
+                    // Inputs
+                    const Q = this.val('flow'); // m3/day
+                    const BOD_in = this.val('bod_in'); // mg/L
+                    const COD_in = this.val('cod_in'); // mg/L
+                    const TSS_in = this.val('tss_in'); // mg/L
+                    const FM_target = this.val('fm_ratio'); // kg BOD/kg MLVSS/day
+                    const MLSS = this.val('mlss'); // mg/L
+                    const SRT = this.val('srt'); // days
+                    const MLVSS_ratio = this.val('mlvss_ratio'); // ratio
+                    const Flux = this.val('flux'); // LMH
+                    const TMP = this.val('tmp'); // bar
+                    const CleanFreq = this.val('clean_freq'); // days
+                    const DO = this.val('do_target'); // mg/L
+                    const Temp = this.val('temp'); // °C
+
+                    // STEP 1: Biological Design (F/M Ratio)
+                    // F/M = (Q * BOD) / (V * MLVSS)
+                    // Rearrange: V = (Q * BOD) / (F/M * MLVSS)
+
+                    const BOD_load = (Q * BOD_in) / 1000; // kg/day
+                    const MLVSS = MLSS * MLVSS_ratio; // mg/L
+
+                    // Required MLVSS mass = BOD_load / F/M
+                    const MLVSS_mass = BOD_load / FM_target; // kg
+                    const MLSS_mass = MLVSS_mass / MLVSS_ratio; // kg
+
+                    // Tank Volume = MLSS_mass / MLSS concentration
+                    const TankVol = (MLSS_mass * 1000) / MLSS; // m³
+
+                    const HRT = TankVol / Q; // days
+                    const FM_actual = BOD_load / MLVSS_mass; // kg/kg/day
+                    const Vol_load = BOD_load / TankVol; // kg BOD/m³/day
+
+                    // STEP 2: Membrane System
+                    const Permeate_flow = Q / 24; // m³/hr
+                    const Membrane_area = (Permeate_flow * 1000) / Flux; // m²
+                    const Modules = Math.ceil(Membrane_area / 40); // 40 m² per module
+                    const Actual_flux = (Permeate_flow * 1000) / (Modules * 40); // LMH
+
+                    // STEP 3: Aeration Requirements
+                    // O2 for BOD removal: 1 kg O2 per kg BOD removed (assuming 90% removal)
+                    const BOD_removed = BOD_load * 0.9; // kg/day
+                    const O2_BOD = BOD_removed * 1.0; // kg/day
+
+                    // O2 for nitrification: 4.57 kg O2 per kg NH3-N (assuming 30 mg/L NH3-N)
+                    const TKN = BOD_in * 0.12; // Assume TKN = 12% of BOD
+                    const NH3_load = (Q * TKN) / 1000; // kg/day
+                    const O2_nit = NH3_load * 4.57; // kg/day
+
+                    const O2_total = O2_BOD + O2_nit; // kg/day
+
+                    // Air requirement (assuming 2% O2 transfer efficiency for fine bubble)
+                    const OTE_fine = 0.20; // 20% oxygen transfer efficiency
+                    const Air_fine = (O2_total / 0.232) / OTE_fine / 24; // Nm³/hr (air is 23.2% O2)
+
+                    // Coarse bubble for membrane scouring: 0.5-0.6 Nm³/m²/hr
+                    const SADm = 0.55; // Specific Aeration Demand per m² membrane
+                    const Air_coarse = Membrane_area * SADm; // Nm³/hr
+
+                    const Air_total = Air_fine + Air_coarse; // Nm³/hr
+
+                    // Blower power (rough estimate: 0.02 kW per Nm³/hr)
+                    const Blower_power = Air_total * 0.02; // kW
+
+                    // STEP 4: Sludge Production & Wasting
+                    // Observed yield: Yobs = Y / (1 + Kd * SRT)
+                    const Y = 0.6; // Maximum yield coefficient
+                    const Kd = 0.06; // Endogenous decay coefficient (1/day)
+                    const Yobs = Y / (1 + Kd * SRT); // kg VSS/kg BOD
+
+                    const Sludge_prod = BOD_removed * Yobs; // kg VSS/day
+
+                    // Waste sludge = MLSS mass / SRT
+                    const Waste_mass = MLSS_mass / SRT; // kg/day
+                    const Waste_flow = (Waste_mass * 1000) / MLSS; // m³/day
+
+                    const SRT_actual = MLSS_mass / Waste_mass; // days (verification)
+
+                    // Update UI - KPIs
+                    this.set('kpi_tank_vol', TankVol.toFixed(1));
+                    this.set('kpi_membrane_area', Membrane_area.toFixed(0));
+                    this.set('kpi_air_req', Air_total.toFixed(1));
+                    this.set('kpi_waste_sludge', Waste_flow.toFixed(2));
+
+                    // Biological Design
+                    this.set('res_bod_load', BOD_load.toFixed(2) + ' kg/day');
+                    this.set('res_mlvss_mass', MLVSS_mass.toFixed(1) + ' kg');
+                    this.set('res_mlss_mass', MLSS_mass.toFixed(1) + ' kg');
+                    this.set('res_tank_vol', TankVol.toFixed(1) + ' m³');
+                    this.set('res_hrt', (HRT * 24).toFixed(1) + ' hours');
+                    this.set('res_fm_actual', FM_actual.toFixed(3) + ' kg BOD/kg MLVSS/day');
+                    this.set('res_vol_load', Vol_load.toFixed(2) + ' kg BOD/m³/day');
+
+                    // Membrane System
+                    this.set('res_permeate_flow', Permeate_flow.toFixed(2) + ' m³/hr');
+                    this.set('res_membrane_area', Membrane_area.toFixed(1) + ' m²');
+                    this.set('res_modules', Modules + ' modules');
+                    this.set('res_actual_flux', Actual_flux.toFixed(1) + ' LMH');
+                    this.set('res_cleaning', 'Every ' + CleanFreq + ' days');
+                    this.set('res_ceb', 'Every 2-3 days (NaOCl backwash)');
+                    this.set('res_cip', 'Every ' + CleanFreq + ' days (Citric Acid + NaOCl)');
+
+                    // Aeration
+                    this.set('res_o2_bod', O2_BOD.toFixed(1) + ' kg/day');
+                    this.set('res_o2_nit', O2_nit.toFixed(1) + ' kg/day');
+                    this.set('res_o2_total', O2_total.toFixed(1) + ' kg/day');
+                    this.set('res_air_fine', Air_fine.toFixed(1) + ' Nm³/hr');
+                    this.set('res_air_coarse', Air_coarse.toFixed(1) + ' Nm³/hr');
+                    this.set('res_air_total', Air_total.toFixed(1) + ' Nm³/hr');
+                    this.set('res_blower_power', Blower_power.toFixed(1) + ' kW');
+
+                    // Sludge Production
+                    this.set('res_yobs', Yobs.toFixed(3) + ' kg VSS/kg BOD');
+                    this.set('res_sludge_prod', Sludge_prod.toFixed(2) + ' kg VSS/day');
+                    this.set('res_waste_flow', (Waste_flow * 1000 / 24).toFixed(2) + ' L/hr');
+                    this.set('res_waste_daily', Waste_flow.toFixed(2) + ' m³/day');
+                    this.set('res_srt_actual', SRT_actual.toFixed(1) + ' days');
+
+                    // Equipment Table
+                    const equipment = [
+                        { name: 'MBR Tank', spec: `${TankVol.toFixed(0)} m³ with baffles`, qty: 1 },
+                        { name: 'Membrane Modules', spec: `40 m² flat sheet/hollow fiber`, qty: Modules },
+                        { name: 'Fine Bubble Diffusers', spec: `${Air_fine.toFixed(0)} Nm³/hr capacity`, qty: Math.ceil(TankVol / 50) },
+                        { name: 'Coarse Bubble Diffusers', spec: `${Air_coarse.toFixed(0)} Nm³/hr for scouring`, qty: Modules },
+                        { name: 'Blower Package', spec: `${(Air_total * 1.2).toFixed(0)} Nm³/hr, ${(Blower_power * 1.2).toFixed(0)} kW`, qty: 2 },
+                        { name: 'Permeate Pump', spec: `${Permeate_flow.toFixed(1)} m³/hr @ ${TMP} bar`, qty: 2 },
+                        { name: 'Waste Sludge Pump', spec: `${(Waste_flow * 1000 / 24).toFixed(0)} L/hr`, qty: 1 },
+                        { name: 'CIP Cleaning System', spec: `500 L tank with dosing pumps`, qty: 1 }
+                    ];
+
+                    let equipHTML = '';
+                    equipment.forEach(eq => {
+                        equipHTML += `<tr><td>${eq.name}</td><td>${eq.spec}</td><td>${eq.qty}</td></tr>`;
+                    });
+                    document.getElementById('equipment_table').innerHTML = equipHTML;
+
+                    // Warnings
+                    const warnings = [];
+                    if (FM_actual < 0.05 || FM_actual > 0.15) warnings.push('⚠️ F/M ratio outside typical range (0.05-0.15)');
+                    if (MLSS < 8000 || MLSS > 12000) warnings.push('⚠️ MLSS outside typical range (8,000-12,000 mg/L)');
+                    if (SRT < 15 || SRT > 30) warnings.push('⚠️ SRT outside typical range (15-30 days)');
+                    if (Actual_flux < 15 || Actual_flux > 25) warnings.push('⚠️ Flux outside typical range (15-25 LMH)');
+                    if (HRT < 0.3 || HRT > 1) warnings.push('⚠️ HRT outside typical range (8-24 hours)');
+                    if (Vol_load > 1.5) warnings.push('⚠️ High volumetric loading - may impact treatment');
+
+                    const warningBox = document.getElementById('warnings');
+                    if (warnings.length > 0) {
+                        warningBox.innerHTML = warnings.map(w => `<div class="warning-item">${w}</div>`).join('');
+                        warningBox.className = 'warning-box show';
+                    } else {
+                        warningBox.className = 'warning-box';
+                    }
+
+                    const successBox = document.getElementById('success');
+                    if (warnings.length === 0) {
+                        successBox.innerHTML = '<i class="fas fa-check-circle"></i> MBR design parameters are within recommended ranges!';
+                        successBox.className = 'success-box show';
+                    } else {
+                        successBox.className = 'success-box';
+                    }
+
+                    // Update Chart
+                    this.updateChart(MLSS, Flux, HRT * 24, SRT, FM_actual * 1000, Vol_load);
+
+                } catch (error) {
+                    alert('Calculation error: ' + error.message);
+                }
+            },
+
+            updateChart: function(mlss, flux, hrt, srt, fm, vol_load) {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+
+                if (window.mbrChart) {
+                    window.mbrChart.destroy();
+                }
+
+                window.mbrChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['MLSS (÷100)', 'Flux', 'HRT', 'SRT', 'F/M (×1000)', 'Vol Load'],
+                        datasets: [{
+                            label: 'MBR Performance Parameters',
+                            data: [
+                                mlss / 100,
+                                flux,
+                                hrt,
+                                srt,
+                                fm,
+                                vol_load
+                            ],
+                            backgroundColor: [
+                                'rgba(16, 185, 129, 0.7)',
+                                'rgba(5, 150, 105, 0.7)',
+                                'rgba(52, 211, 153, 0.7)',
+                                'rgba(110, 231, 183, 0.7)',
+                                'rgba(167, 243, 208, 0.7)',
+                                'rgba(6, 95, 70, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(16, 185, 129, 1)',
+                                'rgba(5, 150, 105, 1)',
+                                'rgba(52, 211, 153, 1)',
+                                'rgba(110, 231, 183, 1)',
+                                'rgba(167, 243, 208, 1)',
+                                'rgba(6, 95, 70, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'MBR Operating Parameters',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            exportPDF: function() {
+                const element = document.getElementById('results-panel');
+                const opt = {
+                    margin: 10,
+                    filename: 'MBR_Design_Report.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            }
+        };
+
+        // Auto-calculate on input change
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => MBREngine.calculate());
+            });
+
+            // Initial calculation
+            MBREngine.calculate();
+        });
+    </script>
+</body>
+
+</html>

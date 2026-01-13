@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boiler Feed Water Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #dc2626; --secondary: #f97316; --accent: #fbbf24; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #b91c1c 100%); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .input-field { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
+        .nav-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .pass { background: #f0fdf4; color: #166534; }
+        .fail { background: #fef2f2; color: #991b1b; }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" target="_top" class="flex items-center gap-2 text-white/80 hover:text-white"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-semibold">🔥 Boiler Feed Water Calculator</h1>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20"><i class="fas fa-print mr-1"></i>Print</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Input Panel -->
+            <div class="space-y-6 no-print">
+                <!-- Boiler Specifications -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-fire text-red-500"></i> Boiler Specifications
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Pressure (kg/cm²)</label>
+                            <select id="pressure" class="input-field">
+                                <option value="10">0-20 kg/cm² (Low Pressure)</option>
+                                <option value="30" selected>21-40 kg/cm² (Medium Pressure)</option>
+                                <option value="50">41-60 kg/cm² (High Pressure)</option>
+                                <option value="80">61-100 kg/cm² (Very High)</option>
+                                <option value="120">100+ kg/cm² (Supercritical)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Steam Generation (TPH)</label>
+                            <input type="number" id="steamRate" value="10" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Boiler Efficiency (%)</label>
+                            <input type="number" id="efficiency" value="85" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Condensate Return (%)</label>
+                            <input type="number" id="condensateReturn" value="60" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedwater Quality -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-tint text-blue-500"></i> Feedwater Quality
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">TDS (ppm)</label>
+                            <input type="number" id="feedTds" value="50" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Hardness (ppm)</label>
+                            <input type="number" id="feedHardness" value="2" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Silica (ppm)</label>
+                            <input type="number" id="feedSilica" value="5" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Dissolved O₂ (ppm)</label>
+                            <input type="number" id="feedO2" value="0.02" step="0.01" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Iron (ppm)</label>
+                            <input type="number" id="feedIron" value="0.05" step="0.01" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">pH</label>
+                            <input type="number" id="feedPh" value="8.5" step="0.1" class="input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fuel & Economics -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-rupee-sign text-amber-500"></i> Fuel & Economics
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Fuel Type</label>
+                            <select id="fuelType" class="input-field">
+                                <option value="naturalgas">Natural Gas (CV: 8500 kcal/m³)</option>
+                                <option value="furnaceoil" selected>Furnace Oil (CV: 10000 kcal/kg)</option>
+                                <option value="coal">Coal (CV: 4500 kcal/kg)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Fuel Cost (₹/unit)</label>
+                            <input type="number" id="fuelCost" value="45" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Operating Hours/Year</label>
+                            <input type="number" id="opHours" value="7920" class="input-field">
+                        </div>
+                    </div>
+                    <button id="calculateBtn" class="w-full mt-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold py-2.5 rounded-lg hover:from-red-700 hover:to-orange-700">
+                        <i class="fas fa-calculator mr-2"></i> Calculate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="xl:col-span-2 space-y-6">
+                <!-- Water Quality Limits (IS 10392) -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-clipboard-check text-green-500"></i> Water Quality Limits (IS 10392)
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="py-2 px-3 text-left">Parameter</th>
+                                    <th class="py-2 px-3 text-right">Feedwater</th>
+                                    <th class="py-2 px-3 text-right">Max Limit</th>
+                                    <th class="py-2 px-3 text-right">Drum Water Limit</th>
+                                    <th class="py-2 px-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="limitsTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="complianceStatus" class="mt-4 p-3 rounded-lg text-center font-semibold"></div>
+                </div>
+
+                <!-- Blowdown Calculation -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-tachometer-alt text-amber-500"></i> Blowdown & Heat Loss
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-4 bg-amber-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Blowdown Rate</p>
+                            <p id="blowdownPct" class="text-2xl font-bold text-amber-700">0%</p>
+                        </div>
+                        <div class="p-4 bg-orange-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Blowdown Flow</p>
+                            <p id="blowdownFlow" class="text-2xl font-bold text-orange-700">0</p>
+                            <p class="text-xs text-gray-500">kg/hr</p>
+                        </div>
+                        <div class="p-4 bg-red-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Heat Loss</p>
+                            <p id="heatLoss" class="text-2xl font-bold text-red-700">0</p>
+                            <p class="text-xs text-gray-500">kcal/hr</p>
+                        </div>
+                        <div class="p-4 bg-rose-50 rounded-lg text-center">
+                            <p class="text-xs text-gray-600">Fuel Waste/Day</p>
+                            <p id="fuelWaste" class="text-2xl font-bold text-rose-700">₹0</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-3 gap-4 text-sm">
+                        <div class="p-3 bg-gray-50 rounded-lg text-center">
+                            <p class="text-gray-600">Makeup Water</p>
+                            <p id="makeupFlow" class="text-lg font-bold">0 kg/hr</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg text-center">
+                            <p class="text-gray-600">Feedwater Flow</p>
+                            <p id="feedFlow" class="text-lg font-bold">0 kg/hr</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg text-center">
+                            <p class="text-gray-600">Annual Blowdown Loss</p>
+                            <p id="annualBdCost" class="text-lg font-bold text-red-600">₹0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chemical Treatment -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <i class="fas fa-flask text-purple-500"></i> Chemical Dosing
+                        </h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="p-3 bg-purple-50 rounded-lg">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700">Trisodium Phosphate</span>
+                                    <span id="phosphateDose" class="font-bold">0 kg/day</span>
+                                </div>
+                                <p class="text-xs text-gray-500">Maintains 10-30 ppm PO₄ in drum</p>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded-lg">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700">Oxygen Scavenger</span>
+                                    <span id="scavengerDose" class="font-bold">0 L/day</span>
+                                </div>
+                                <p class="text-xs text-gray-500">8:1 ratio + 0.1 ppm residual</p>
+                            </div>
+                            <div class="p-3 bg-green-50 rounded-lg">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700">Condensate Amine</span>
+                                    <span id="amineDose" class="font-bold">0 L/day</span>
+                                </div>
+                                <p class="text-xs text-gray-500">pH 8.5-9.5 in condensate</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-gradient-to-r from-red-600 to-orange-600 text-white">
+                        <h4 class="font-semibold mb-4">Annual Treatment Cost</h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-white/80">Phosphate (₹85/kg)</span>
+                                <span id="costPhosphate" class="font-bold">₹0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-white/80">O₂ Scavenger (₹380/L)</span>
+                                <span id="costScavenger" class="font-bold">₹0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-white/80">Amine (₹520/L)</span>
+                                <span id="costAmine" class="font-bold">₹0</span>
+                            </div>
+                            <hr class="border-white/30">
+                            <div class="flex justify-between text-lg">
+                                <span class="font-semibold">Total Chemical</span>
+                                <span id="costTotalChem" class="font-bold">₹0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-white/80">Blowdown Heat Loss</span>
+                                <span id="costBlowdown" class="font-bold">₹0</span>
+                            </div>
+                            <hr class="border-white/30">
+                            <div class="flex justify-between text-xl">
+                                <span class="font-bold">Grand Total</span>
+                                <span id="costGrand" class="font-bold">₹0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-yellow-500"></i> Recommendations
+                    </h3>
+                    <div id="recommendations" class="space-y-2 text-sm">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // Boiler water quality limits by pressure (IS 10392)
+            const LIMITS = {
+                10: { tds: 3500, silica: 150, hardness: 2, iron: 0.1, o2: 0.02, ph: [10, 12], drumTds: 3500 },
+                30: { tds: 3000, silica: 90, hardness: 1, iron: 0.05, o2: 0.01, ph: [10, 11.5], drumTds: 3000 },
+                50: { tds: 2500, silica: 40, hardness: 0.5, iron: 0.03, o2: 0.007, ph: [10, 11], drumTds: 2500 },
+                80: { tds: 500, silica: 8, hardness: 0.1, iron: 0.02, o2: 0.005, ph: [9.5, 10.5], drumTds: 500 },
+                120: { tds: 150, silica: 2, hardness: 0, iron: 0.01, o2: 0.003, ph: [9, 10], drumTds: 150 }
+            };
+
+            const FUEL = {
+                naturalgas: { cv: 8500, unit: 'm³' },
+                furnaceoil: { cv: 10000, unit: 'kg' },
+                coal: { cv: 4500, unit: 'kg' }
+            };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('calculateBtn').addEventListener('click', calculate);
+                document.querySelectorAll('input, select').forEach(el => el.addEventListener('change', calculate));
+                calculate();
+            });
+
+            function calculate() {
+                const pressure = parseInt(document.getElementById('pressure').value);
+                const steamRate = parseFloat(document.getElementById('steamRate').value) * 1000; // kg/hr
+                const efficiency = parseFloat(document.getElementById('efficiency').value) / 100;
+                const condensateReturn = parseFloat(document.getElementById('condensateReturn').value) / 100;
+
+                const feedTds = parseFloat(document.getElementById('feedTds').value);
+                const feedHardness = parseFloat(document.getElementById('feedHardness').value);
+                const feedSilica = parseFloat(document.getElementById('feedSilica').value);
+                const feedO2 = parseFloat(document.getElementById('feedO2').value);
+                const feedIron = parseFloat(document.getElementById('feedIron').value);
+                const feedPh = parseFloat(document.getElementById('feedPh').value);
+
+                const fuelType = document.getElementById('fuelType').value;
+                const fuelCost = parseFloat(document.getElementById('fuelCost').value);
+                const opHours = parseFloat(document.getElementById('opHours').value);
+
+                const limits = LIMITS[pressure];
+                const fuel = FUEL[fuelType];
+
+                // Makeup water requirement
+                const makeupFlow = steamRate * (1 - condensateReturn);
+
+                // Blowdown calculation based on TDS
+                // BD% = Feed TDS / (Drum TDS - Feed TDS) * 100
+                const drumTds = limits.drumTds;
+                const blowdownPct = (feedTds / (drumTds - feedTds)) * 100;
+                const blowdownFlow = steamRate * (blowdownPct / 100);
+
+                // Total feedwater = steam + blowdown
+                const feedFlow = steamRate + blowdownFlow;
+
+                // Heat loss from blowdown (kcal/hr)
+                // Assume drum at saturation temp, makeup at 30°C
+                const satTemp = 100 + (pressure * 0.8); // Approximate
+                const heatLoss = blowdownFlow * 1 * (satTemp - 30); // Cp = 1 kcal/kg°C
+
+                // Fuel waste
+                const fuelWastePerHr = heatLoss / (fuel.cv * efficiency);
+                const fuelWastePerDay = fuelWastePerHr * 24 * fuelCost;
+                const fuelWasteAnnual = fuelWastePerDay * (opHours / 24);
+
+                // Chemical dosing
+                // Phosphate: 20 ppm in drum, assume 50% blowdown loss
+                const phosphateKgDay = (20 * (steamRate + blowdownFlow) * 24) / 1e6 * 1.5;
+                // O2 scavenger: 8x dissolved O2 + 0.1 ppm residual
+                const scavengerDose = (8 * feedO2 + 0.1) * feedFlow * 24 / 1e6; // Tonnes
+                const scavengerLDay = scavengerDose * 1000 / 1.1; // L/day (density ~1.1)
+                // Amine: 0.5 ppm in steam
+                const amineLDay = (0.5 * steamRate * 24) / 1e6 * 1000 / 0.95;
+
+                // Annual costs
+                const daysYear = opHours / 24;
+                const costPhosphate = phosphateKgDay * 85 * daysYear;
+                const costScavenger = scavengerLDay * 380 * daysYear;
+                const costAmine = amineLDay * 520 * daysYear;
+                const costTotalChem = costPhosphate + costScavenger + costAmine;
+                const costGrand = costTotalChem + fuelWasteAnnual;
+
+                // Format helper
+                const fmtINR = n => '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+                // Update limits table
+                const params = [
+                    { name: 'TDS', feed: feedTds, limit: limits.tds, drum: drumTds, unit: 'ppm' },
+                    { name: 'Total Hardness', feed: feedHardness, limit: limits.hardness, drum: '<' + limits.hardness, unit: 'ppm' },
+                    { name: 'Silica', feed: feedSilica, limit: limits.silica, drum: limits.silica, unit: 'ppm' },
+                    { name: 'Dissolved O₂', feed: feedO2, limit: limits.o2, drum: '<0.007', unit: 'ppm' },
+                    { name: 'Iron', feed: feedIron, limit: limits.iron, drum: '<' + limits.iron, unit: 'ppm' },
+                    { name: 'pH', feed: feedPh, limit: limits.ph.join('-'), drum: limits.ph.join('-'), unit: '', isRange: true }
+                ];
+
+                let allPass = true;
+                document.getElementById('limitsTable').innerHTML = params.map(p => {
+                    let pass;
+                    if (p.isRange) {
+                        pass = p.feed >= limits.ph[0] - 1 && p.feed <= limits.ph[1];
+                    } else {
+                        pass = p.feed <= p.limit;
+                    }
+                    if (!pass) allPass = false;
+                    return `
+                        <tr class="border-b">
+                            <td class="py-2 px-3">${p.name}</td>
+                            <td class="py-2 px-3 text-right">${p.feed} ${p.unit}</td>
+                            <td class="py-2 px-3 text-right">${p.limit} ${p.unit}</td>
+                            <td class="py-2 px-3 text-right text-gray-500">${p.drum} ${p.unit}</td>
+                            <td class="py-2 px-3 text-center"><span class="px-2 py-1 rounded text-xs font-semibold ${pass ? 'pass' : 'fail'}">${pass ? '✓ PASS' : '✗ FAIL'}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+
+                const compStatus = document.getElementById('complianceStatus');
+                if (allPass) {
+                    compStatus.className = 'mt-4 p-3 rounded-lg text-center font-semibold pass';
+                    compStatus.innerHTML = '✓ Feedwater quality meets IS 10392 requirements for ' + pressure + ' kg/cm² boilers';
+                } else {
+                    compStatus.className = 'mt-4 p-3 rounded-lg text-center font-semibold fail';
+                    compStatus.innerHTML = '✗ Feedwater quality does NOT meet requirements - pretreatment needed';
+                }
+
+                // Update blowdown section
+                document.getElementById('blowdownPct').textContent = blowdownPct.toFixed(1) + '%';
+                document.getElementById('blowdownFlow').textContent = blowdownFlow.toFixed(0);
+                document.getElementById('heatLoss').textContent = (heatLoss/1000).toFixed(1) + 'k';
+                document.getElementById('fuelWaste').textContent = fmtINR(fuelWastePerDay);
+                document.getElementById('makeupFlow').textContent = makeupFlow.toFixed(0) + ' kg/hr';
+                document.getElementById('feedFlow').textContent = feedFlow.toFixed(0) + ' kg/hr';
+                document.getElementById('annualBdCost').textContent = fmtINR(fuelWasteAnnual);
+
+                // Chemical dosing
+                document.getElementById('phosphateDose').textContent = phosphateKgDay.toFixed(2) + ' kg/day';
+                document.getElementById('scavengerDose').textContent = scavengerLDay.toFixed(2) + ' L/day';
+                document.getElementById('amineDose').textContent = amineLDay.toFixed(2) + ' L/day';
+
+                // Costs
+                document.getElementById('costPhosphate').textContent = fmtINR(costPhosphate);
+                document.getElementById('costScavenger').textContent = fmtINR(costScavenger);
+                document.getElementById('costAmine').textContent = fmtINR(costAmine);
+                document.getElementById('costTotalChem').textContent = fmtINR(costTotalChem);
+                document.getElementById('costBlowdown').textContent = fmtINR(fuelWasteAnnual);
+                document.getElementById('costGrand').textContent = fmtINR(costGrand);
+
+                // Recommendations
+                const recs = [];
+                if (blowdownPct > 5) recs.push('⚠️ High blowdown rate (' + blowdownPct.toFixed(1) + '%). Consider improving feedwater TDS.');
+                if (feedTds > limits.tds * 0.8) recs.push('💡 Feedwater TDS is near limit. Monitor closely or add DM polisher.');
+                if (feedHardness > limits.hardness * 0.5) recs.push('⚠️ Hardness approaching limit. Check softener/DM plant performance.');
+                if (feedO2 > limits.o2) recs.push('🔴 Dissolved O₂ exceeds limit. Check deaerator operation.');
+                if (fuelWasteAnnual > 500000) recs.push('💰 Blowdown heat loss is significant (' + fmtINR(fuelWasteAnnual) + '/yr). Consider blowdown heat recovery.');
+                if (condensateReturn < 0.5) recs.push('♻️ Low condensate return (' + (condensateReturn*100).toFixed(0) + '%). Improving return reduces makeup & chemical costs.');
+                if (recs.length === 0) recs.push('✅ System operating within normal parameters.');
+
+                document.getElementById('recommendations').innerHTML = recs.map(r => 
+                    `<div class="p-3 bg-gray-50 rounded-lg">${r}</div>`
+                ).join('');
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Equipment Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #7c3aed; --secondary: #8b5cf6; --accent: #a78bfa; --success: #10b981; --warning: #f59e0b; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%); min-height: 100vh; }
+        .glass { backdrop-filter: blur(20px); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+        .card { background: rgba(255,255,255,0.98); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 20px 60px rgba(0,0,0,0.2); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 30px 80px rgba(0,0,0,0.25); }
+        .input-field { width: 100%; padding: 0.65rem 1rem; border: 2px solid #e2e8f0; border-radius: 0.75rem; font-size: 0.875rem; transition: all 0.2s; background: white; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(124,58,237,0.15); }
+        .nav-header { background: rgba(0,0,0,0.3); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .category-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .equipment-card { cursor: pointer; border: 2px solid transparent; position: relative; overflow: hidden; }
+        .equipment-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--accent)); transform: scaleX(0); transition: transform 0.3s; }
+        .equipment-card:hover::before { transform: scaleX(1); }
+        .equipment-card:hover { border-color: var(--primary); }
+        .equipment-card.selected { border-color: var(--primary); background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); }
+        .equipment-card.selected::before { transform: scaleX(1); }
+        .star { color: #fbbf24; }
+        .star.empty { color: #d1d5db; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; transition: all 0.2s; border: none; cursor: pointer; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(124,58,237,0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .modal-overlay { animation: fadeIn 0.2s ease-out; }
+        .modal-content { animation: slideUp 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+        .verified { background: #dcfce7; color: #166534; }
+        .premium { background: #fef3c7; color: #92400e; }
+        .tab { padding: 0.75rem 1.5rem; font-weight: 500; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+        .tab:hover { color: var(--primary); }
+        .tab.active { color: var(--primary); border-color: var(--primary); }
+        @media print { body { background: white !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="nav-header sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" target="_top" class="flex items-center gap-2 text-white/80 hover:text-white transition-colors"><i class="fas fa-arrow-left"></i><span class="hidden sm:inline">Dashboard</span></a>
+                <div class="h-6 w-px bg-white/20"></div>
+                <h1 class="text-white font-bold text-lg">🏭 Vendor Equipment Database</h1>
+                <span class="hidden md:inline text-xs bg-purple-500/30 text-purple-200 px-2 py-1 rounded-full">Premium Edition</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="compareCount" class="text-white/70 text-sm hidden sm:inline">0 selected</span>
+                <button id="compareBtn" disabled class="btn-primary text-sm py-2 px-4 disabled:hover:transform-none">
+                    <i class="fas fa-balance-scale mr-2"></i>Compare
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <!-- Hero Stats -->
+        <div class="glass rounded-2xl p-6 mb-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-white">
+            <div class="text-center">
+                <p class="text-3xl font-bold" id="statEquipment">0</p>
+                <p class="text-sm text-white/70">Equipment Items</p>
+            </div>
+            <div class="text-center">
+                <p class="text-3xl font-bold" id="statVendors">0</p>
+                <p class="text-sm text-white/70">Verified Vendors</p>
+            </div>
+            <div class="text-center">
+                <p class="text-3xl font-bold" id="statCategories">0</p>
+                <p class="text-sm text-white/70">Categories</p>
+            </div>
+            <div class="text-center">
+                <p class="text-3xl font-bold text-green-400">₹5L+</p>
+                <p class="text-sm text-white/70">Avg Savings</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <!-- Filters Panel -->
+            <div class="space-y-4 no-print">
+                <div class="card">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Search equipment, vendor..." class="input-field pl-11">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fas fa-th-large text-purple-500"></i> Category</h4>
+                    <div id="categoryFilters" class="space-y-2 text-sm"></div>
+                </div>
+
+                <div class="card">
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fas fa-building text-blue-500"></i> Vendor</h4>
+                    <div id="vendorFilters" class="space-y-2 text-sm max-h-40 overflow-y-auto"></div>
+                </div>
+
+                <div class="card">
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fas fa-rupee-sign text-green-500"></i> Price Range</h4>
+                    <select id="priceFilter" class="input-field">
+                        <option value="all">All Prices</option>
+                        <option value="0-100000">Under ₹1 Lakh</option>
+                        <option value="100000-500000">₹1-5 Lakhs</option>
+                        <option value="500000-2000000">₹5-20 Lakhs</option>
+                        <option value="2000000-10000000">₹20L-1 Crore</option>
+                        <option value="10000000-500000000">Above ₹1 Crore</option>
+                    </select>
+                </div>
+
+                <div class="card">
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fas fa-star text-yellow-500"></i> Rating</h4>
+                    <select id="ratingFilter" class="input-field">
+                        <option value="all">All Ratings</option>
+                        <option value="4.5">4.5+ Stars</option>
+                        <option value="4">4+ Stars</option>
+                        <option value="3">3+ Stars</option>
+                    </select>
+                </div>
+
+                <button onclick="resetFilters()" class="w-full py-2 text-sm text-purple-600 hover:text-purple-800 font-medium">
+                    <i class="fas fa-undo mr-1"></i> Reset Filters
+                </button>
+            </div>
+
+            <!-- Equipment Grid -->
+            <div class="xl:col-span-3">
+                <div class="mb-4 flex flex-wrap justify-between items-center gap-3">
+                    <p id="resultCount" class="text-white/80 text-sm font-medium">Showing 0 results</p>
+                    <div class="flex items-center gap-3">
+                        <select id="sortBy" class="input-field w-auto text-sm py-2">
+                            <option value="rating">⭐ Top Rated</option>
+                            <option value="name">A-Z Name</option>
+                            <option value="price-asc">💰 Price: Low</option>
+                            <option value="price-desc">💰 Price: High</option>
+                            <option value="vendor">🏢 Vendor</option>
+                        </select>
+                        <div class="flex bg-white rounded-lg overflow-hidden">
+                            <button id="viewGrid" class="p-2 px-3 text-purple-600 bg-purple-100"><i class="fas fa-th"></i></button>
+                            <button id="viewList" class="p-2 px-3 text-gray-400 hover:text-gray-600"><i class="fas fa-list"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div id="equipmentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4 modal-overlay">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-auto modal-content">
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <!-- Compare Modal -->
+    <div id="compareModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4 modal-overlay">
+        <div class="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-auto modal-content">
+            <div class="sticky top-0 bg-white p-5 border-b flex justify-between items-center z-10">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-balance-scale text-purple-500 mr-2"></i>Equipment Comparison</h3>
+                <button onclick="closeCompare()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"><i class="fas fa-times text-gray-600"></i></button>
+            </div>
+            <div id="compareContent" class="p-5"></div>
+        </div>
+    </div>
+
+    <script>
+    const EQUIPMENT_DB = [
+        // PUMPS - Expanded
+        { id: 1, name: 'Mega CPK', type: 'Centrifugal Pump', category: 'Pumps', vendor: 'KSB', country: 'Germany/India', capacity: '10-500 m³/hr', head: '10-150m', priceMin: 50000, priceMax: 500000, material: 'CI/SS304/SS316', leadTime: '4-6 weeks', warranty: '18 months', contact: '1800-123-4567', email: 'sales@ksb.in', rating: 4.8, reviews: 156, verified: true, premium: false, features: ['ISO 2858', 'Back Pull-Out', 'Mechanical Seal'], applications: ['Raw water', 'Process water', 'Cooling water'], image: 'pump' },
+        { id: 2, name: 'Etanorm SYT', type: 'Centrifugal Pump', category: 'Pumps', vendor: 'KSB', country: 'Germany/India', capacity: '5-200 m³/hr', head: '5-80m', priceMin: 40000, priceMax: 300000, material: 'CI/SS', leadTime: '3-4 weeks', warranty: '12 months', contact: '1800-123-4567', email: 'sales@ksb.in', rating: 4.6, reviews: 203, verified: true, premium: false, features: ['Standardized', 'Energy Efficient', 'Easy Maintenance'], applications: ['Water supply', 'Irrigation', 'Industrial'], image: 'pump' },
+        { id: 3, name: 'NB/NK Series', type: 'Centrifugal Pump', category: 'Pumps', vendor: 'Grundfos', country: 'Denmark', capacity: '2-400 m³/hr', head: '10-120m', priceMin: 60000, priceMax: 600000, material: 'CI/SS/Duplex', leadTime: '4-6 weeks', warranty: '24 months', contact: '1800-209-4567', email: 'sales@grundfos.in', rating: 4.9, reviews: 312, verified: true, premium: true, features: ['IE5 Motor', 'Smart Monitoring', 'Variable Speed'], applications: ['HVAC', 'Process', 'Water treatment'], image: 'pump' },
+        { id: 4, name: 'DME/DDA', type: 'Dosing Pump', category: 'Pumps', vendor: 'Grundfos', country: 'Denmark', capacity: '0.5-60 L/hr', head: 'Up to 16 bar', priceMin: 25000, priceMax: 150000, material: 'PP/PVDF/SS', leadTime: '2-3 weeks', warranty: '24 months', contact: '1800-209-4567', email: 'dosing@grundfos.in', rating: 4.7, reviews: 189, verified: true, premium: false, features: ['Digital Control', 'Flow Pacing', 'Auto Degas'], applications: ['Chemical dosing', 'pH control', 'Disinfection'], image: 'pump' },
+        { id: 5, name: 'Sigma Series', type: 'Dosing Pump', category: 'Pumps', vendor: 'ProMinent', country: 'Germany', capacity: '0.1-1000 L/hr', head: 'Up to 25 bar', priceMin: 35000, priceMax: 250000, material: 'PP/PVDF/SS316', leadTime: '3-4 weeks', warranty: '18 months', contact: '022-2763-5000', email: 'india@prominent.com', rating: 4.5, reviews: 98, verified: true, premium: false, features: ['Solenoid/Motor', 'Multi-layer Diaphragm', 'PTFE Wetted'], applications: ['Water treatment', 'Chemical industry', 'Food & Beverage'], image: 'pump' },
+        { id: 6, name: 'DB/KDB Series', type: 'Submersible Pump', category: 'Pumps', vendor: 'Kirloskar', country: 'India', capacity: '5-100 m³/hr', head: '5-50m', priceMin: 25000, priceMax: 200000, material: 'CI/SS', leadTime: '2-3 weeks', warranty: '12 months', contact: '020-2444-0770', email: 'pumps@kirloskar.com', rating: 4.3, reviews: 445, verified: true, premium: false, features: ['Dry Run Protection', 'Thermal Protection', 'Cast Iron Impeller'], applications: ['Drainage', 'Sewage', 'Dewatering'], image: 'pump' },
+        { id: 7, name: 'CRN Series', type: 'Vertical Multistage', category: 'Pumps', vendor: 'Grundfos', country: 'Denmark', capacity: '1-180 m³/hr', head: '10-250m', priceMin: 80000, priceMax: 800000, material: 'SS304/SS316', leadTime: '3-5 weeks', warranty: '24 months', contact: '1800-209-4567', email: 'sales@grundfos.in', rating: 4.8, reviews: 267, verified: true, premium: true, features: ['All SS Construction', 'Compact Design', 'High Efficiency'], applications: ['RO feed', 'Boiler feed', 'High pressure'], image: 'pump' },
+        
+        // BLOWERS - Expanded
+        { id: 10, name: 'Delta Blower G5', type: 'Roots Blower', category: 'Blowers', vendor: 'Aerzen', country: 'Germany', capacity: '50-15000 Nm³/hr', pressure: '0.3-1 bar', priceMin: 200000, priceMax: 3500000, material: 'CI/Nodular Iron', leadTime: '8-12 weeks', warranty: '24 months', contact: '080-4179-1500', email: 'india@aerzen.com', rating: 4.9, reviews: 87, verified: true, premium: true, features: ['Oil-free', 'Low Noise', 'IE4 Motor'], applications: ['Aeration', 'Pneumatic conveying', 'Vacuum'], image: 'blower' },
+        { id: 11, name: 'GM/GMa Series', type: 'Roots Blower', category: 'Blowers', vendor: 'Everest', country: 'India', capacity: '50-3000 Nm³/hr', pressure: '0.3-0.8 bar', priceMin: 100000, priceMax: 800000, material: 'CI', leadTime: '4-6 weeks', warranty: '12 months', contact: '011-2634-5678', email: 'sales@everestblowers.com', rating: 4.2, reviews: 156, verified: true, premium: false, features: ['Bi-lobe Design', 'Helical Gears', 'Acoustic Enclosure'], applications: ['STP aeration', 'ETP aeration', 'Fish farming'], image: 'blower' },
+        { id: 12, name: 'ZS Turbo', type: 'Turbo Blower', category: 'Blowers', vendor: 'Atlas Copco', country: 'Sweden', capacity: '500-20000 Nm³/hr', pressure: '0.3-1.5 bar', priceMin: 2500000, priceMax: 15000000, material: 'Alu/Ti Impeller', leadTime: '14-20 weeks', warranty: '36 months', contact: '020-3985-6000', email: 'blower@atlascopco.in', rating: 4.8, reviews: 45, verified: true, premium: true, features: ['Magnetic Bearing', 'VSD Standard', '40% Energy Saving'], applications: ['Large STPs', 'Industrial aeration', 'Process air'], image: 'blower' },
+        { id: 13, name: 'Mink Claw', type: 'Claw Vacuum Pump', category: 'Blowers', vendor: 'Busch', country: 'Germany', capacity: '40-1000 m³/hr', pressure: '100-1000 mbar abs', priceMin: 300000, priceMax: 1500000, material: 'CI/Coated', leadTime: '6-8 weeks', warranty: '18 months', contact: '020-2714-6000', email: 'india@busch.com', rating: 4.6, reviews: 67, verified: true, premium: false, features: ['Dry Running', 'Low Maintenance', 'Oil-free'], applications: ['Vacuum filtration', 'Packaging', 'Thermoforming'], image: 'blower' },
+        
+        // MEMBRANES - Expanded
+        { id: 20, name: 'BW30-400', type: 'RO Membrane', category: 'Membranes', vendor: 'DuPont FilmTec', country: 'USA', capacity: '37 m³/day', rejection: '99.5% NaCl', priceMin: 18000, priceMax: 25000, material: 'TFC Polyamide', leadTime: '1-2 weeks', warranty: '3 years', contact: '022-2493-8000', email: 'water@dupont.com', rating: 4.7, reviews: 534, verified: true, premium: false, features: ['High Rejection', 'Fouling Resistant', 'iLEC Interlocking'], applications: ['Brackish water', 'Industrial RO', 'WTP'], image: 'membrane' },
+        { id: 21, name: 'SW30HRLE-400', type: 'RO Membrane', category: 'Membranes', vendor: 'DuPont FilmTec', country: 'USA', capacity: '28 m³/day', rejection: '99.8% NaCl', priceMin: 35000, priceMax: 50000, material: 'TFC Polyamide', leadTime: '2-3 weeks', warranty: '3 years', contact: '022-2493-8000', email: 'water@dupont.com', rating: 4.9, reviews: 234, verified: true, premium: true, features: ['Seawater Grade', 'High Recovery', 'Low Energy'], applications: ['Desalination', 'High TDS water'], image: 'membrane' },
+        { id: 22, name: 'TM720D-400', type: 'RO Membrane', category: 'Membranes', vendor: 'Toray', country: 'Japan', capacity: '45 m³/day', rejection: '99.7% NaCl', priceMin: 20000, priceMax: 30000, material: 'TFC', leadTime: '2-3 weeks', warranty: '3 years', contact: '022-4347-8900', email: 'membrane@toray.co.in', rating: 4.6, reviews: 189, verified: true, premium: false, features: ['High Flux', 'Chlorine Tolerant', 'Wide pH Range'], applications: ['Brackish RO', 'Reuse', 'Process water'], image: 'membrane' },
+        { id: 23, name: 'SFP-2880XP', type: 'UF Membrane', category: 'Membranes', vendor: 'DuPont', country: 'USA', capacity: '88 m² area', rejection: '0.02 μm', priceMin: 45000, priceMax: 70000, material: 'PVDF Hollow Fiber', leadTime: '2-3 weeks', warranty: '5 years', contact: '022-2493-8000', email: 'water@dupont.com', rating: 4.8, reviews: 145, verified: true, premium: true, features: ['Outside-In', 'High Area', 'Integrity Testable'], applications: ['Pretreatment', 'Tertiary', 'Reuse'], image: 'membrane' },
+        { id: 24, name: 'ZeeWeed 500D', type: 'MBR Membrane', category: 'Membranes', vendor: 'Suez/Veolia', country: 'USA/France', capacity: '31.6 m²/cassette', rejection: '0.04 μm', priceMin: 150000, priceMax: 280000, material: 'PVDF', leadTime: '4-8 weeks', warranty: '7 years', contact: '022-6754-3200', email: 'mbr@suez.com', rating: 4.9, reviews: 112, verified: true, premium: true, features: ['Submerged', 'Low Energy Aeration', 'High MLSS'], applications: ['MBR plants', 'Reuse', 'Compact STP'], image: 'membrane' },
+        
+        // FILTERS
+        { id: 30, name: 'HRG PSF', type: 'Pressure Sand Filter', category: 'Filters', vendor: 'Ion Exchange', country: 'India', capacity: '5-500 m³/hr', filtration: '15-20 μm', priceMin: 80000, priceMax: 800000, material: 'FRP/MS Epoxy', leadTime: '3-4 weeks', warranty: '12 months', contact: '022-2857-5000', email: 'filters@ionexchange.co.in', rating: 4.4, reviews: 287, verified: true, premium: false, features: ['Multi-grade Media', 'Auto Backwash', 'Low ΔP'], applications: ['Pretreatment', 'Turbidity removal'], image: 'filter' },
+        { id: 31, name: 'Premium ACF', type: 'Activated Carbon Filter', category: 'Filters', vendor: 'Thermax', country: 'India', capacity: '5-300 m³/hr', filtration: 'Organics/Chlorine', priceMin: 100000, priceMax: 600000, material: 'MS Epoxy/SS304', leadTime: '4-6 weeks', warranty: '12 months', contact: '020-2554-2574', email: 'water@thermaxglobal.com', rating: 4.5, reviews: 156, verified: true, premium: false, features: ['Coconut Shell Carbon', 'High Iodine Number', 'Auto Regeneration'], applications: ['Dechlorination', 'Odor removal', 'COD reduction'], image: 'filter' },
+        { id: 32, name: 'Auto Disc Filter', type: 'Disc Filter', category: 'Filters', vendor: 'Netafim', country: 'Israel', capacity: '10-1000 m³/hr', filtration: '20-400 μm', priceMin: 50000, priceMax: 500000, material: 'PP/PA', leadTime: '2-4 weeks', warranty: '24 months', contact: '080-4622-1800', email: 'india@netafim.com', rating: 4.7, reviews: 198, verified: true, premium: false, features: ['Self Cleaning', 'Low Water Loss', 'Modular'], applications: ['Irrigation', 'Industrial filtration', 'Cooling tower'], image: 'filter' },
+        
+        // CLARIFIERS
+        { id: 40, name: 'Clarifloccculator', type: 'Centre Feed Clarifier', category: 'Clarifiers', vendor: 'Enviro', country: 'India', capacity: '20-2000 m³/hr', efficiency: '95% TSS', priceMin: 800000, priceMax: 8000000, material: 'RCC/MS', leadTime: '10-16 weeks', warranty: '12 months', contact: '080-2658-9000', email: 'enquiry@enviro-india.com', rating: 4.3, reviews: 89, verified: true, premium: false, features: ['Integrated Flocculation', 'Sludge Thickening', 'Adjustable Weirs'], applications: ['WTP', 'ETP primary', 'Lime softening'], image: 'clarifier' },
+        { id: 41, name: 'Lamella+ Settler', type: 'Lamella Clarifier', category: 'Clarifiers', vendor: 'Thermax', country: 'India', capacity: '30-1500 m³/hr', efficiency: '97% TSS', priceMin: 400000, priceMax: 4000000, material: 'MS/SS/FRP Plates', leadTime: '6-10 weeks', warranty: '12 months', contact: '020-2554-2574', email: 'water@thermaxglobal.com', rating: 4.6, reviews: 134, verified: true, premium: false, features: ['60° Inclined Plates', 'Quick Installation', 'Small Footprint'], applications: ['High rate settling', 'Retrofit', 'Space constrained'], image: 'clarifier' },
+        { id: 42, name: 'DAF Pro', type: 'DAF System', category: 'Clarifiers', vendor: 'Evoqua', country: 'USA', capacity: '10-800 m³/hr', efficiency: '99% TSS/O&G', priceMin: 1500000, priceMax: 12000000, material: 'SS316L', leadTime: '12-16 weeks', warranty: '18 months', contact: '044-2254-8700', email: 'india@evoqua.com', rating: 4.8, reviews: 67, verified: true, premium: true, features: ['Saturator System', 'Auto Skimmer', 'High Removal'], applications: ['O&G removal', 'Algae removal', 'Fiber recovery'], image: 'clarifier' },
+        
+        // CHEMICALS
+        { id: 50, name: 'PAC 30%', type: 'Coagulant', category: 'Chemicals', vendor: 'GACL', country: 'India', capacity: 'Bulk Supply', purity: 'Al₂O₃ 30% min', priceMin: 28, priceMax: 38, material: 'Liquid', leadTime: '3-5 days', warranty: 'N/A', contact: '079-2532-1431', email: 'sales@gacl.com', rating: 4.2, reviews: 567, verified: true, premium: false, unit: '/kg', features: ['High Basicity', 'Low Sludge', 'Wide pH Range'], applications: ['Coagulation', 'Color removal'], image: 'chemical' },
+        { id: 51, name: 'Ferric Chloride 42%', type: 'Coagulant', category: 'Chemicals', vendor: 'GACL', country: 'India', capacity: 'Bulk/Tanker', purity: 'FeCl₃ 42%', priceMin: 18, priceMax: 25, material: 'Liquid', leadTime: '3-5 days', warranty: 'N/A', contact: '079-2532-1431', email: 'sales@gacl.com', rating: 4.0, reviews: 423, verified: true, premium: false, unit: '/kg', features: ['High Purity', 'Consistent Quality'], applications: ['Coagulation', 'Phosphorus removal', 'Odor control'], image: 'chemical' },
+        { id: 52, name: 'Flopam AN 934', type: 'Anionic Flocculant', category: 'Chemicals', vendor: 'SNF Floerger', country: 'France/India', capacity: '25 kg bags', purity: 'MW 18-22 Million', priceMin: 200, priceMax: 320, material: 'Powder', leadTime: '1-2 weeks', warranty: 'N/A', contact: '044-2654-3200', email: 'india@snf.com', rating: 4.6, reviews: 234, verified: true, premium: false, unit: '/kg', features: ['High Molecular Weight', 'Fast Settling', 'Low Dose'], applications: ['Sludge dewatering', 'Settling aid'], image: 'chemical' },
+        { id: 53, name: 'HYDREX 4102', type: 'Antiscalant', category: 'Chemicals', vendor: 'Veolia', country: 'France', capacity: '25L/210L drums', purity: 'Phosphonate Based', priceMin: 450, priceMax: 650, material: 'Liquid', leadTime: '1-2 weeks', warranty: 'N/A', contact: '022-6754-3200', email: 'chemicals@veolia.com', rating: 4.7, reviews: 178, verified: true, premium: true, unit: '/kg', features: ['Silica Control', 'Wide pH', 'RO Compatible'], applications: ['RO antiscalant', 'MEE antiscalant'], image: 'chemical' },
+        
+        // INSTRUMENTATION
+        { id: 60, name: 'Liquiline CM442', type: 'Multi-parameter Transmitter', category: 'Instrumentation', vendor: 'Endress+Hauser', country: 'Switzerland', capacity: '1-4 Channels', accuracy: 'Sensor Dependent', priceMin: 65000, priceMax: 180000, material: 'SS/Polycarbonate', leadTime: '2-4 weeks', warranty: '36 months', contact: '022-2778-6000', email: 'sales@in.endress.com', rating: 4.9, reviews: 145, verified: true, premium: true, features: ['Memosens Digital', 'Multi-sensor', 'Web Server'], applications: ['pH', 'DO', 'Conductivity', 'Turbidity'], image: 'instrument' },
+        { id: 61, name: 'Promag W 400', type: 'Electromagnetic Flow Meter', category: 'Instrumentation', vendor: 'Endress+Hauser', country: 'Switzerland', capacity: 'DN25-2000', accuracy: '±0.2%', priceMin: 45000, priceMax: 450000, material: 'SS316L/PTFE', leadTime: '3-4 weeks', warranty: '36 months', contact: '022-2778-6000', email: 'flow@in.endress.com', rating: 4.8, reviews: 287, verified: true, premium: true, features: ['Heartbeat Tech', 'Extended Calibration', 'High Accuracy'], applications: ['Water', 'Wastewater', 'Slurry'], image: 'instrument' },
+        { id: 62, name: 'TU5300sc', type: 'Turbidity Analyzer', category: 'Instrumentation', vendor: 'Hach', country: 'USA', capacity: '0-4000 NTU', accuracy: '±2% of reading', priceMin: 120000, priceMax: 280000, material: 'SS316/Optical', leadTime: '3-4 weeks', warranty: '24 months', contact: '022-2764-3800', email: 'india@hach.com', rating: 4.7, reviews: 156, verified: true, premium: false, features: ['EPA Compliant', 'Auto Cleaning', 'Prognosys'], applications: ['Filter outlet', 'WTP monitoring', 'Process'], image: 'instrument' },
+        { id: 63, name: 'sc1000', type: 'Universal Controller', category: 'Instrumentation', vendor: 'Hach', country: 'USA', capacity: '1-4 Sensors', accuracy: 'N/A', priceMin: 55000, priceMax: 120000, material: 'Polycarbonate IP66', leadTime: '2-3 weeks', warranty: '24 months', contact: '022-2764-3800', email: 'india@hach.com', rating: 4.5, reviews: 198, verified: true, premium: false, features: ['Universal Platform', 'Touch Screen', 'SCADA Ready'], applications: ['Multi-point monitoring', 'Panel mount'], image: 'instrument' },
+        
+        // VALVES & PIPING (New Category)
+        { id: 70, name: 'Butterfly Valve', type: 'Manual BFV', category: 'Valves', vendor: 'Audco', country: 'India', capacity: 'DN50-1200', pressure: 'PN10/PN16', priceMin: 2000, priceMax: 150000, material: 'CI/DI/SS', leadTime: '1-2 weeks', warranty: '12 months', contact: '044-2251-4000', email: 'sales@audco.net', rating: 4.4, reviews: 534, verified: true, premium: false, features: ['ISO 5211', 'EPDM/NBR Seat', 'Wafer/Lug'], applications: ['Isolation', 'Throttling'], image: 'valve' },
+        { id: 71, name: 'Electric Actuated BFV', type: 'Actuated Valve', category: 'Valves', vendor: 'Rotork', country: 'UK', capacity: 'DN50-600', pressure: 'PN16', priceMin: 25000, priceMax: 350000, material: 'CI/SS/Aluminum', leadTime: '4-6 weeks', warranty: '18 months', contact: '022-2846-1000', email: 'india@rotork.com', rating: 4.7, reviews: 167, verified: true, premium: true, features: ['IQ3 Intelligent', 'Modulating', 'Explosion Proof'], applications: ['Remote control', 'Automation'], image: 'valve' },
+        { id: 72, name: 'Globe Control Valve', type: 'Control Valve', category: 'Valves', vendor: 'Fisher (Emerson)', country: 'USA', capacity: 'DN25-300', pressure: 'Class 150-600', priceMin: 80000, priceMax: 800000, material: 'WCB/SS316', leadTime: '6-10 weeks', warranty: '18 months', contact: '080-4084-0000', email: 'india@emerson.com', rating: 4.8, reviews: 89, verified: true, premium: true, features: ['Digital Positioner', 'Cage Trim', 'Low Noise'], applications: ['Flow control', 'Pressure control'], image: 'valve' }
+    ];
+
+    const CATEGORIES = [...new Set(EQUIPMENT_DB.map(e => e.category))];
+    const VENDORS = [...new Set(EQUIPMENT_DB.map(e => e.vendor))];
+
+    let selectedItems = [];
+    let filteredData = [...EQUIPMENT_DB];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initFilters();
+        renderEquipment();
+        updateStats();
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('priceFilter').addEventListener('change', applyFilters);
+        document.getElementById('ratingFilter').addEventListener('change', applyFilters);
+        document.getElementById('sortBy').addEventListener('change', applyFilters);
+        document.getElementById('compareBtn').addEventListener('click', showCompare);
+    });
+
+    function initFilters() {
+        document.getElementById('categoryFilters').innerHTML = CATEGORIES.map(cat => `
+            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                <input type="checkbox" value="${cat}" class="cat-filter rounded text-purple-600" checked>
+                <span class="text-gray-700">${cat}</span>
+                <span class="ml-auto text-xs text-gray-400">${EQUIPMENT_DB.filter(e => e.category === cat).length}</span>
+            </label>
+        `).join('');
+
+        document.getElementById('vendorFilters').innerHTML = VENDORS.map(v => `
+            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                <input type="checkbox" value="${v}" class="vendor-filter rounded text-purple-600" checked>
+                <span class="text-gray-700 text-sm">${v}</span>
+            </label>
+        `).join('');
+
+        document.querySelectorAll('.cat-filter, .vendor-filter').forEach(el => el.addEventListener('change', applyFilters));
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const pr = document.getElementById('priceFilter').value;
+        const rating = document.getElementById('ratingFilter').value;
+        const sortBy = document.getElementById('sortBy').value;
+        const cats = [...document.querySelectorAll('.cat-filter:checked')].map(e => e.value);
+        const vendors = [...document.querySelectorAll('.vendor-filter:checked')].map(e => e.value);
+
+        filteredData = EQUIPMENT_DB.filter(e => {
+            const matchSearch = !search || e.name.toLowerCase().includes(search) || e.type.toLowerCase().includes(search) || e.vendor.toLowerCase().includes(search);
+            const matchCat = cats.includes(e.category);
+            const matchVendor = vendors.includes(e.vendor);
+            let matchPrice = true;
+            if (pr !== 'all') { const [min, max] = pr.split('-').map(Number); matchPrice = e.priceMax >= min && e.priceMin <= max; }
+            const matchRating = rating === 'all' || e.rating >= parseFloat(rating);
+            return matchSearch && matchCat && matchVendor && matchPrice && matchRating;
+        });
+
+        filteredData.sort((a, b) => {
+            switch(sortBy) {
+                case 'price-asc': return a.priceMin - b.priceMin;
+                case 'price-desc': return b.priceMax - a.priceMax;
+                case 'vendor': return a.vendor.localeCompare(b.vendor);
+                case 'rating': return b.rating - a.rating;
+                default: return a.name.localeCompare(b.name);
+            }
+        });
+        renderEquipment();
+    }
+
+    function renderEquipment() {
+        const fmtPrice = (min, max, unit = '') => {
+            const fmt = n => n < 100 ? '₹' + n : (n < 100000 ? '₹' + (n/1000).toFixed(0) + 'K' : '₹' + (n/100000).toFixed(1) + 'L');
+            return unit ? fmt(min) + '-' + fmt(max) + unit : fmt(min) + ' - ' + fmt(max);
+        };
+        const renderStars = r => Array(5).fill(0).map((_, i) => `<i class="fas fa-star ${i < Math.round(r) ? 'star' : 'star empty'}"></i>`).join('');
+        const catColors = { Pumps: 'bg-blue-100 text-blue-700', Blowers: 'bg-emerald-100 text-emerald-700', Membranes: 'bg-purple-100 text-purple-700', Filters: 'bg-amber-100 text-amber-700', Clarifiers: 'bg-cyan-100 text-cyan-700', Chemicals: 'bg-pink-100 text-pink-700', Instrumentation: 'bg-indigo-100 text-indigo-700', Valves: 'bg-rose-100 text-rose-700' };
+
+        document.getElementById('equipmentGrid').innerHTML = filteredData.map(e => {
+            const sel = selectedItems.includes(e.id);
+            return `
+                <div class="card equipment-card ${sel ? 'selected' : ''}" onclick="showDetail(${e.id})">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="category-badge ${catColors[e.category] || 'bg-gray-100 text-gray-700'}">${e.category}</span>
+                        <input type="checkbox" ${sel ? 'checked' : ''} class="w-5 h-5 rounded-md border-2 text-purple-600" onclick="event.stopPropagation(); toggleSelect(${e.id})">
+                    </div>
+                    <div class="flex items-center gap-2 mb-1">
+                        ${e.verified ? '<span class="tag verified"><i class="fas fa-check-circle"></i></span>' : ''}
+                        ${e.premium ? '<span class="tag premium"><i class="fas fa-crown"></i> Premium</span>' : ''}
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-lg">${e.name}</h4>
+                    <p class="text-sm text-gray-500 mb-2">${e.type}</p>
+                    <div class="flex items-center gap-2 mb-3 flex-wrap">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(e.vendor)}&background=random&size=24&rounded=true" class="w-6 h-6 rounded-full">
+                        <span class="text-sm font-medium text-gray-700">${e.vendor}</span>
+                        <span class="text-xs text-gray-400">${e.country}</span>
+                    </div>
+                    <div class="flex items-center gap-1 mb-3 text-sm">${renderStars(e.rating)}<span class="text-gray-600 ml-1">${e.rating}</span><span class="text-gray-400">(${e.reviews})</span></div>
+                    <div class="text-sm text-gray-600 space-y-1 mb-3">
+                        <p class="flex items-center gap-2"><i class="fas fa-tachometer-alt w-4 text-gray-400"></i> ${e.capacity}</p>
+                        <p class="flex items-center gap-2"><i class="fas fa-clock w-4 text-gray-400"></i> ${e.leadTime}</p>
+                    </div>
+                    <div class="pt-3 border-t flex justify-between items-center">
+                        <span class="text-xl font-bold text-purple-700">${fmtPrice(e.priceMin, e.priceMax, e.unit)}</span>
+                        <button class="text-xs text-purple-600 hover:text-purple-800 font-semibold">View Details →</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        document.getElementById('resultCount').textContent = `Showing ${filteredData.length} of ${EQUIPMENT_DB.length} items`;
+    }
+
+    function toggleSelect(id) {
+        if (selectedItems.includes(id)) selectedItems = selectedItems.filter(i => i !== id);
+        else if (selectedItems.length < 4) selectedItems.push(id);
+        updateCompareBtn();
+        renderEquipment();
+    }
+    function updateCompareBtn() {
+        document.getElementById('compareCount').textContent = selectedItems.length + ' selected';
+        document.getElementById('compareBtn').disabled = selectedItems.length < 2;
+    }
+    function updateStats() {
+        document.getElementById('statEquipment').textContent = EQUIPMENT_DB.length;
+        document.getElementById('statVendors').textContent = VENDORS.length;
+        document.getElementById('statCategories').textContent = CATEGORIES.length;
+    }
+    window.resetFilters = () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('priceFilter').value = 'all';
+        document.getElementById('ratingFilter').value = 'all';
+        document.querySelectorAll('.cat-filter, .vendor-filter').forEach(c => c.checked = true);
+        applyFilters();
+    };
+    window.toggleSelect = toggleSelect;
+    window.showDetail = id => {
+        const e = EQUIPMENT_DB.find(eq => eq.id === id);
+        const fmtINR = n => '₹' + n.toLocaleString('en-IN');
+        const renderStars = r => Array(5).fill(0).map((_, i) => `<i class="fas fa-star ${i < Math.round(r) ? 'star' : 'star empty'}"></i>`).join('');
+        document.getElementById('detailContent').innerHTML = `
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            ${e.verified ? '<span class="tag verified"><i class="fas fa-check-circle"></i> Verified</span>' : ''}
+                            ${e.premium ? '<span class="tag premium"><i class="fas fa-crown"></i> Premium</span>' : ''}
+                        </div>
+                        <h2 class="text-2xl font-bold">${e.name}</h2>
+                        <p class="text-white/80">${e.type} by ${e.vendor}</p>
+                        <div class="flex items-center gap-2 mt-2">${renderStars(e.rating)}<span class="font-bold ml-1">${e.rating}</span><span class="text-white/70">(${e.reviews} reviews)</span></div>
+                    </div>
+                    <button onclick="closeDetail()" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-3"><i class="fas fa-info-circle text-purple-500 mr-2"></i>Specifications</h3>
+                    <table class="w-full text-sm">
+                        <tr class="border-b"><td class="py-2 text-gray-500">Category</td><td class="py-2 font-medium">${e.category}</td></tr>
+                        <tr class="border-b"><td class="py-2 text-gray-500">Capacity</td><td class="py-2 font-medium">${e.capacity}</td></tr>
+                        <tr class="border-b"><td class="py-2 text-gray-500">Material</td><td class="py-2 font-medium">${e.material}</td></tr>
+                        <tr class="border-b"><td class="py-2 text-gray-500">Country</td><td class="py-2 font-medium">${e.country}</td></tr>
+                        <tr class="border-b"><td class="py-2 text-gray-500">Lead Time</td><td class="py-2 font-medium">${e.leadTime}</td></tr>
+                        <tr><td class="py-2 text-gray-500">Warranty</td><td class="py-2 font-medium">${e.warranty}</td></tr>
+                    </table>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-3"><i class="fas fa-star text-yellow-500 mr-2"></i>Features</h3>
+                    <ul class="space-y-2">${e.features.map(f => `<li class="flex items-center gap-2 text-sm"><i class="fas fa-check text-green-500"></i> ${f}</li>`).join('')}</ul>
+                    <h3 class="font-bold text-gray-800 mt-5 mb-3"><i class="fas fa-cogs text-blue-500 mr-2"></i>Applications</h3>
+                    <div class="flex flex-wrap gap-2">${e.applications.map(a => `<span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">${a}</span>`).join('')}</div>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 border-t">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Price Range</p>
+                        <p class="text-2xl font-bold text-purple-700">${fmtINR(e.priceMin)} - ${fmtINR(e.priceMax)}${e.unit || ''}</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <a href="tel:${e.contact}" class="btn-primary"><i class="fas fa-phone mr-2"></i>Call</a>
+                        <a href="mailto:${e.email}" class="btn-primary bg-gradient-to-r from-green-500 to-emerald-600"><i class="fas fa-envelope mr-2"></i>Email</a>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('detailModal').classList.remove('hidden');
+        document.getElementById('detailModal').classList.add('flex');
+    };
+    window.closeDetail = () => { document.getElementById('detailModal').classList.add('hidden'); document.getElementById('detailModal').classList.remove('flex'); };
+    function showCompare() {
+        const items = selectedItems.map(id => EQUIPMENT_DB.find(e => e.id === id));
+        const fmtINR = n => '₹' + n.toLocaleString('en-IN');
+        const fields = [['Type', 'type'], ['Vendor', 'vendor'], ['Country', 'country'], ['Capacity', 'capacity'], ['Material', 'material'], ['Lead Time', 'leadTime'], ['Warranty', 'warranty'], ['Rating', 'rating']];
+        let html = `<table class="w-full text-sm"><thead><tr class="bg-purple-50"><th class="py-3 px-4 text-left font-bold text-purple-700">Specification</th>${items.map(e => `<th class="py-3 px-4 text-left font-bold">${e.name}</th>`).join('')}</tr></thead><tbody>`;
+        fields.forEach(([label, key]) => { html += `<tr class="border-b hover:bg-gray-50"><td class="py-3 px-4 font-medium text-gray-600">${label}</td>${items.map(e => `<td class="py-3 px-4">${e[key]}</td>`).join('')}</tr>`; });
+        html += `<tr class="bg-green-50"><td class="py-3 px-4 font-bold text-green-700">Price Range</td>${items.map(e => `<td class="py-3 px-4 font-bold text-green-700">${fmtINR(e.priceMin)} - ${fmtINR(e.priceMax)}${e.unit || ''}</td>`).join('')}</tr>`;
+        html += '</tbody></table>';
+        document.getElementById('compareContent').innerHTML = html;
+        document.getElementById('compareModal').classList.remove('hidden');
+        document.getElementById('compareModal').classList.add('flex');
+    }
+    window.closeCompare = () => { document.getElementById('compareModal').classList.add('hidden'); document.getElementById('compareModal').classList.remove('flex'); };
+    </script>
+</body>
+</html>

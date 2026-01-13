@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimedia Filter Design Engine | EEPL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #06b6d4;
+            --primary-dark: #0891b2;
+            --secondary: #64748b;
+            --accent: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #ecfeff;
+            --card-bg: #ffffff;
+            --border-color: #a5f3fc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+            margin: 0;
+            padding: 20px;
+            color: var(--accent);
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: white;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 8px 0 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+        }
+
+        .design-studio {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(6, 182, 212, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(6, 182, 212, 0.2);
+        }
+
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 2px solid var(--border-color);
+            background: linear-gradient(to right, #ecfeff, #ffffff);
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 14px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            pointer-events: none;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: var(--secondary);
+        }
+
+        .preset-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
+        }
+
+        .result-block {
+            background: linear-gradient(135deg, #ecfeff, #ffffff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-label {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff, #ecfeff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(6, 182, 212, 0.15);
+            border-color: var(--primary);
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .warning-box, .success-box {
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border: 2px solid #fed7aa;
+            color: #c2410c;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .warning-box.show, .success-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .info-badge {
+            background: #a5f3fc;
+            color: #0e7490;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent);
+        }
+
+        table tr:hover {
+            background: #ecfeff;
+        }
+
+        .media-layer {
+            background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+            border: 2px solid #5eead4;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .media-layer-title {
+            font-weight: 700;
+            color: #0f766e;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1><i class="fas fa-filter"></i> Multimedia Filter Design Engine</h1>
+        <p>Advanced Filtration Design | Media Selection | Backwash Optimization</p>
+    </div>
+
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-sliders-h"></i> Design Parameters</div>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Presets -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-magic"></i> Quick Presets</div>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="FilterEngine.loadPreset('municipal')">Municipal Water</button>
+                            <button class="preset-btn" onclick="FilterEngine.loadPreset('industrial')">Industrial</button>
+                            <button class="preset-btn" onclick="FilterEngine.loadPreset('high_rate')">High Rate</button>
+                            <button class="preset-btn" onclick="FilterEngine.loadPreset('polishing')">Polishing</button>
+                        </div>
+                    </div>
+
+                    <!-- Hydraulics -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-tint"></i> Hydraulic Design</div>
+                        <div class="input-group">
+                            <label>Design Flow Rate</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="flow" value="100" step="1">
+                                <span class="unit-badge">m³/hr</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Number of Filters</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="num_filters" value="2" step="1" min="1">
+                                <span class="unit-badge">units</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Filtration Rate</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="filt_rate" value="8" step="0.5">
+                                <span class="unit-badge">m/hr</span>
+                            </div>
+                            <div class="info-badge">Typical: 5-12 m/hr</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Filter Run Time</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="run_time" value="24" step="1">
+                                <span class="unit-badge">hours</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Configuration -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-layer-group"></i> Media Layers</div>
+
+                        <div class="media-layer">
+                            <div class="media-layer-title">Layer 1: Anthracite</div>
+                            <div class="input-group">
+                                <label>Depth</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="anth_depth" value="600" step="50">
+                                    <span class="unit-badge">mm</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Effective Size (ES)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="anth_es" value="1.2" step="0.1">
+                                    <span class="unit-badge">mm</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="media-layer">
+                            <div class="media-layer-title">Layer 2: Sand</div>
+                            <div class="input-group">
+                                <label>Depth</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="sand_depth" value="400" step="50">
+                                    <span class="unit-badge">mm</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Effective Size (ES)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="sand_es" value="0.5" step="0.05">
+                                    <span class="unit-badge">mm</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="media-layer">
+                            <div class="media-layer-title">Layer 3: Gravel (Support)</div>
+                            <div class="input-group">
+                                <label>Total Gravel Depth</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="gravel_depth" value="300" step="50">
+                                    <span class="unit-badge">mm</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Backwash -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-recycle"></i> Backwash Design</div>
+                        <div class="input-group">
+                            <label>Backwash Rate</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="bw_rate" value="45" step="5">
+                                <span class="unit-badge">m/hr</span>
+                            </div>
+                            <div class="info-badge">Typical: 40-50 m/hr</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Backwash Duration</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="bw_time" value="15" step="1">
+                                <span class="unit-badge">minutes</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Air Scour Rate</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="air_rate" value="60" step="5">
+                                <span class="unit-badge">m/hr</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Air Scour Duration</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="air_time" value="5" step="1">
+                                <span class="unit-badge">minutes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="action-btn" onclick="FilterEngine.calculate()">
+                        <i class="fas fa-calculator"></i> Design Filter System
+                    </button>
+                    <button class="action-btn secondary" onclick="FilterEngine.exportPDF()">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div id="results-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-chart-line"></i> Design Results</div>
+                </div>
+                <div class="panel-body">
+                    <div class="warning-box" id="warnings"></div>
+                    <div class="success-box" id="success"></div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_area">--</div>
+                            <div class="kpi-label">Filter Area (m²)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_diameter">--</div>
+                            <div class="kpi-label">Diameter (m)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_media_vol">--</div>
+                            <div class="kpi-label">Total Media (m³)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_bw_vol">--</div>
+                            <div class="kpi-label">BW Volume (m³)</div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Dimensions -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 1</span> Filter Tank Dimensions</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Flow Rate</span>
+                            <span class="calc-val" id="res_total_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Flow per Filter (Normal)</span>
+                            <span class="calc-val" id="res_flow_per">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Flow per Filter (One Out)</span>
+                            <span class="calc-val" id="res_flow_contingency">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Filter Area (each)</span>
+                            <span class="calc-val" id="res_area">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Filter Diameter</span>
+                            <span class="calc-val" id="res_dia">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Media Depth</span>
+                            <span class="calc-val" id="res_media_depth">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Freeboard</span>
+                            <span class="calc-val" id="res_freeboard">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Tank Height</span>
+                            <span class="calc-val" id="res_total_height">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Media Specifications -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 2</span> Media Requirements</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Layer</th>
+                                    <th>Material</th>
+                                    <th>Depth (mm)</th>
+                                    <th>ES (mm)</th>
+                                    <th>L/d Ratio</th>
+                                    <th>Volume (m³)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="media_table">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: #94a3b8;">Run calculation to generate</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Backwash Analysis -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 3</span> Backwash System Design</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Backwash Flow Rate</span>
+                            <span class="calc-val" id="res_bw_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Backwash Volume per Cycle</span>
+                            <span class="calc-val" id="res_bw_vol">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Air Scour Flow Rate</span>
+                            <span class="calc-val" id="res_air_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Media Expansion</span>
+                            <span class="calc-val" id="res_expansion">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Backwash Frequency</span>
+                            <span class="calc-val" id="res_bw_freq">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Daily Backwash Volume</span>
+                            <span class="calc-val" id="res_bw_daily">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Backwash % of Production</span>
+                            <span class="calc-val" id="res_bw_percent">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Underdrain System -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 4</span> Underdrain & Nozzle System</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Nozzle Type</span>
+                            <span class="calc-val" id="res_nozzle_type">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Nozzle Spacing</span>
+                            <span class="calc-val" id="res_nozzle_spacing">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Number of Nozzles</span>
+                            <span class="calc-val" id="res_nozzle_count">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Flow per Nozzle (Filtration)</span>
+                            <span class="calc-val" id="res_nozzle_flow_filt">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Flow per Nozzle (Backwash)</span>
+                            <span class="calc-val" id="res_nozzle_flow_bw">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Manifold Pipe Size</span>
+                            <span class="calc-val" id="res_manifold">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Performance Chart -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Analysis</span> Media Distribution Visualization</h4>
+                        <div class="chart-container">
+                            <canvas id="mediaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.FilterEngine = {
+            val: function(id) {
+                return parseFloat(document.getElementById(id).value) || 0;
+            },
+
+            set: function(id, text) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            },
+
+            loadPreset: function(type) {
+                const presets = {
+                    municipal: {
+                        flow: 100, num_filters: 2, filt_rate: 8, run_time: 24,
+                        anth_depth: 600, anth_es: 1.2, sand_depth: 400, sand_es: 0.5, gravel_depth: 300,
+                        bw_rate: 45, bw_time: 15, air_rate: 60, air_time: 5
+                    },
+                    industrial: {
+                        flow: 150, num_filters: 3, filt_rate: 10, run_time: 20,
+                        anth_depth: 700, anth_es: 1.4, sand_depth: 450, sand_es: 0.6, gravel_depth: 350,
+                        bw_rate: 48, bw_time: 18, air_rate: 65, air_time: 6
+                    },
+                    high_rate: {
+                        flow: 200, num_filters: 4, filt_rate: 12, run_time: 16,
+                        anth_depth: 800, anth_es: 1.5, sand_depth: 500, sand_es: 0.7, gravel_depth: 300,
+                        bw_rate: 50, bw_time: 20, air_rate: 70, air_time: 7
+                    },
+                    polishing: {
+                        flow: 80, num_filters: 2, filt_rate: 6, run_time: 30,
+                        anth_depth: 500, anth_es: 1.0, sand_depth: 350, sand_es: 0.45, gravel_depth: 250,
+                        bw_rate: 42, bw_time: 12, air_rate: 55, air_time: 4
+                    }
+                };
+
+                const preset = presets[type];
+                if (preset) {
+                    Object.keys(preset).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = preset[key];
+                    });
+                    this.calculate();
+                }
+            },
+
+            calculate: function() {
+                try {
+                    // Inputs
+                    const Q = this.val('flow'); // m3/hr
+                    const N = this.val('num_filters');
+                    const FiltRate = this.val('filt_rate'); // m/hr
+                    const RunTime = this.val('run_time'); // hours
+
+                    const AnthDepth = this.val('anth_depth') / 1000; // convert to m
+                    const AnthES = this.val('anth_es');
+                    const SandDepth = this.val('sand_depth') / 1000;
+                    const SandES = this.val('sand_es');
+                    const GravelDepth = this.val('gravel_depth') / 1000;
+
+                    const BWRate = this.val('bw_rate'); // m/hr
+                    const BWTime = this.val('bw_time') / 60; // convert to hours
+                    const AirRate = this.val('air_rate');
+                    const AirTime = this.val('air_time') / 60;
+
+                    // STEP 1: Filter Dimensions
+                    const QperFilter = Q / N;
+                    const QperFilter_contingency = Q / (N - 1); // One filter out
+                    const Area = QperFilter / FiltRate; // m2 per filter
+                    const Diameter = Math.sqrt((4 * Area) / Math.PI);
+
+                    const TotalMediaDepth = AnthDepth + SandDepth + GravelDepth;
+                    const Freeboard = 1.0; // 1m for backwash expansion
+                    const TotalHeight = TotalMediaDepth + Freeboard + 0.5; // +0.5m for underdrain
+
+                    // KPIs
+                    this.set('kpi_area', Area.toFixed(2));
+                    this.set('kpi_diameter', Diameter.toFixed(2));
+
+                    // Dimensions
+                    this.set('res_total_flow', Q.toFixed(1) + ' m³/hr');
+                    this.set('res_flow_per', QperFilter.toFixed(1) + ' m³/hr');
+                    this.set('res_flow_contingency', QperFilter_contingency.toFixed(1) + ' m³/hr');
+                    this.set('res_area', Area.toFixed(2) + ' m²');
+                    this.set('res_dia', Diameter.toFixed(2) + ' m');
+                    this.set('res_media_depth', (TotalMediaDepth * 1000).toFixed(0) + ' mm');
+                    this.set('res_freeboard', Freeboard.toFixed(2) + ' m');
+                    this.set('res_total_height', TotalHeight.toFixed(2) + ' m');
+
+                    // STEP 2: Media Requirements
+                    const AnthVol = Area * AnthDepth * N;
+                    const SandVol = Area * SandDepth * N;
+                    const GravelVol = Area * GravelDepth * N;
+                    const TotalMediaVol = AnthVol + SandVol + GravelVol;
+
+                    this.set('kpi_media_vol', TotalMediaVol.toFixed(2));
+
+                    // L/d ratios
+                    const AnthLd = (AnthDepth * 1000) / AnthES;
+                    const SandLd = (SandDepth * 1000) / SandES;
+
+                    const mediaData = [
+                        { layer: 1, material: 'Anthracite', depth: AnthDepth * 1000, es: AnthES, ld: AnthLd, vol: AnthVol },
+                        { layer: 2, material: 'Sand', depth: SandDepth * 1000, es: SandES, ld: SandLd, vol: SandVol },
+                        { layer: 3, material: 'Gravel', depth: GravelDepth * 1000, es: 'Various', ld: '-', vol: GravelVol }
+                    ];
+
+                    let mediaHTML = '';
+                    mediaData.forEach(m => {
+                        mediaHTML += `
+                            <tr>
+                                <td>${m.layer}</td>
+                                <td>${m.material}</td>
+                                <td>${m.depth.toFixed(0)}</td>
+                                <td>${m.es}</td>
+                                <td>${typeof m.ld === 'number' ? m.ld.toFixed(0) : m.ld}</td>
+                                <td>${m.vol.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('media_table').innerHTML = mediaHTML;
+
+                    // STEP 3: Backwash Analysis
+                    const BWFlow = Area * BWRate; // m3/hr per filter
+                    const BWVol = BWFlow * BWTime; // m3 per cycle
+                    const AirFlow = Area * AirRate; // m3/hr per filter
+
+                    // Media expansion (rough estimate)
+                    const Expansion = 30; // % for multimedia filter
+
+                    const BWFreq = RunTime; // hours between backwash
+                    const CyclesPerDay = 24 / BWFreq;
+                    const DailyBWVol = BWVol * CyclesPerDay * N;
+                    const DailyProduction = Q * 24;
+                    const BWPercent = (DailyBWVol / DailyProduction) * 100;
+
+                    this.set('kpi_bw_vol', BWVol.toFixed(2));
+
+                    this.set('res_bw_flow', BWFlow.toFixed(1) + ' m³/hr');
+                    this.set('res_bw_vol', BWVol.toFixed(2) + ' m³');
+                    this.set('res_air_flow', AirFlow.toFixed(1) + ' m³/hr');
+                    this.set('res_expansion', Expansion.toFixed(0) + ' %');
+                    this.set('res_bw_freq', BWFreq.toFixed(1) + ' hours');
+                    this.set('res_bw_daily', DailyBWVol.toFixed(1) + ' m³/day');
+                    this.set('res_bw_percent', BWPercent.toFixed(2) + ' %');
+
+                    // STEP 4: Underdrain System
+                    const NozzleSpacing = 0.2; // 200mm grid
+                    const NozzleCount = Math.floor(Area / (NozzleSpacing * NozzleSpacing));
+                    const NozzleFlowFilt = (QperFilter * 1000) / NozzleCount; // L/hr per nozzle
+                    const NozzleFlowBW = (BWFlow * 1000) / NozzleCount;
+
+                    // Manifold sizing (velocity ~1.5 m/s)
+                    const ManifoldDia = Math.sqrt((4 * QperFilter) / (3600 * 1.5 * Math.PI)) * 1000; // mm
+
+                    this.set('res_nozzle_type', 'Dual-flow slotted nozzles');
+                    this.set('res_nozzle_spacing', (NozzleSpacing * 1000).toFixed(0) + ' mm');
+                    this.set('res_nozzle_count', NozzleCount.toFixed(0) + ' nos');
+                    this.set('res_nozzle_flow_filt', NozzleFlowFilt.toFixed(1) + ' L/hr');
+                    this.set('res_nozzle_flow_bw', NozzleFlowBW.toFixed(1) + ' L/hr');
+                    this.set('res_manifold', 'DN' + Math.ceil(ManifoldDia / 25) * 25 + ' (' + ManifoldDia.toFixed(0) + ' mm)');
+
+                    // Warnings
+                    const warnings = [];
+                    if (FiltRate < 5 || FiltRate > 12) warnings.push('⚠️ Filtration rate outside typical range (5-12 m/hr)');
+                    if (AnthLd < 1000 || AnthLd > 1500) warnings.push('⚠️ Anthracite L/d ratio outside optimal range (1000-1500)');
+                    if (SandLd < 1000 || SandLd > 1500) warnings.push('⚠️ Sand L/d ratio outside optimal range (1000-1500)');
+                    if (BWPercent > 5) warnings.push('⚠️ Backwash water >5% of production - consider optimization');
+                    if (Diameter > 4) warnings.push('⚠️ Large filter diameter - consider multiple smaller units');
+
+                    const warningBox = document.getElementById('warnings');
+                    if (warnings.length > 0) {
+                        warningBox.innerHTML = warnings.map(w => `<div>${w}</div>`).join('');
+                        warningBox.className = 'warning-box show';
+                    } else {
+                        warningBox.className = 'warning-box';
+                    }
+
+                    // Success
+                    const successBox = document.getElementById('success');
+                    if (warnings.length === 0) {
+                        successBox.innerHTML = '<i class="fas fa-check-circle"></i> Filter design is optimal! All parameters within recommended ranges.';
+                        successBox.className = 'success-box show';
+                    } else {
+                        successBox.className = 'success-box';
+                    }
+
+                    // Update Chart
+                    this.updateChart(AnthDepth, SandDepth, GravelDepth);
+
+                } catch (error) {
+                    alert('Calculation error: ' + error.message);
+                }
+            },
+
+            updateChart: function(anth, sand, gravel) {
+                const ctx = document.getElementById('mediaChart').getContext('2d');
+
+                if (window.filterChart) {
+                    window.filterChart.destroy();
+                }
+
+                window.filterChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Anthracite', 'Sand', 'Gravel'],
+                        datasets: [{
+                            label: 'Media Depth (mm)',
+                            data: [anth * 1000, sand * 1000, gravel * 1000],
+                            backgroundColor: [
+                                'rgba(6, 182, 212, 0.7)',
+                                'rgba(245, 158, 11, 0.7)',
+                                'rgba(100, 116, 139, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(6, 182, 212, 1)',
+                                'rgba(245, 158, 11, 1)',
+                                'rgba(100, 116, 139, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Media Layer Distribution',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Depth (mm)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            exportPDF: function() {
+                const element = document.getElementById('results-panel');
+                const opt = {
+                    margin: 10,
+                    filename: 'Multimedia_Filter_Design.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            }
+        };
+
+        // Auto-calculate on input change
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => FilterEngine.calculate());
+            });
+
+            // Initial calculation
+            FilterEngine.calculate();
+        });
+    </script>
+</body>
+
+</html>

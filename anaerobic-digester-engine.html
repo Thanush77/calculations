@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anaerobic Digester Calculator | EEPL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-dark: #047857;
+            --secondary: #64748b;
+            --accent: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #ecfdf5;
+            --card-bg: #ffffff;
+            --border-color: #a7f3d0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            margin: 0;
+            padding: 20px;
+            color: var(--accent);
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(5, 150, 105, 0.3);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: white;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 8px 0 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+        }
+
+        .design-studio {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(5, 150, 105, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(5, 150, 105, 0.2);
+        }
+
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 2px solid var(--border-color);
+            background: linear-gradient(to right, #ecfdf5, #ffffff);
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 14px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            pointer-events: none;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: var(--primary-dark);
+        }
+
+        .preset-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
+        }
+
+        .result-block {
+            background: linear-gradient(135deg, #ecfdf5, #ffffff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-label {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff, #ecfdf5);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.15);
+            border-color: var(--primary);
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border: 2px solid #fed7aa;
+            color: #c2410c;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .warning-item {
+            margin-bottom: 6px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-weight: 500;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #bbf7d0;
+            color: #166534;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .info-badge {
+            background: #a7f3d0;
+            color: #065f46;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent);
+        }
+
+        table tr:hover {
+            background: #ecfdf5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1><i class="fas fa-recycle"></i> Anaerobic Digester Calculator</h1>
+        <p>Biogas Production | Energy Recovery | HRT & OLR Optimization</p>
+    </div>
+
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-sliders-h"></i> Design Parameters</div>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Presets -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-magic"></i> Quick Presets</div>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="ADEngine.loadPreset('mesophilic')">Mesophilic</button>
+                            <button class="preset-btn" onclick="ADEngine.loadPreset('thermophilic')">Thermophilic</button>
+                            <button class="preset-btn" onclick="ADEngine.loadPreset('municipal')">Municipal Sludge</button>
+                            <button class="preset-btn" onclick="ADEngine.loadPreset('industrial')">Industrial WW</button>
+                        </div>
+                    </div>
+
+                    <!-- Operating Mode -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-thermometer-half"></i> Operating Mode</div>
+                        <div class="input-group">
+                            <label>Digester Type</label>
+                            <div class="input-wrapper">
+                                <select id="digester_type" onchange="ADEngine.updateDefaults()">
+                                    <option value="mesophilic">Mesophilic (35°C)</option>
+                                    <option value="thermophilic">Thermophilic (55°C)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Operating Temperature</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="temp" value="35" step="1">
+                                <span class="unit-badge">°C</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Ambient Temperature</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="temp_ambient" value="25" step="1">
+                                <span class="unit-badge">°C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feed Characteristics -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-flask"></i> Feed Characteristics</div>
+                        <div class="input-group">
+                            <label>Feed Flow Rate</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="flow" value="50" step="1">
+                                <span class="unit-badge">m³/day</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Total Solids (TS)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="ts" value="4" step="0.1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Volatile Solids (VS % of TS)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="vs_ratio" value="70" step="1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>COD Concentration</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="cod" value="40000" step="1000">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Design Parameters -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-cogs"></i> Design Parameters</div>
+                        <div class="input-group">
+                            <label>Hydraulic Retention Time (HRT)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="hrt" value="20" step="1">
+                                <span class="unit-badge">days</span>
+                            </div>
+                            <div class="info-badge">Meso: 15-30d | Thermo: 10-15d</div>
+                        </div>
+                        <div class="input-group">
+                            <label>VS Destruction Efficiency</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="vs_destruction" value="55" step="1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                            <div class="info-badge">Typical: 50-65%</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Biogas Yield</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="biogas_yield" value="0.5" step="0.01">
+                                <span class="unit-badge">m³/kg VS</span>
+                            </div>
+                            <div class="info-badge">Typical: 0.4-0.6 m³/kg VS</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Methane Content</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="methane_content" value="65" step="1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                            <div class="info-badge">Typical: 55-70%</div>
+                        </div>
+                    </div>
+
+                    <button class="action-btn" onclick="ADEngine.calculate()">
+                        <i class="fas fa-calculator"></i> Design Digester System
+                    </button>
+                    <br>
+                    <button class="action-btn secondary" onclick="ADEngine.exportPDF()">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div id="results-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-chart-line"></i> Design Results</div>
+                </div>
+                <div class="panel-body">
+                    <div class="warning-box" id="warnings"></div>
+                    <div class="success-box" id="success"></div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_volume">--</div>
+                            <div class="kpi-label">Digester Volume (m³)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_biogas">--</div>
+                            <div class="kpi-label">Biogas (m³/day)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_energy">--</div>
+                            <div class="kpi-label">Energy (kWh/day)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_olr">--</div>
+                            <div class="kpi-label">OLR (kg VS/m³/d)</div>
+                        </div>
+                    </div>
+
+                    <!-- Digester Sizing -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 1</span> Digester Sizing</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Required Digester Volume</span>
+                            <span class="calc-val" id="res_volume">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual HRT</span>
+                            <span class="calc-val" id="res_hrt_actual">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">VS Loading (Input)</span>
+                            <span class="calc-val" id="res_vs_load">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Organic Loading Rate (OLR)</span>
+                            <span class="calc-val" id="res_olr">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">COD Loading Rate</span>
+                            <span class="calc-val" id="res_cod_load">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Recommended Tank Diameter</span>
+                            <span class="calc-val" id="res_diameter">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Recommended Tank Height</span>
+                            <span class="calc-val" id="res_height">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Biogas Production -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 2</span> Biogas Production</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">VS Destroyed</span>
+                            <span class="calc-val" id="res_vs_destroyed">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Biogas Production</span>
+                            <span class="calc-val" id="res_biogas_total">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Methane (CH₄) Production</span>
+                            <span class="calc-val" id="res_methane">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Carbon Dioxide (CO₂) Production</span>
+                            <span class="calc-val" id="res_co2">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Specific Biogas Yield</span>
+                            <span class="calc-val" id="res_specific_yield">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Biogas Production Rate</span>
+                            <span class="calc-val" id="res_biogas_rate">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Energy Recovery -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 3</span> Energy Recovery Potential</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Energy Content (LHV)</span>
+                            <span class="calc-val" id="res_energy_content">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Electrical Power (35% eff.)</span>
+                            <span class="calc-val" id="res_power_elec">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Thermal Power (50% eff.)</span>
+                            <span class="calc-val" id="res_power_thermal">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Daily Electrical Energy</span>
+                            <span class="calc-val" id="res_energy_daily">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Annual Electrical Energy</span>
+                            <span class="calc-val" id="res_energy_annual">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">CO₂ Emission Reduction (vs Coal)</span>
+                            <span class="calc-val" id="res_co2_reduction">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Heating Requirements -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 4</span> Heating Requirements</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Heat Required (Feed Heating)</span>
+                            <span class="calc-val" id="res_heat_feed">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Heat Loss (Tank Walls)</span>
+                            <span class="calc-val" id="res_heat_loss">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Heat Requirement</span>
+                            <span class="calc-val" id="res_heat_total">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Biogas for Self-Heating</span>
+                            <span class="calc-val" id="res_biogas_heating">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Net Biogas Available</span>
+                            <span class="calc-val" id="res_biogas_net">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Self-Heating % of Production</span>
+                            <span class="calc-val" id="res_heating_pct">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Digestate -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 5</span> Digestate Production</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Digestate Flow</span>
+                            <span class="calc-val" id="res_digestate_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Digestate TS</span>
+                            <span class="calc-val" id="res_digestate_ts">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Digestate VS</span>
+                            <span class="calc-val" id="res_digestate_vs">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">COD Removal</span>
+                            <span class="calc-val" id="res_cod_removal">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Equipment Summary -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 6</span> Equipment Summary</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Equipment</th>
+                                    <th>Specification</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipment_table">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #94a3b8;">Run calculation to generate</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Performance Chart -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Analysis</span> Performance Visualization</h4>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.ADEngine = {
+            val: function(id) {
+                return parseFloat(document.getElementById(id).value) || 0;
+            },
+            set: function(id, text) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            },
+
+            updateDefaults: function() {
+                const type = document.getElementById('digester_type').value;
+                if (type === 'mesophilic') {
+                    document.getElementById('temp').value = 35;
+                    document.getElementById('hrt').value = 20;
+                } else {
+                    document.getElementById('temp').value = 55;
+                    document.getElementById('hrt').value = 12;
+                }
+            },
+
+            loadPreset: function(type) {
+                const presets = {
+                    mesophilic: {
+                        digester_type: 'mesophilic', temp: 35, temp_ambient: 25,
+                        flow: 50, ts: 4, vs_ratio: 70, cod: 40000,
+                        hrt: 20, vs_destruction: 55, biogas_yield: 0.5, methane_content: 65
+                    },
+                    thermophilic: {
+                        digester_type: 'thermophilic', temp: 55, temp_ambient: 25,
+                        flow: 50, ts: 4, vs_ratio: 70, cod: 40000,
+                        hrt: 12, vs_destruction: 60, biogas_yield: 0.55, methane_content: 65
+                    },
+                    municipal: {
+                        digester_type: 'mesophilic', temp: 35, temp_ambient: 20,
+                        flow: 100, ts: 3.5, vs_ratio: 65, cod: 35000,
+                        hrt: 20, vs_destruction: 50, biogas_yield: 0.45, methane_content: 62
+                    },
+                    industrial: {
+                        digester_type: 'mesophilic', temp: 35, temp_ambient: 25,
+                        flow: 80, ts: 5, vs_ratio: 75, cod: 50000,
+                        hrt: 22, vs_destruction: 58, biogas_yield: 0.52, methane_content: 68
+                    }
+                };
+
+                const preset = presets[type];
+                if (preset) {
+                    Object.keys(preset).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = preset[key];
+                    });
+                    this.calculate();
+                }
+            },
+
+            calculate: function() {
+                try {
+                    // Inputs
+                    const Type = document.getElementById('digester_type').value;
+                    const Temp = this.val('temp'); // °C
+                    const TempAmbient = this.val('temp_ambient'); // °C
+                    const Q = this.val('flow'); // m3/day
+                    const TS_pct = this.val('ts'); // %
+                    const VS_ratio = this.val('vs_ratio'); // %
+                    const COD = this.val('cod'); // mg/L
+                    const HRT = this.val('hrt'); // days
+                    const VS_dest_eff = this.val('vs_destruction'); // %
+                    const Biogas_yield = this.val('biogas_yield'); // m3/kg VS
+                    const CH4_pct = this.val('methane_content'); // %
+
+                    // STEP 1: Digester Sizing
+                    const Volume = Q * HRT; // m³
+                    const HRT_actual = Volume / Q; // days
+
+                    // VS loading
+                    const TS_conc = TS_pct * 10000; // mg/L
+                    const VS_conc = TS_conc * (VS_ratio / 100); // mg/L
+                    const VS_load_kgd = (Q * VS_conc) / 1000; // kg/day
+                    const OLR = VS_load_kgd / Volume; // kg VS/m³/day
+                    const COD_load = (Q * COD) / Volume / 1000; // kg COD/m³/day
+
+                    // Tank dimensions (H:D ratio = 1:1 for simplicity)
+                    const Diameter = Math.pow((Volume * 4) / (Math.PI * 1), 1/3); // m
+                    const Height = Diameter; // m
+
+                    // STEP 2: Biogas Production
+                    const VS_destroyed = VS_load_kgd * (VS_dest_eff / 100); // kg/day
+                    const Biogas_total = VS_destroyed * Biogas_yield; // m³/day
+                    const CH4_prod = Biogas_total * (CH4_pct / 100); // m³/day
+                    const CO2_prod = Biogas_total * ((100 - CH4_pct) / 100); // m³/day
+                    const Specific_yield = Biogas_total / VS_load_kgd; // m³/kg VS input
+                    const Biogas_rate = Biogas_total / Volume; // m³/m³/day
+
+                    // STEP 3: Energy Recovery
+                    // Methane LHV = 35.8 MJ/m³ = 9.94 kWh/m³
+                    const Energy_content = CH4_prod * 9.94; // kWh/day
+                    const Power_elec = (Energy_content / 24) * 0.35; // kW (35% efficiency)
+                    const Power_thermal = (Energy_content / 24) * 0.50; // kW (50% efficiency)
+                    const Energy_daily = Energy_content * 0.35; // kWh/day
+                    const Energy_annual = Energy_daily * 365; // kWh/year
+
+                    // CO2 reduction: coal = 0.95 kg CO2/kWh
+                    const CO2_reduction = (Energy_annual * 0.95) / 1000; // tonnes/year
+
+                    // STEP 4: Heating Requirements
+                    // Heat to raise feed temp: Q = m × Cp × ΔT (Cp water = 4.18 kJ/kg/°C)
+                    const Heat_feed = (Q * 1000 * 4.18 * (Temp - TempAmbient)) / 3600 / 24; // kW
+
+                    // Heat loss through walls (U = 0.5 W/m²/°C for insulated tank)
+                    const U = 0.5; // W/m²/°C
+                    const Surface_area = Math.PI * Diameter * Height + 2 * Math.PI * Math.pow(Diameter/2, 2); // m²
+                    const Heat_loss = (U * Surface_area * (Temp - TempAmbient)) / 1000; // kW
+
+                    const Heat_total = Heat_feed + Heat_loss; // kW
+                    const Heat_total_daily = Heat_total * 24; // kWh/day
+
+                    // Biogas for heating (thermal efficiency 80%)
+                    const Biogas_heating = Heat_total_daily / (9.94 * 0.8 * (CH4_pct / 100)); // m³/day
+                    const Biogas_net = Biogas_total - Biogas_heating; // m³/day
+                    const Heating_pct = (Biogas_heating / Biogas_total) * 100; // %
+
+                    // STEP 5: Digestate
+                    const Digestate_flow = Q; // m³/day (assuming no volume change)
+                    const TS_out = TS_conc * (1 - (VS_dest_eff / 100) * (VS_ratio / 100)); // mg/L
+                    const Digestate_TS = TS_out / 10000; // %
+                    const VS_out = VS_conc * (1 - VS_dest_eff / 100); // mg/L
+                    const Digestate_VS = (VS_out / TS_out) * 100; // % of TS
+                    const COD_removal = VS_dest_eff * 0.9; // Approximate COD removal
+
+                    // Update UI - KPIs
+                    this.set('kpi_volume', Volume.toFixed(0));
+                    this.set('kpi_biogas', Biogas_total.toFixed(1));
+                    this.set('kpi_energy', Energy_daily.toFixed(0));
+                    this.set('kpi_olr', OLR.toFixed(2));
+
+                    // Digester Sizing
+                    this.set('res_volume', Volume.toFixed(1) + ' m³');
+                    this.set('res_hrt_actual', HRT_actual.toFixed(1) + ' days');
+                    this.set('res_vs_load', VS_load_kgd.toFixed(1) + ' kg/day');
+                    this.set('res_olr', OLR.toFixed(2) + ' kg VS/m³/day');
+                    this.set('res_cod_load', COD_load.toFixed(2) + ' kg COD/m³/day');
+                    this.set('res_diameter', Diameter.toFixed(2) + ' m');
+                    this.set('res_height', Height.toFixed(2) + ' m');
+
+                    // Biogas Production
+                    this.set('res_vs_destroyed', VS_destroyed.toFixed(1) + ' kg/day');
+                    this.set('res_biogas_total', Biogas_total.toFixed(1) + ' m³/day');
+                    this.set('res_methane', CH4_prod.toFixed(1) + ' m³/day');
+                    this.set('res_co2', CO2_prod.toFixed(1) + ' m³/day');
+                    this.set('res_specific_yield', Specific_yield.toFixed(2) + ' m³/kg VS');
+                    this.set('res_biogas_rate', Biogas_rate.toFixed(2) + ' m³/m³/day');
+
+                    // Energy Recovery
+                    this.set('res_energy_content', Energy_content.toFixed(1) + ' kWh/day');
+                    this.set('res_power_elec', Power_elec.toFixed(1) + ' kW');
+                    this.set('res_power_thermal', Power_thermal.toFixed(1) + ' kW');
+                    this.set('res_energy_daily', Energy_daily.toFixed(1) + ' kWh/day');
+                    this.set('res_energy_annual', (Energy_annual / 1000).toFixed(1) + ' MWh/year');
+                    this.set('res_co2_reduction', CO2_reduction.toFixed(1) + ' tonnes/year');
+
+                    // Heating
+                    this.set('res_heat_feed', Heat_feed.toFixed(1) + ' kW');
+                    this.set('res_heat_loss', Heat_loss.toFixed(1) + ' kW');
+                    this.set('res_heat_total', Heat_total.toFixed(1) + ' kW');
+                    this.set('res_biogas_heating', Biogas_heating.toFixed(1) + ' m³/day');
+                    this.set('res_biogas_net', Biogas_net.toFixed(1) + ' m³/day');
+                    this.set('res_heating_pct', Heating_pct.toFixed(1) + ' %');
+
+                    // Digestate
+                    this.set('res_digestate_flow', Digestate_flow.toFixed(1) + ' m³/day');
+                    this.set('res_digestate_ts', Digestate_TS.toFixed(2) + ' %');
+                    this.set('res_digestate_vs', Digestate_VS.toFixed(1) + ' % of TS');
+                    this.set('res_cod_removal', COD_removal.toFixed(1) + ' %');
+
+                    // Equipment Table
+                    const equipment = [
+                        { name: 'Digester Tank', spec: `${Diameter.toFixed(1)}m dia × ${Height.toFixed(1)}m H, ${Volume.toFixed(0)} m³`, qty: 1 },
+                        { name: 'Feed Pump', spec: `${(Q / 24).toFixed(1)} m³/hr progressive cavity`, qty: 1 },
+                        { name: 'Heating System', spec: `${(Heat_total * 1.2).toFixed(0)} kW heat exchanger`, qty: 1 },
+                        { name: 'Mixing System', spec: `Mechanical or gas mixing`, qty: 1 },
+                        { name: 'Gas Holder', spec: `${(Biogas_total * 0.5).toFixed(0)} m³ capacity`, qty: 1 },
+                        { name: 'Gas Blower', spec: `${(Biogas_total / 24 * 1.5).toFixed(1)} m³/hr`, qty: 1 },
+                        { name: 'Gas Flare', spec: `${(Biogas_total / 24 * 1.2).toFixed(1)} m³/hr capacity`, qty: 1 },
+                        { name: 'CHP Unit (Optional)', spec: `${Power_elec.toFixed(0)} kWe generator`, qty: 1 },
+                        { name: 'Control Panel', spec: `Temperature, pH, gas monitoring`, qty: 1 }
+                    ];
+
+                    let equipHTML = '';
+                    equipment.forEach(eq => {
+                        equipHTML += `<tr><td>${eq.name}</td><td>${eq.spec}</td><td>${eq.qty}</td></tr>`;
+                    });
+                    document.getElementById('equipment_table').innerHTML = equipHTML;
+
+                    // Warnings
+                    const warnings = [];
+                    if (Type === 'mesophilic' && (HRT < 15 || HRT > 30)) warnings.push('⚠️ HRT outside typical range for mesophilic (15-30 days)');
+                    if (Type === 'thermophilic' && (HRT < 10 || HRT > 15)) warnings.push('⚠️ HRT outside typical range for thermophilic (10-15 days)');
+                    if (OLR < 1 || OLR > 5) warnings.push('⚠️ OLR outside typical range (2-5 kg VS/m³/day)');
+                    if (Biogas_yield < 0.3 || Biogas_yield > 0.7) warnings.push('⚠️ Biogas yield outside typical range (0.4-0.6 m³/kg VS)');
+                    if (CH4_pct < 50 || CH4_pct > 75) warnings.push('⚠️ Methane content outside typical range (55-70%)');
+                    if (Heating_pct > 40) warnings.push('⚠️ High heating demand - consider insulation improvement');
+
+                    const warningBox = document.getElementById('warnings');
+                    if (warnings.length > 0) {
+                        warningBox.innerHTML = warnings.map(w => `<div class="warning-item">${w}</div>`).join('');
+                        warningBox.className = 'warning-box show';
+                    } else {
+                        warningBox.className = 'warning-box';
+                    }
+
+                    const successBox = document.getElementById('success');
+                    if (warnings.length === 0) {
+                        successBox.innerHTML = '<i class="fas fa-check-circle"></i> Digester design parameters are within recommended ranges!';
+                        successBox.className = 'success-box show';
+                    } else {
+                        successBox.className = 'success-box';
+                    }
+
+                    // Update Chart
+                    this.updateChart(Volume, Biogas_total, Energy_daily, OLR, VS_dest_eff, CH4_pct);
+
+                } catch (error) {
+                    alert('Calculation error: ' + error.message);
+                }
+            },
+
+            updateChart: function(volume, biogas, energy, olr, vs_dest, ch4) {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+
+                if (window.adChart) {
+                    window.adChart.destroy();
+                }
+
+                window.adChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Volume (÷10)', 'Biogas (×10)', 'Energy (÷10)', 'OLR (×10)', 'VS Dest %', 'CH₄ %'],
+                        datasets: [{
+                            label: 'Digester Performance Metrics',
+                            data: [
+                                volume / 10,
+                                biogas * 10,
+                                energy / 10,
+                                olr * 10,
+                                vs_dest,
+                                ch4
+                            ],
+                            backgroundColor: [
+                                'rgba(5, 150, 105, 0.7)',
+                                'rgba(4, 120, 87, 0.7)',
+                                'rgba(6, 95, 70, 0.7)',
+                                'rgba(52, 211, 153, 0.7)',
+                                'rgba(110, 231, 183, 0.7)',
+                                'rgba(167, 243, 208, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(5, 150, 105, 1)',
+                                'rgba(4, 120, 87, 1)',
+                                'rgba(6, 95, 70, 1)',
+                                'rgba(52, 211, 153, 1)',
+                                'rgba(110, 231, 183, 1)',
+                                'rgba(167, 243, 208, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Anaerobic Digester Parameters',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            exportPDF: function() {
+                const element = document.getElementById('results-panel');
+                const opt = {
+                    margin: 10,
+                    filename: 'Anaerobic_Digester_Design_Report.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            }
+        };
+
+        // Auto-calculate on input change
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => ADEngine.calculate());
+            });
+
+            // Initial calculation
+            ADEngine.calculate();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrocoagulation Calculator | EEPL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #9333ea;
+            --primary-dark: #7e22ce;
+            --secondary: #64748b;
+            --accent: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #faf5ff;
+            --card-bg: #ffffff;
+            --border-color: #e9d5ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            margin: 0;
+            padding: 20px;
+            color: var(--accent);
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.3);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: white;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 8px 0 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+        }
+
+        .design-studio {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(147, 51, 234, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(147, 51, 234, 0.2);
+        }
+
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 2px solid var(--border-color);
+            background: linear-gradient(to right, #faf5ff, #ffffff);
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 14px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            pointer-events: none;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: var(--primary-dark);
+        }
+
+        .preset-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(147, 51, 234, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
+        }
+
+        .result-block {
+            background: linear-gradient(135deg, #faf5ff, #ffffff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-label {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff, #faf5ff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(147, 51, 234, 0.15);
+            border-color: var(--primary);
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border: 2px solid #fed7aa;
+            color: #c2410c;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .warning-item {
+            margin-bottom: 6px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-weight: 500;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #bbf7d0;
+            color: #166534;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .info-badge {
+            background: #e9d5ff;
+            color: #6b21a8;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent);
+        }
+
+        table tr:hover {
+            background: #faf5ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1><i class="fas fa-bolt"></i> Electrocoagulation Calculator</h1>
+        <p>Faraday's Law | Current Density | Electrode Consumption | Power Requirements</p>
+    </div>
+
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-sliders-h"></i> Design Parameters</div>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Presets -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-magic"></i> Quick Presets</div>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="ECEngine.loadPreset('tss_removal')">TSS Removal</button>
+                            <button class="preset-btn" onclick="ECEngine.loadPreset('heavy_metal')">Heavy Metals</button>
+                            <button class="preset-btn" onclick="ECEngine.loadPreset('oily_water')">Oily Water</button>
+                            <button class="preset-btn" onclick="ECEngine.loadPreset('dye_removal')">Dye Removal</button>
+                        </div>
+                    </div>
+
+                    <!-- Flow Parameters -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-tint"></i> Flow Parameters</div>
+                        <div class="input-group">
+                            <label>Design Flow Rate</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="flow" value="10" step="0.1">
+                                <span class="unit-badge">m³/hr</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Retention Time</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="retention_time" value="30" step="1">
+                                <span class="unit-badge">minutes</span>
+                            </div>
+                            <div class="info-badge">Typical: 20-45 min</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Operating Hours per Day</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="hours_day" value="16" step="1">
+                                <span class="unit-badge">hours</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Water Quality -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-flask"></i> Water Quality</div>
+                        <div class="input-group">
+                            <label>Influent Pollutant Concentration</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="pollutant_in" value="200" step="10">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Target Removal Efficiency</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="removal_eff" value="90" step="1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Conductivity</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="conductivity" value="1500" step="100">
+                                <span class="unit-badge">µS/cm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Electrode Configuration -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-layer-group"></i> Electrode System</div>
+                        <div class="input-group">
+                            <label>Electrode Material</label>
+                            <div class="input-wrapper">
+                                <select id="electrode_type" onchange="ECEngine.updateElectrode()">
+                                    <option value="aluminum">Aluminum (Al)</option>
+                                    <option value="iron">Iron (Fe)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Current Density</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="current_density" value="30" step="1">
+                                <span class="unit-badge">A/m²</span>
+                            </div>
+                            <div class="info-badge">Typical: 10-50 A/m²</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Electrode Plate Area (per plate)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="plate_area" value="0.5" step="0.1">
+                                <span class="unit-badge">m²</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Number of Electrode Plates</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="num_plates" value="10" step="1">
+                                <span class="unit-badge">plates</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Plate Spacing</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="plate_spacing" value="10" step="1">
+                                <span class="unit-badge">mm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Economics -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-dollar-sign"></i> Economics</div>
+                        <div class="input-group">
+                            <label>Electrode Cost</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="electrode_cost" value="200" step="10">
+                                <span class="unit-badge">₹/kg</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Electricity Cost</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="power_cost" value="7" step="0.5">
+                                <span class="unit-badge">₹/kWh</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="action-btn" onclick="ECEngine.calculate()">
+                        <i class="fas fa-calculator"></i> Calculate EC System
+                    </button>
+                    <br>
+                    <button class="action-btn secondary" onclick="ECEngine.exportPDF()">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div id="results-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-chart-line"></i> Design Results</div>
+                </div>
+                <div class="panel-body">
+                    <div class="warning-box" id="warnings"></div>
+                    <div class="success-box" id="success"></div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_current">--</div>
+                            <div class="kpi-label">Current (A)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_voltage">--</div>
+                            <div class="kpi-label">Voltage (V)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_power">--</div>
+                            <div class="kpi-label">Power (kW)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_electrode_cons">--</div>
+                            <div class="kpi-label">Electrode (kg/day)</div>
+                        </div>
+                    </div>
+
+                    <!-- Electrical Design -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 1</span> Electrical Parameters</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Electrode Area (Active)</span>
+                            <span class="calc-val" id="res_total_area">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Operating Current (I)</span>
+                            <span class="calc-val" id="res_current">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Current per Plate</span>
+                            <span class="calc-val" id="res_current_plate">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Cell Voltage (V)</span>
+                            <span class="calc-val" id="res_voltage">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Power Consumption</span>
+                            <span class="calc-val" id="res_power">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Specific Energy Consumption</span>
+                            <span class="calc-val" id="res_sec">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Faraday's Law Calculation -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 2</span> Electrode Dissolution (Faraday's Law)</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Faraday's Constant (F)</span>
+                            <span class="calc-val" id="res_faraday">96,485 C/mol</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Electrode Molecular Weight (M)</span>
+                            <span class="calc-val" id="res_mw">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Valence (z)</span>
+                            <span class="calc-val" id="res_valence">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Electrode Dissolution Rate</span>
+                            <span class="calc-val" id="res_dissolution_rate">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Daily Electrode Consumption</span>
+                            <span class="calc-val" id="res_electrode_daily">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Monthly Electrode Consumption</span>
+                            <span class="calc-val" id="res_electrode_monthly">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Electrode Life (per set)</span>
+                            <span class="calc-val" id="res_electrode_life">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Reactor Design -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 3</span> Reactor Design</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Required Reactor Volume</span>
+                            <span class="calc-val" id="res_reactor_vol">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Recommended Length</span>
+                            <span class="calc-val" id="res_length">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Recommended Width</span>
+                            <span class="calc-val" id="res_width">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Recommended Depth</span>
+                            <span class="calc-val" id="res_depth">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual Retention Time</span>
+                            <span class="calc-val" id="res_hrt">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Effective Electrode Volume</span>
+                            <span class="calc-val" id="res_electrode_vol">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Treatment Performance -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 4</span> Treatment Performance</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Pollutant Removed (Mass)</span>
+                            <span class="calc-val" id="res_pollutant_removed">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Effluent Concentration</span>
+                            <span class="calc-val" id="res_pollutant_out">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Metal to Pollutant Ratio</span>
+                            <span class="calc-val" id="res_metal_ratio">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Sludge Production (Estimated)</span>
+                            <span class="calc-val" id="res_sludge">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Operating Costs -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 5</span> Operating Costs</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Daily Electricity Cost</span>
+                            <span class="calc-val" id="res_cost_power_daily">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Daily Electrode Cost</span>
+                            <span class="calc-val" id="res_cost_electrode_daily">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Daily Operating Cost</span>
+                            <span class="calc-val" id="res_cost_total_daily">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Monthly Operating Cost</span>
+                            <span class="calc-val" id="res_cost_monthly">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Annual Operating Cost</span>
+                            <span class="calc-val" id="res_cost_annual">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Cost per m³ Treated</span>
+                            <span class="calc-val" id="res_cost_per_m3">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Cost Breakdown (Power:Electrode)</span>
+                            <span class="calc-val" id="res_cost_breakdown">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Equipment Summary -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 6</span> Equipment Summary</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Equipment</th>
+                                    <th>Specification</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipment_table">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #94a3b8;">Run calculation to generate</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Performance Chart -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Analysis</span> EC System Performance</h4>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.ECEngine = {
+            electrodeData: {
+                aluminum: { mw: 26.98, valence: 3, name: 'Aluminum (Al)', density: 2700, cost: 200 },
+                iron: { mw: 55.85, valence: 2, name: 'Iron (Fe)', density: 7870, cost: 80 }
+            },
+
+            val: function(id) {
+                return parseFloat(document.getElementById(id).value) || 0;
+            },
+            set: function(id, text) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            },
+
+            updateElectrode: function() {
+                const type = document.getElementById('electrode_type').value;
+                const data = this.electrodeData[type];
+                document.getElementById('electrode_cost').value = data.cost;
+            },
+
+            loadPreset: function(type) {
+                const presets = {
+                    tss_removal: {
+                        flow: 10, retention_time: 30, hours_day: 16,
+                        pollutant_in: 200, removal_eff: 90, conductivity: 1500,
+                        electrode_type: 'aluminum', current_density: 30, plate_area: 0.5,
+                        num_plates: 10, plate_spacing: 10, electrode_cost: 200, power_cost: 7
+                    },
+                    heavy_metal: {
+                        flow: 5, retention_time: 45, hours_day: 20,
+                        pollutant_in: 50, removal_eff: 95, conductivity: 2000,
+                        electrode_type: 'iron', current_density: 25, plate_area: 0.4,
+                        num_plates: 12, plate_spacing: 8, electrode_cost: 80, power_cost: 7
+                    },
+                    oily_water: {
+                        flow: 15, retention_time: 35, hours_day: 16,
+                        pollutant_in: 500, removal_eff: 92, conductivity: 1200,
+                        electrode_type: 'aluminum', current_density: 40, plate_area: 0.6,
+                        num_plates: 8, plate_spacing: 12, electrode_cost: 200, power_cost: 7
+                    },
+                    dye_removal: {
+                        flow: 8, retention_time: 40, hours_day: 18,
+                        pollutant_in: 300, removal_eff: 88, conductivity: 1800,
+                        electrode_type: 'aluminum', current_density: 35, plate_area: 0.5,
+                        num_plates: 10, plate_spacing: 10, electrode_cost: 200, power_cost: 7
+                    }
+                };
+
+                const preset = presets[type];
+                if (preset) {
+                    Object.keys(preset).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = preset[key];
+                    });
+                    this.calculate();
+                }
+            },
+
+            calculate: function() {
+                try {
+                    // Inputs
+                    const Q = this.val('flow'); // m3/hr
+                    const RT = this.val('retention_time'); // minutes
+                    const HoursDay = this.val('hours_day'); // hours
+                    const Pollutant_in = this.val('pollutant_in'); // mg/L
+                    const RemovalEff = this.val('removal_eff'); // %
+                    const Conductivity = this.val('conductivity'); // µS/cm
+                    const ElectrodeType = document.getElementById('electrode_type').value;
+                    const CD = this.val('current_density'); // A/m²
+                    const PlateArea = this.val('plate_area'); // m²
+                    const NumPlates = this.val('num_plates');
+                    const PlateSpacing = this.val('plate_spacing'); // mm
+                    const ElectrodeCost = this.val('electrode_cost'); // ₹/kg
+                    const PowerCost = this.val('power_cost'); // ₹/kWh
+
+                    const electrode = this.electrodeData[ElectrodeType];
+
+                    // STEP 1: Electrical Parameters
+                    // Active electrode area (half the plates are anodes)
+                    const ActivePlates = Math.floor(NumPlates / 2);
+                    const TotalArea = ActivePlates * PlateArea; // m²
+
+                    // Current: I = CD × A
+                    const Current = CD * TotalArea; // A
+                    const CurrentPerPlate = Current / ActivePlates; // A per plate
+
+                    // Voltage estimation based on conductivity and spacing
+                    // V = (ρ × d × I) / A, where ρ = 1/σ (resistivity)
+                    // Simplified: V ≈ 5-15V for typical EC systems
+                    const Resistivity = 10000 / Conductivity; // Ω·cm
+                    const Spacing_cm = PlateSpacing / 10; // cm
+                    const Voltage = (Resistivity * Spacing_cm * CD / 1000) + 2; // V (+ overpotential)
+
+                    // Power: P = V × I
+                    const Power = (Voltage * Current) / 1000; // kW
+                    const SEC = Power / Q; // kWh/m³ (Specific Energy Consumption)
+
+                    // STEP 2: Faraday's Law - Electrode Dissolution
+                    // m = (I × t × M) / (z × F)
+                    // Where: m = mass (g), I = current (A), t = time (s), M = molecular weight (g/mol)
+                    //        z = valence, F = Faraday constant (96485 C/mol)
+
+                    const F = 96485; // C/mol
+                    const M = electrode.mw; // g/mol
+                    const z = electrode.valence;
+
+                    // Dissolution rate (g/hr)
+                    const DissolutionRate = (Current * 3600 * M) / (z * F); // g/hr
+
+                    // Daily consumption
+                    const ElectrodeDaily = (DissolutionRate * HoursDay) / 1000; // kg/day
+                    const ElectrodeMonthly = ElectrodeDaily * 30; // kg/month
+
+                    // Electrode life (assuming 5 kg per plate, 80% utilization)
+                    const MassPerPlate = PlateArea * 0.003 * electrode.density; // kg (3mm thick)
+                    const ElectrodeLife = (MassPerPlate * ActivePlates * 0.8) / ElectrodeDaily; // days
+
+                    // STEP 3: Reactor Design
+                    const ReactorVol = (Q * RT) / 60; // m³
+                    const Length = Math.pow(ReactorVol * 2, 1/3) * 1.5; // m (L:W:H = 1.5:1:1)
+                    const Width = Length / 1.5; // m
+                    const Depth = Width; // m
+                    const HRT_actual = (ReactorVol / Q) * 60; // minutes
+
+                    // Electrode volume
+                    const ElectrodeVol = NumPlates * PlateArea * 0.003; // m³ (3mm thick plates)
+
+                    // STEP 4: Treatment Performance
+                    const PollutantRemoved = (Q * Pollutant_in * RemovalEff / 100) / 1000; // kg/hr
+                    const Pollutant_out = Pollutant_in * (1 - RemovalEff / 100); // mg/L
+                    const MetalDissolved = DissolutionRate / 1000; // kg/hr
+                    const MetalRatio = MetalDissolved / PollutantRemoved; // kg metal/kg pollutant
+
+                    // Sludge production (metal hydroxides + pollutants)
+                    // Al(OH)3 MW = 78, Fe(OH)3 MW = 107
+                    const HydroxideMW = ElectrodeType === 'aluminum' ? 78 : 107;
+                    const SludgeProd = (MetalDissolved * HydroxideMW / M + PollutantRemoved) * HoursDay; // kg/day
+
+                    // STEP 5: Operating Costs
+                    const PowerDaily = Power * HoursDay; // kWh/day
+                    const CostPowerDaily = PowerDaily * PowerCost; // ₹/day
+                    const CostElectrodeDaily = ElectrodeDaily * ElectrodeCost; // ₹/day
+                    const CostTotalDaily = CostPowerDaily + CostElectrodeDaily; // ₹/day
+                    const CostMonthly = CostTotalDaily * 30; // ₹/month
+                    const CostAnnual = CostTotalDaily * 365; // ₹/year
+                    const CostPerM3 = CostTotalDaily / (Q * HoursDay); // ₹/m³
+                    const PowerPct = (CostPowerDaily / CostTotalDaily) * 100; // %
+                    const ElectrodePct = 100 - PowerPct; // %
+
+                    // Update UI - KPIs
+                    this.set('kpi_current', Current.toFixed(1));
+                    this.set('kpi_voltage', Voltage.toFixed(1));
+                    this.set('kpi_power', Power.toFixed(2));
+                    this.set('kpi_electrode_cons', ElectrodeDaily.toFixed(2));
+
+                    // Electrical Parameters
+                    this.set('res_total_area', TotalArea.toFixed(2) + ' m²');
+                    this.set('res_current', Current.toFixed(1) + ' A');
+                    this.set('res_current_plate', CurrentPerPlate.toFixed(1) + ' A');
+                    this.set('res_voltage', Voltage.toFixed(1) + ' V');
+                    this.set('res_power', Power.toFixed(2) + ' kW');
+                    this.set('res_sec', SEC.toFixed(2) + ' kWh/m³');
+
+                    // Faraday's Law
+                    this.set('res_mw', M.toFixed(2) + ' g/mol');
+                    this.set('res_valence', z);
+                    this.set('res_dissolution_rate', DissolutionRate.toFixed(2) + ' g/hr');
+                    this.set('res_electrode_daily', ElectrodeDaily.toFixed(2) + ' kg/day');
+                    this.set('res_electrode_monthly', ElectrodeMonthly.toFixed(1) + ' kg/month');
+                    this.set('res_electrode_life', ElectrodeLife.toFixed(0) + ' days');
+
+                    // Reactor Design
+                    this.set('res_reactor_vol', ReactorVol.toFixed(2) + ' m³');
+                    this.set('res_length', Length.toFixed(2) + ' m');
+                    this.set('res_width', Width.toFixed(2) + ' m');
+                    this.set('res_depth', Depth.toFixed(2) + ' m');
+                    this.set('res_hrt', HRT_actual.toFixed(1) + ' minutes');
+                    this.set('res_electrode_vol', ElectrodeVol.toFixed(3) + ' m³');
+
+                    // Treatment Performance
+                    this.set('res_pollutant_removed', PollutantRemoved.toFixed(2) + ' kg/hr');
+                    this.set('res_pollutant_out', Pollutant_out.toFixed(1) + ' mg/L');
+                    this.set('res_metal_ratio', MetalRatio.toFixed(2) + ' kg/kg');
+                    this.set('res_sludge', SludgeProd.toFixed(2) + ' kg/day');
+
+                    // Operating Costs
+                    this.set('res_cost_power_daily', '₹ ' + CostPowerDaily.toFixed(2));
+                    this.set('res_cost_electrode_daily', '₹ ' + CostElectrodeDaily.toFixed(2));
+                    this.set('res_cost_total_daily', '₹ ' + CostTotalDaily.toFixed(2));
+                    this.set('res_cost_monthly', '₹ ' + CostMonthly.toFixed(2));
+                    this.set('res_cost_annual', '₹ ' + CostAnnual.toFixed(2));
+                    this.set('res_cost_per_m3', '₹ ' + CostPerM3.toFixed(2));
+                    this.set('res_cost_breakdown', PowerPct.toFixed(0) + '% : ' + ElectrodePct.toFixed(0) + '%');
+
+                    // Equipment Table
+                    const equipment = [
+                        { name: 'EC Reactor Tank', spec: `${Length.toFixed(1)}L × ${Width.toFixed(1)}W × ${Depth.toFixed(1)}H m`, qty: 1 },
+                        { name: `${electrode.name} Electrodes`, spec: `${PlateArea.toFixed(1)} m² × ${NumPlates} plates`, qty: 1 },
+                        { name: 'DC Power Supply', spec: `${(Current * 1.2).toFixed(0)} A @ ${Voltage.toFixed(0)} V`, qty: 1 },
+                        { name: 'Electrode Support Frame', spec: `${PlateSpacing}mm spacing, insulated`, qty: 1 },
+                        { name: 'Feed Pump', spec: `${Q.toFixed(1)} m³/hr`, qty: 1 },
+                        { name: 'Sludge Settling Tank', spec: `${(ReactorVol * 2).toFixed(1)} m³`, qty: 1 },
+                        { name: 'Control Panel', spec: `Current, voltage, timer control`, qty: 1 }
+                    ];
+
+                    let equipHTML = '';
+                    equipment.forEach(eq => {
+                        equipHTML += `<tr><td>${eq.name}</td><td>${eq.spec}</td><td>${eq.qty}</td></tr>`;
+                    });
+                    document.getElementById('equipment_table').innerHTML = equipHTML;
+
+                    // Warnings
+                    const warnings = [];
+                    if (CD < 10 || CD > 50) warnings.push('⚠️ Current density outside typical range (10-50 A/m²)');
+                    if (RT < 20 || RT > 60) warnings.push('⚠️ Retention time outside typical range (20-60 min)');
+                    if (Voltage > 20) warnings.push('⚠️ High voltage - check conductivity and electrode spacing');
+                    if (MetalRatio < 0.01) warnings.push('⚠️ Low metal dose - may not achieve target removal');
+                    if (MetalRatio > 0.5) warnings.push('⚠️ Very high metal dose - check optimization');
+                    if (ElectrodeLife < 30) warnings.push('⚠️ Short electrode life - consider larger/thicker plates');
+
+                    const warningBox = document.getElementById('warnings');
+                    if (warnings.length > 0) {
+                        warningBox.innerHTML = warnings.map(w => `<div class="warning-item">${w}</div>`).join('');
+                        warningBox.className = 'warning-box show';
+                    } else {
+                        warningBox.className = 'warning-box';
+                    }
+
+                    const successBox = document.getElementById('success');
+                    if (warnings.length === 0) {
+                        successBox.innerHTML = '<i class="fas fa-check-circle"></i> EC system design parameters are within recommended ranges!';
+                        successBox.className = 'success-box show';
+                    } else {
+                        successBox.className = 'success-box';
+                    }
+
+                    // Update Chart
+                    this.updateChart(Current, Voltage, Power, ElectrodeDaily, CostTotalDaily, RemovalEff);
+
+                } catch (error) {
+                    alert('Calculation error: ' + error.message);
+                }
+            },
+
+            updateChart: function(current, voltage, power, electrode, cost, removal) {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+
+                if (window.ecChart) {
+                    window.ecChart.destroy();
+                }
+
+                window.ecChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Current (×10)', 'Voltage (×10)', 'Power', 'Electrode', 'Cost (÷100)', 'Removal %'],
+                        datasets: [{
+                            label: 'EC System Parameters',
+                            data: [
+                                current * 10,
+                                voltage * 10,
+                                power,
+                                electrode,
+                                cost / 100,
+                                removal
+                            ],
+                            backgroundColor: [
+                                'rgba(147, 51, 234, 0.7)',
+                                'rgba(126, 34, 206, 0.7)',
+                                'rgba(168, 85, 247, 0.7)',
+                                'rgba(192, 132, 252, 0.7)',
+                                'rgba(216, 180, 254, 0.7)',
+                                'rgba(233, 213, 255, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(147, 51, 234, 1)',
+                                'rgba(126, 34, 206, 1)',
+                                'rgba(168, 85, 247, 1)',
+                                'rgba(192, 132, 252, 1)',
+                                'rgba(216, 180, 254, 1)',
+                                'rgba(233, 213, 255, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Electrocoagulation Performance',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            exportPDF: function() {
+                const element = document.getElementById('results-panel');
+                const opt = {
+                    margin: 10,
+                    filename: 'Electrocoagulation_Design_Report.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            }
+        };
+
+        // Auto-calculate on input change
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => ECEngine.calculate());
+            });
+
+            // Initial calculation
+            ECEngine.calculate();
+        });
+    </script>
+</body>
+
+</html>

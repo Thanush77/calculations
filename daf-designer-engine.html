@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAF Designer Engine | EEPL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --secondary: #64748b;
+            --accent: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            margin: 0;
+            padding: 20px;
+            color: var(--accent);
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: white;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 8px 0 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+        }
+
+        .design-studio {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 2px solid var(--border-color);
+            background: linear-gradient(to right, #f8fafc, #ffffff);
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 14px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            pointer-events: none;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: var(--secondary);
+        }
+
+        .preset-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
+        }
+
+        .result-block {
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-label {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border: 2px solid #fed7aa;
+            color: #c2410c;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .warning-item {
+            margin-bottom: 6px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-weight: 500;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #bbf7d0;
+            color: #166534;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .info-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent);
+        }
+
+        table tr:hover {
+            background: #f8fafc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1><i class="fas fa-water"></i> DAF Designer Engine</h1>
+        <p>Dissolved Air Flotation System | Complete Design & Optimization Suite</p>
+    </div>
+
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-sliders-h"></i> Design Parameters</div>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Presets -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-magic"></i> Quick Presets</div>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="DAFEngine.loadPreset('municipal')">Municipal WW</button>
+                            <button class="preset-btn" onclick="DAFEngine.loadPreset('industrial')">Industrial</button>
+                            <button class="preset-btn" onclick="DAFEngine.loadPreset('oily')">Oily Water</button>
+                            <button class="preset-btn" onclick="DAFEngine.loadPreset('high_tss')">High TSS</button>
+                        </div>
+                    </div>
+
+                    <!-- Hydraulic Parameters -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-tint"></i> Hydraulic Design</div>
+                        <div class="input-group">
+                            <label>Design Flow Rate</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="flow" value="100" step="1">
+                                <span class="unit-badge">m³/hr</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Surface Loading Rate (SLR)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="slr" value="6" step="0.1">
+                                <span class="unit-badge">m/hr</span>
+                            </div>
+                            <div class="info-badge">Typical: 4-10 m/hr</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Retention Time (HRT)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="hrt" value="30" step="1">
+                                <span class="unit-badge">minutes</span>
+                            </div>
+                            <div class="info-badge">Typical: 20-40 min</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Tank Depth</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="depth" value="2.5" step="0.1">
+                                <span class="unit-badge">m</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Solids Parameters -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-vial"></i> Solids Characteristics</div>
+                        <div class="input-group">
+                            <label>Influent TSS</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="tss_in" value="200" step="10">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Target TSS Removal</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="removal_eff" value="90" step="1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Sludge Concentration</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="sludge_conc" value="3" step="0.1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DAF Specific -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-wind"></i> Air System</div>
+                        <div class="input-group">
+                            <label>Recycle Ratio</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="recycle_ratio" value="30" step="1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                            <div class="info-badge">Typical: 15-50%</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Saturator Pressure</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="pressure" value="5" step="0.5">
+                                <span class="unit-badge">bar</span>
+                            </div>
+                            <div class="info-badge">Typical: 4-6 bar</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Air-to-Solids Ratio (Target)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="as_ratio" value="0.02" step="0.001">
+                                <span class="unit-badge">kg/kg</span>
+                            </div>
+                            <div class="info-badge">Typical: 0.01-0.05</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Temperature</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="temp" value="20" step="1">
+                                <span class="unit-badge">°C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="action-btn" onclick="DAFEngine.calculate()">
+                        <i class="fas fa-calculator"></i> Design DAF System
+                    </button>
+                    <br>
+                    <button class="action-btn secondary" onclick="DAFEngine.exportPDF()">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div id="results-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-chart-line"></i> Design Results</div>
+                </div>
+                <div class="panel-body">
+                    <div class="warning-box" id="warnings"></div>
+                    <div class="success-box" id="success"></div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_area">--</div>
+                            <div class="kpi-label">Tank Area (m²)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_recycle">--</div>
+                            <div class="kpi-label">Recycle Flow (m³/hr)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_air">--</div>
+                            <div class="kpi-label">Air Required (kg/hr)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_sludge">--</div>
+                            <div class="kpi-label">Sludge (m³/hr)</div>
+                        </div>
+                    </div>
+
+                    <!-- Tank Dimensions -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 1</span> Tank Geometry</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Surface Area Required</span>
+                            <span class="calc-val" id="res_area">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Tank Length</span>
+                            <span class="calc-val" id="res_length">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Tank Width</span>
+                            <span class="calc-val" id="res_width">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Tank Depth</span>
+                            <span class="calc-val" id="res_depth">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Volume</span>
+                            <span class="calc-val" id="res_volume">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual HRT</span>
+                            <span class="calc-val" id="res_hrt">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Air System -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 2</span> Air Dissolution System</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Recycle Flow Rate</span>
+                            <span class="calc-val" id="res_recycle_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Air Saturation Conc. (Cs)</span>
+                            <span class="calc-val" id="res_air_sat">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Air Available (Sa)</span>
+                            <span class="calc-val" id="res_air_avail">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Air Requirement (Mass)</span>
+                            <span class="calc-val" id="res_air_mass">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual A/S Ratio</span>
+                            <span class="calc-val" id="res_as_actual">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Saturator Volume</span>
+                            <span class="calc-val" id="res_sat_vol">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Solids & Sludge -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 3</span> Solids Loading & Sludge</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">TSS Loading Rate</span>
+                            <span class="calc-val" id="res_tss_load">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Effluent TSS</span>
+                            <span class="calc-val" id="res_tss_out">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Solids Removed (Mass)</span>
+                            <span class="calc-val" id="res_solids_removed">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Float Sludge Production</span>
+                            <span class="calc-val" id="res_sludge_prod">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Sludge Daily Volume</span>
+                            <span class="calc-val" id="res_sludge_daily">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Equipment Summary -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 4</span> Equipment Summary</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Equipment</th>
+                                    <th>Specification</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipment_table">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #94a3b8;">Run calculation to generate</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Performance Chart -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Analysis</span> Performance Visualization</h4>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.DAFEngine = {
+            // Helper functions
+            val: function(id) {
+                return parseFloat(document.getElementById(id).value) || 0;
+            },
+            set: function(id, text) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            },
+
+            // Load presets
+            loadPreset: function(type) {
+                const presets = {
+                    municipal: {
+                        flow: 100, slr: 6, hrt: 30, depth: 2.5,
+                        tss_in: 150, removal_eff: 85, sludge_conc: 3,
+                        recycle_ratio: 30, pressure: 5, as_ratio: 0.02, temp: 20
+                    },
+                    industrial: {
+                        flow: 50, slr: 7, hrt: 25, depth: 2.8,
+                        tss_in: 300, removal_eff: 92, sludge_conc: 4,
+                        recycle_ratio: 40, pressure: 5.5, as_ratio: 0.03, temp: 25
+                    },
+                    oily: {
+                        flow: 80, slr: 5, hrt: 35, depth: 3,
+                        tss_in: 250, removal_eff: 95, sludge_conc: 2.5,
+                        recycle_ratio: 45, pressure: 6, as_ratio: 0.04, temp: 20
+                    },
+                    high_tss: {
+                        flow: 120, slr: 8, hrt: 28, depth: 2.5,
+                        tss_in: 500, removal_eff: 88, sludge_conc: 5,
+                        recycle_ratio: 35, pressure: 5.5, as_ratio: 0.025, temp: 22
+                    }
+                };
+
+                const preset = presets[type];
+                if (preset) {
+                    Object.keys(preset).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = preset[key];
+                    });
+                    this.calculate();
+                }
+            },
+
+            // Main calculation
+            calculate: function() {
+                try {
+                    // Input values
+                    const Q = this.val('flow'); // m3/hr
+                    const SLR = this.val('slr'); // m/hr
+                    const HRT = this.val('hrt'); // minutes
+                    const Depth = this.val('depth'); // m
+                    const TSS_in = this.val('tss_in'); // mg/L
+                    const RemovalEff = this.val('removal_eff'); // %
+                    const SludgeConc = this.val('sludge_conc'); // %
+                    const RecycleRatio = this.val('recycle_ratio'); // %
+                    const P = this.val('pressure'); // bar
+                    const AS_target = this.val('as_ratio'); // kg/kg
+                    const Temp = this.val('temp'); // °C
+
+                    // STEP 1: Tank Dimensions
+                    const Area = Q / SLR; // m2
+                    const LW_ratio = 3; // Length/Width ratio
+                    const Width = Math.sqrt(Area / LW_ratio);
+                    const Length = Width * LW_ratio;
+                    const Volume = Area * Depth; // m3
+                    const HRT_actual = (Volume / Q) * 60; // minutes
+
+                    // STEP 2: Air System
+                    const Q_recycle = Q * (RecycleRatio / 100); // m3/hr
+
+                    // Air saturation concentration (Henry's Law)
+                    // Cs = 1.3 * (P + 1) at 20°C, adjust for temperature
+                    const f = 0.5; // Saturation efficiency factor
+                    const Cs = 1.3 * f * (P + 1) * Math.pow(1.024, (20 - Temp)); // mg/L
+
+                    // Air available from recycle
+                    const Sa = (Q_recycle / Q) * Cs; // mg/L
+
+                    // Solids mass flow
+                    const SolidsLoad = Q * TSS_in / 1000; // kg/hr
+
+                    // Air requirement
+                    const AirReq = AS_target * SolidsLoad; // kg/hr
+
+                    // Actual A/S ratio achieved
+                    const AirAvail = Q * Sa / 1000; // kg/hr
+                    const AS_actual = AirAvail / SolidsLoad;
+
+                    // Saturator volume (2-3 min retention)
+                    const SaturatorVol = Q_recycle * (2.5 / 60); // m3
+
+                    // STEP 3: Solids & Sludge
+                    const TSSLoadRate = (Q * TSS_in) / Area; // kg/m2/hr
+                    const TSS_out = TSS_in * (1 - RemovalEff / 100); // mg/L
+                    const SolidsRemoved = Q * (TSS_in - TSS_out) / 1000; // kg/hr
+                    const SludgeProd = SolidsRemoved / ((SludgeConc / 100) * 1000); // m3/hr
+                    const SludgeDaily = SludgeProd * 24; // m3/day
+
+                    // Update UI - KPIs
+                    this.set('kpi_area', Area.toFixed(1));
+                    this.set('kpi_recycle', Q_recycle.toFixed(1));
+                    this.set('kpi_air', AirAvail.toFixed(2));
+                    this.set('kpi_sludge', SludgeProd.toFixed(2));
+
+                    // Tank Geometry
+                    this.set('res_area', Area.toFixed(1) + ' m²');
+                    this.set('res_length', Length.toFixed(2) + ' m');
+                    this.set('res_width', Width.toFixed(2) + ' m');
+                    this.set('res_depth', Depth.toFixed(2) + ' m');
+                    this.set('res_volume', Volume.toFixed(1) + ' m³');
+                    this.set('res_hrt', HRT_actual.toFixed(1) + ' min');
+
+                    // Air System
+                    this.set('res_recycle_flow', Q_recycle.toFixed(1) + ' m³/hr');
+                    this.set('res_air_sat', Cs.toFixed(2) + ' mg/L');
+                    this.set('res_air_avail', Sa.toFixed(2) + ' mg/L');
+                    this.set('res_air_mass', AirAvail.toFixed(2) + ' kg/hr');
+                    this.set('res_as_actual', AS_actual.toFixed(4) + ' kg/kg');
+                    this.set('res_sat_vol', SaturatorVol.toFixed(2) + ' m³');
+
+                    // Solids & Sludge
+                    this.set('res_tss_load', TSSLoadRate.toFixed(2) + ' kg/m²/hr');
+                    this.set('res_tss_out', TSS_out.toFixed(1) + ' mg/L');
+                    this.set('res_solids_removed', SolidsRemoved.toFixed(2) + ' kg/hr');
+                    this.set('res_sludge_prod', SludgeProd.toFixed(3) + ' m³/hr');
+                    this.set('res_sludge_daily', SludgeDaily.toFixed(2) + ' m³/day');
+
+                    // Equipment Table
+                    const equipment = [
+                        { name: 'DAF Tank', spec: `${Length.toFixed(1)}L × ${Width.toFixed(1)}W × ${Depth.toFixed(1)}H m`, qty: 1 },
+                        { name: 'Recycle Pump', spec: `${Q_recycle.toFixed(1)} m³/hr @ 0.5 bar`, qty: 1 },
+                        { name: 'Air Compressor', spec: `${(AirAvail * 1.2).toFixed(1)} kg/hr air`, qty: 1 },
+                        { name: 'Saturator Vessel', spec: `${SaturatorVol.toFixed(1)} m³ @ ${P} bar`, qty: 1 },
+                        { name: 'Sludge Skimmer', spec: `${Width.toFixed(1)} m width`, qty: 1 },
+                        { name: 'Float Sludge Pump', spec: `${(SludgeProd * 1.5).toFixed(1)} m³/hr`, qty: 1 }
+                    ];
+
+                    let equipHTML = '';
+                    equipment.forEach(eq => {
+                        equipHTML += `<tr><td>${eq.name}</td><td>${eq.spec}</td><td>${eq.qty}</td></tr>`;
+                    });
+                    document.getElementById('equipment_table').innerHTML = equipHTML;
+
+                    // Warnings & Success
+                    const warnings = [];
+                    if (SLR < 4 || SLR > 10) warnings.push('⚠️ Surface loading rate outside typical range (4-10 m/hr)');
+                    if (HRT_actual < 20 || HRT_actual > 40) warnings.push('⚠️ Retention time outside typical range (20-40 min)');
+                    if (AS_actual < 0.005) warnings.push('⚠️ A/S ratio may be too low for effective flotation');
+                    if (AS_actual > 0.06) warnings.push('⚠️ A/S ratio may be excessive - check economics');
+                    if (RecycleRatio < 15 || RecycleRatio > 50) warnings.push('⚠️ Recycle ratio outside typical range (15-50%)');
+                    if (TSSLoadRate > 5) warnings.push('⚠️ High TSS loading - consider pre-treatment');
+
+                    const warningBox = document.getElementById('warnings');
+                    if (warnings.length > 0) {
+                        warningBox.innerHTML = warnings.map(w => `<div class="warning-item">${w}</div>`).join('');
+                        warningBox.className = 'warning-box show';
+                    } else {
+                        warningBox.className = 'warning-box';
+                    }
+
+                    // Success message
+                    const successBox = document.getElementById('success');
+                    if (warnings.length === 0) {
+                        successBox.innerHTML = '<i class="fas fa-check-circle"></i> Design parameters are within recommended ranges!';
+                        successBox.className = 'success-box show';
+                    } else {
+                        successBox.className = 'success-box';
+                    }
+
+                    // Update Chart
+                    this.updateChart(TSS_in, TSS_out, RemovalEff, SLR, TSSLoadRate, AS_actual);
+
+                } catch (error) {
+                    alert('Calculation error: ' + error.message);
+                }
+            },
+
+            // Chart visualization
+            updateChart: function(tss_in, tss_out, removal, slr, loading, as_ratio) {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+
+                if (window.dafChart) {
+                    window.dafChart.destroy();
+                }
+
+                window.dafChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['TSS In', 'TSS Out', 'Removal %', 'SLR (×10)', 'Loading (×10)', 'A/S (×100)'],
+                        datasets: [{
+                            label: 'Performance Metrics',
+                            data: [
+                                tss_in,
+                                tss_out,
+                                removal,
+                                slr * 10,
+                                loading * 10,
+                                as_ratio * 100
+                            ],
+                            backgroundColor: [
+                                'rgba(14, 165, 233, 0.7)',
+                                'rgba(239, 68, 68, 0.7)',
+                                'rgba(16, 185, 129, 0.7)',
+                                'rgba(245, 158, 11, 0.7)',
+                                'rgba(99, 102, 241, 0.7)',
+                                'rgba(236, 72, 153, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(14, 165, 233, 1)',
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(16, 185, 129, 1)',
+                                'rgba(245, 158, 11, 1)',
+                                'rgba(99, 102, 241, 1)',
+                                'rgba(236, 72, 153, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'DAF Performance Parameters',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            // PDF Export
+            exportPDF: function() {
+                const element = document.getElementById('results-panel');
+                const opt = {
+                    margin: 10,
+                    filename: 'DAF_Design_Report.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            }
+        };
+
+        // Auto-calculate on input change
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => DAFEngine.calculate());
+            });
+
+            // Initial calculation
+            DAFEngine.calculate();
+        });
+    </script>
+</body>
+
+</html>

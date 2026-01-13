@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NF/UF Membrane Selector | EEPL</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #64748b;
+            --accent: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-page: #eff6ff;
+            --card-bg: #ffffff;
+            --border-color: #bfdbfe;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            margin: 0;
+            padding: 20px;
+            color: var(--accent);
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: white;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 8px 0 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+        }
+
+        .design-studio {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(59, 130, 246, 0.2);
+        }
+
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 2px solid var(--border-color);
+            background: linear-gradient(to right, #eff6ff, #ffffff);
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 14px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            pointer-events: none;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: var(--primary-dark);
+        }
+
+        .preset-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
+        }
+
+        .result-block {
+            background: linear-gradient(135deg, #eff6ff, #ffffff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-block h4 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .calc-row:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .calc-label {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .calc-val {
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff, #eff6ff);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
+            border-color: var(--primary);
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border: 2px solid #fed7aa;
+            color: #c2410c;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .warning-item {
+            margin-bottom: 6px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-weight: 500;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #bbf7d0;
+            color: #166534;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .info-badge {
+            background: #bfdbfe;
+            color: #1e40af;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent);
+        }
+
+        table tr:hover {
+            background: #eff6ff;
+        }
+
+        .membrane-badge {
+            background: var(--success);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1><i class="fas fa-filter"></i> NF/UF Membrane Selector</h1>
+        <p>Membrane Selection | Flux Optimization | Temperature Correction | Life Projection</p>
+    </div>
+
+    <div class="design-studio">
+        <!-- Input Panel -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-sliders-h"></i> Design Parameters</div>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Presets -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-magic"></i> Quick Presets</div>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="MEMEngine.loadPreset('uf_municipal')">UF Municipal</button>
+                            <button class="preset-btn" onclick="MEMEngine.loadPreset('uf_industrial')">UF Industrial</button>
+                            <button class="preset-btn" onclick="MEMEngine.loadPreset('nf_softening')">NF Softening</button>
+                            <button class="preset-btn" onclick="MEMEngine.loadPreset('nf_organics')">NF Organics</button>
+                        </div>
+                    </div>
+
+                    <!-- Membrane Type -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-layer-group"></i> Membrane Selection</div>
+                        <div class="input-group">
+                            <label>Membrane Type</label>
+                            <div class="input-wrapper">
+                                <select id="membrane_type" onchange="MEMEngine.updateMembraneType()">
+                                    <option value="uf">Ultrafiltration (UF)</option>
+                                    <option value="nf">Nanofiltration (NF)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>MWCO (Molecular Weight Cut-Off)</label>
+                            <div class="input-wrapper">
+                                <select id="mwco" onchange="MEMEngine.updateMWCO()">
+                                    <optgroup label="UF Membranes">
+                                        <option value="10000">10 kDa (10,000 Da)</option>
+                                        <option value="30000">30 kDa (30,000 Da)</option>
+                                        <option value="50000">50 kDa (50,000 Da)</option>
+                                        <option value="100000" selected>100 kDa (100,000 Da)</option>
+                                        <option value="150000">150 kDa (150,000 Da)</option>
+                                    </optgroup>
+                                    <optgroup label="NF Membranes">
+                                        <option value="200">200 Da (NF90)</option>
+                                        <option value="300">300 Da (NF270)</option>
+                                        <option value="400">400 Da (NF200)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Membrane Configuration</label>
+                            <div class="input-wrapper">
+                                <select id="membrane_config">
+                                    <option value="hollow_fiber">Hollow Fiber</option>
+                                    <option value="spiral_wound">Spiral Wound</option>
+                                    <option value="tubular">Tubular</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flow Parameters -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-tint"></i> Flow Parameters</div>
+                        <div class="input-group">
+                            <label>Design Flow Rate (Permeate)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="flow" value="100" step="1">
+                                <span class="unit-badge">m³/hr</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Target Recovery</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="recovery" value="90" step="1">
+                                <span class="unit-badge">%</span>
+                            </div>
+                            <div class="info-badge">UF: 90-95% | NF: 75-90%</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Operating Temperature</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="temp" value="25" step="1">
+                                <span class="unit-badge">°C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Operating Conditions -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-cogs"></i> Operating Conditions</div>
+                        <div class="input-group">
+                            <label>Target Net Flux (at 25°C)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="flux_target" value="80" step="5">
+                                <span class="unit-badge">LMH</span>
+                            </div>
+                            <div class="info-badge">UF: 60-120 | NF: 20-40 LMH</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Transmembrane Pressure (TMP)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="tmp" value="1.5" step="0.1">
+                                <span class="unit-badge">bar</span>
+                            </div>
+                            <div class="info-badge">UF: 0.5-3 | NF: 5-15 bar</div>
+                        </div>
+                        <div class="input-group">
+                            <label>Feed Water TDS</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="tds" value="500" step="50">
+                                <span class="unit-badge">mg/L</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Feed Water Turbidity</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="turbidity" value="1" step="0.1">
+                                <span class="unit-badge">NTU</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cleaning & Maintenance -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-tools"></i> Cleaning Parameters</div>
+                        <div class="input-group">
+                            <label>Chemical Cleaning Frequency</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="clean_freq" value="30" step="5">
+                                <span class="unit-badge">days</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Expected Membrane Life</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="membrane_life" value="5" step="0.5">
+                                <span class="unit-badge">years</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="action-btn" onclick="MEMEngine.calculate()">
+                        <i class="fas fa-calculator"></i> Design Membrane System
+                    </button>
+                    <br>
+                    <button class="action-btn secondary" onclick="MEMEngine.exportPDF()">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div id="results-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-chart-line"></i> Design Results</div>
+                </div>
+                <div class="panel-body">
+                    <div class="warning-box" id="warnings"></div>
+                    <div class="success-box" id="success"></div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_membrane_area">--</div>
+                            <div class="kpi-label">Membrane Area (m²)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_modules">--</div>
+                            <div class="kpi-label">Modules Required</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_flux_corrected">--</div>
+                            <div class="kpi-label">Flux @ Temp (LMH)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpi_feed_flow">--</div>
+                            <div class="kpi-label">Feed Flow (m³/hr)</div>
+                        </div>
+                    </div>
+
+                    <!-- Membrane Selection -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 1</span> Membrane Selection & Specifications</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Recommended Membrane</span>
+                            <span class="calc-val" id="res_membrane_model">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">MWCO</span>
+                            <span class="calc-val" id="res_mwco">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Membrane Material</span>
+                            <span class="calc-val" id="res_material">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Max Operating Pressure</span>
+                            <span class="calc-val" id="res_max_pressure">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Max Operating Temperature</span>
+                            <span class="calc-val" id="res_max_temp">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">pH Range</span>
+                            <span class="calc-val" id="res_ph_range">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Flux Calculation -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 2</span> Flux Calculation with Temperature Correction</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Baseline Flux (25°C)</span>
+                            <span class="calc-val" id="res_flux_baseline">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Temperature Correction Factor (TCF)</span>
+                            <span class="calc-val" id="res_tcf">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Corrected Flux @ Operating Temp</span>
+                            <span class="calc-val" id="res_flux_corrected">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Design Flux (with 15% margin)</span>
+                            <span class="calc-val" id="res_flux_design">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Specific Flux (LMH/bar)</span>
+                            <span class="calc-val" id="res_specific_flux">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Membrane Sizing -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 3</span> Membrane Sizing</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Required Membrane Area</span>
+                            <span class="calc-val" id="res_membrane_area">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Module Area (Standard)</span>
+                            <span class="calc-val" id="res_module_area">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Number of Modules Required</span>
+                            <span class="calc-val" id="res_modules">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Installed Membrane Area</span>
+                            <span class="calc-val" id="res_installed_area">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual Operating Flux</span>
+                            <span class="calc-val" id="res_actual_flux">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Membrane Packing Density</span>
+                            <span class="calc-val" id="res_packing_density">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Flow Balance -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 4</span> Flow Balance & Recovery</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Permeate Flow</span>
+                            <span class="calc-val" id="res_permeate_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Feed Flow Required</span>
+                            <span class="calc-val" id="res_feed_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Concentrate (Reject) Flow</span>
+                            <span class="calc-val" id="res_reject_flow">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Actual Recovery</span>
+                            <span class="calc-val" id="res_recovery_actual">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Concentration Factor</span>
+                            <span class="calc-val" id="res_concentration_factor">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Reject TDS (Estimated)</span>
+                            <span class="calc-val" id="res_reject_tds">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Pressure & Energy -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 5</span> Pressure & Energy Requirements</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Operating TMP</span>
+                            <span class="calc-val" id="res_tmp">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Feed Pressure Required</span>
+                            <span class="calc-val" id="res_feed_pressure">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Pump Power Requirement</span>
+                            <span class="calc-val" id="res_pump_power">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Specific Energy Consumption</span>
+                            <span class="calc-val" id="res_sec">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Daily Energy Consumption</span>
+                            <span class="calc-val" id="res_energy_daily">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Cleaning & Maintenance -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 6</span> Cleaning Schedule & Life Projection</h4>
+                        <div class="calc-row">
+                            <span class="calc-label">Backwash Frequency</span>
+                            <span class="calc-val" id="res_backwash">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">CEB Frequency</span>
+                            <span class="calc-val" id="res_ceb">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">CIP Frequency</span>
+                            <span class="calc-val" id="res_cip">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Expected Membrane Life</span>
+                            <span class="calc-val" id="res_life">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Total Cleanings over Life</span>
+                            <span class="calc-val" id="res_total_cleanings">--</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-label">Replacement Cost per Module</span>
+                            <span class="calc-val" id="res_module_cost">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Commercial Membranes Database -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Database</span> Commercial Membrane Options</h4>
+                        <table id="membrane_database">
+                            <thead>
+                                <tr>
+                                    <th>Manufacturer</th>
+                                    <th>Model</th>
+                                    <th>Type</th>
+                                    <th>Area (m²)</th>
+                                    <th>Flux (LMH)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membrane_tbody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: #94a3b8;">Run calculation to generate</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Equipment Summary -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Step 7</span> Equipment Summary</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Equipment</th>
+                                    <th>Specification</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipment_table">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #94a3b8;">Run calculation to generate</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Performance Chart -->
+                    <div class="result-block">
+                        <h4><span class="step-badge">Analysis</span> Performance Visualization</h4>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.MEMEngine = {
+            membraneDatabase: {
+                uf: [
+                    { mfr: 'DOW', model: 'SFP-2860', area: 51, flux: 100, mwco: 100000, material: 'PES', pressure: 5 },
+                    { mfr: 'Toray', model: 'HFU-2020', area: 40, flux: 90, mwco: 150000, material: 'PVDF', pressure: 4 },
+                    { mfr: 'Pentair', model: 'X-Flow', area: 55, flux: 80, mwco: 100000, material: 'PES', pressure: 6 },
+                    { mfr: 'Pall', model: 'Membralox', area: 30, flux: 120, mwco: 50000, material: 'Ceramic', pressure: 10 }
+                ],
+                nf: [
+                    { mfr: 'DOW', model: 'NF90-400', area: 37, flux: 35, mwco: 200, material: 'TFC-PA', pressure: 15 },
+                    { mfr: 'DOW', model: 'NF270-400', area: 37, flux: 40, mwco: 300, material: 'TFC-PA', pressure: 15 },
+                    { mfr: 'Toray', model: 'NF200-4040', area: 7.9, flux: 30, mwco: 200, material: 'TFC-PA', pressure: 41 },
+                    { mfr: 'Hydranautics', model: 'ESNA1-4040', area: 7.6, flux: 38, mwco: 250, material: 'TFC-PA', pressure: 41 }
+                ]
+            },
+
+            val: function(id) {
+                return parseFloat(document.getElementById(id).value) || 0;
+            },
+            set: function(id, text) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            },
+
+            updateMembraneType: function() {
+                const type = document.getElementById('membrane_type').value;
+                if (type === 'uf') {
+                    document.getElementById('flux_target').value = 80;
+                    document.getElementById('tmp').value = 1.5;
+                    document.getElementById('recovery').value = 90;
+                } else {
+                    document.getElementById('flux_target').value = 30;
+                    document.getElementById('tmp').value = 8;
+                    document.getElementById('recovery').value = 80;
+                }
+            },
+
+            updateMWCO: function() {
+                // Placeholder for MWCO-based adjustments
+            },
+
+            loadPreset: function(type) {
+                const presets = {
+                    uf_municipal: {
+                        membrane_type: 'uf', mwco: '100000', membrane_config: 'hollow_fiber',
+                        flow: 100, recovery: 92, temp: 25, flux_target: 80, tmp: 1.5,
+                        tds: 500, turbidity: 1, clean_freq: 30, membrane_life: 5
+                    },
+                    uf_industrial: {
+                        membrane_type: 'uf', mwco: '50000', membrane_config: 'tubular',
+                        flow: 50, recovery: 88, temp: 30, flux_target: 100, tmp: 2,
+                        tds: 800, turbidity: 5, clean_freq: 20, membrane_life: 4
+                    },
+                    nf_softening: {
+                        membrane_type: 'nf', mwco: '200', membrane_config: 'spiral_wound',
+                        flow: 80, recovery: 85, temp: 25, flux_target: 35, tmp: 10,
+                        tds: 1500, turbidity: 0.5, clean_freq: 45, membrane_life: 6
+                    },
+                    nf_organics: {
+                        membrane_type: 'nf', mwco: '300', membrane_config: 'spiral_wound',
+                        flow: 60, recovery: 80, temp: 22, flux_target: 30, tmp: 8,
+                        tds: 1000, turbidity: 0.3, clean_freq: 40, membrane_life: 5
+                    }
+                };
+
+                const preset = presets[type];
+                if (preset) {
+                    Object.keys(preset).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = preset[key];
+                    });
+                    this.calculate();
+                }
+            },
+
+            calculate: function() {
+                try {
+                    // Inputs
+                    const MemType = document.getElementById('membrane_type').value;
+                    const MWCO = this.val('mwco');
+                    const Config = document.getElementById('membrane_config').value;
+                    const Q_perm = this.val('flow'); // m3/hr
+                    const Recovery = this.val('recovery'); // %
+                    const Temp = this.val('temp'); // °C
+                    const Flux_target = this.val('flux_target'); // LMH
+                    const TMP = this.val('tmp'); // bar
+                    const TDS = this.val('tds'); // mg/L
+                    const Turbidity = this.val('turbidity'); // NTU
+                    const CleanFreq = this.val('clean_freq'); // days
+                    const MemLife = this.val('membrane_life'); // years
+
+                    // STEP 1: Membrane Selection
+                    let membrane_model = '';
+                    let material = '';
+                    let max_pressure = 0;
+                    let max_temp = 0;
+                    let ph_range = '';
+
+                    if (MemType === 'uf') {
+                        membrane_model = 'DOW SFP-2860 (or equivalent)';
+                        material = 'PES (Polyethersulfone)';
+                        max_pressure = 5;
+                        max_temp = 40;
+                        ph_range = '2-11';
+                    } else {
+                        membrane_model = 'DOW NF90-400 (or equivalent)';
+                        material = 'TFC-PA (Thin Film Composite)';
+                        max_pressure = 41;
+                        max_temp = 45;
+                        ph_range = '3-10';
+                    }
+
+                    // STEP 2: Flux Calculation with Temperature Correction
+                    // TCF = exp[0.0239 × (T - 25)] for typical membranes
+                    const TCF = Math.exp(0.0239 * (Temp - 25));
+                    const Flux_corrected = Flux_target * TCF; // LMH at operating temp
+                    const Flux_design = Flux_corrected * 0.85; // 15% design margin
+                    const Specific_flux = Flux_corrected / TMP; // LMH/bar
+
+                    // STEP 3: Membrane Sizing
+                    const Membrane_area = (Q_perm * 1000) / Flux_design; // m²
+
+                    // Module area depends on configuration
+                    let module_area = 40; // default
+                    let packing_density = 600;
+                    if (Config === 'hollow_fiber') {
+                        module_area = 40;
+                        packing_density = 800;
+                    } else if (Config === 'spiral_wound') {
+                        module_area = MemType === 'uf' ? 37 : 7.9;
+                        packing_density = 1000;
+                    } else {
+                        module_area = 30;
+                        packing_density = 200;
+                    }
+
+                    const Modules = Math.ceil(Membrane_area / module_area);
+                    const Installed_area = Modules * module_area; // m²
+                    const Actual_flux = (Q_perm * 1000) / Installed_area; // LMH
+
+                    // STEP 4: Flow Balance
+                    const Permeate_flow = Q_perm; // m3/hr
+                    const Feed_flow = Permeate_flow / (Recovery / 100); // m3/hr
+                    const Reject_flow = Feed_flow - Permeate_flow; // m3/hr
+                    const Recovery_actual = (Permeate_flow / Feed_flow) * 100; // %
+                    const CF = 1 / (1 - Recovery / 100); // Concentration factor
+                    const Reject_TDS = TDS * CF; // mg/L
+
+                    // STEP 5: Pressure & Energy
+                    const Feed_pressure = TMP + 0.5; // bar (+ system losses)
+                    const Pump_power = (Feed_flow * Feed_pressure * 100) / (3600 * 0.75); // kW (75% efficiency)
+                    const SEC = Pump_power / Permeate_flow; // kWh/m³
+                    const Energy_daily = Pump_power * 24; // kWh/day
+
+                    // STEP 6: Cleaning & Maintenance
+                    const Backwash_freq = MemType === 'uf' ? 'Every 30 minutes' : 'N/A';
+                    const CEB_freq = 'Every 3-7 days';
+                    const CIP_freq = 'Every ' + CleanFreq + ' days';
+                    const Life_years = MemLife;
+                    const Total_cleanings = Math.floor((Life_years * 365) / CleanFreq);
+                    const Module_cost = MemType === 'uf' ? 15000 : 8000; // ₹ per module
+
+                    // Update UI - KPIs
+                    this.set('kpi_membrane_area', Membrane_area.toFixed(0));
+                    this.set('kpi_modules', Modules);
+                    this.set('kpi_flux_corrected', Flux_corrected.toFixed(1));
+                    this.set('kpi_feed_flow', Feed_flow.toFixed(1));
+
+                    // Membrane Selection
+                    this.set('res_membrane_model', membrane_model);
+                    this.set('res_mwco', MWCO.toLocaleString() + ' Da');
+                    this.set('res_material', material);
+                    this.set('res_max_pressure', max_pressure + ' bar');
+                    this.set('res_max_temp', max_temp + ' °C');
+                    this.set('res_ph_range', ph_range);
+
+                    // Flux Calculation
+                    this.set('res_flux_baseline', Flux_target.toFixed(1) + ' LMH');
+                    this.set('res_tcf', TCF.toFixed(3));
+                    this.set('res_flux_corrected', Flux_corrected.toFixed(1) + ' LMH');
+                    this.set('res_flux_design', Flux_design.toFixed(1) + ' LMH');
+                    this.set('res_specific_flux', Specific_flux.toFixed(1) + ' LMH/bar');
+
+                    // Membrane Sizing
+                    this.set('res_membrane_area', Membrane_area.toFixed(1) + ' m²');
+                    this.set('res_module_area', module_area.toFixed(1) + ' m²');
+                    this.set('res_modules', Modules + ' modules');
+                    this.set('res_installed_area', Installed_area.toFixed(1) + ' m²');
+                    this.set('res_actual_flux', Actual_flux.toFixed(1) + ' LMH');
+                    this.set('res_packing_density', packing_density + ' m²/m³');
+
+                    // Flow Balance
+                    this.set('res_permeate_flow', Permeate_flow.toFixed(1) + ' m³/hr');
+                    this.set('res_feed_flow', Feed_flow.toFixed(1) + ' m³/hr');
+                    this.set('res_reject_flow', Reject_flow.toFixed(2) + ' m³/hr');
+                    this.set('res_recovery_actual', Recovery_actual.toFixed(1) + ' %');
+                    this.set('res_concentration_factor', CF.toFixed(2));
+                    this.set('res_reject_tds', Reject_TDS.toFixed(0) + ' mg/L');
+
+                    // Pressure & Energy
+                    this.set('res_tmp', TMP.toFixed(1) + ' bar');
+                    this.set('res_feed_pressure', Feed_pressure.toFixed(1) + ' bar');
+                    this.set('res_pump_power', Pump_power.toFixed(2) + ' kW');
+                    this.set('res_sec', SEC.toFixed(2) + ' kWh/m³');
+                    this.set('res_energy_daily', Energy_daily.toFixed(1) + ' kWh/day');
+
+                    // Cleaning & Maintenance
+                    this.set('res_backwash', Backwash_freq);
+                    this.set('res_ceb', CEB_freq);
+                    this.set('res_cip', CIP_freq);
+                    this.set('res_life', Life_years + ' years');
+                    this.set('res_total_cleanings', Total_cleanings + ' CIPs');
+                    this.set('res_module_cost', '₹ ' + Module_cost.toLocaleString());
+
+                    // Membrane Database
+                    const membranes = this.membraneDatabase[MemType];
+                    let dbHTML = '';
+                    membranes.forEach(mem => {
+                        const suitable = mem.area >= (module_area * 0.8) && mem.flux >= (Flux_target * 0.7);
+                        const badge = suitable ? '<span class="membrane-badge">SUITABLE</span>' : '-';
+                        dbHTML += `
+                            <tr style="${suitable ? 'background: #dcfce7;' : ''}">
+                                <td>${mem.mfr}</td>
+                                <td>${mem.model}</td>
+                                <td>${mem.material}</td>
+                                <td>${mem.area.toFixed(1)}</td>
+                                <td>${mem.flux}</td>
+                                <td>${badge}</td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('membrane_tbody').innerHTML = dbHTML;
+
+                    // Equipment Table
+                    const equipment = [
+                        { name: 'Membrane Modules', spec: `${membrane_model}`, qty: Modules },
+                        { name: 'Membrane Housing', spec: `Pressure vessels for ${Modules} modules`, qty: Math.ceil(Modules / 6) },
+                        { name: 'Feed Pump', spec: `${Feed_flow.toFixed(1)} m³/hr @ ${Feed_pressure.toFixed(1)} bar`, qty: 1 },
+                        { name: 'Backwash Pump (UF)', spec: MemType === 'uf' ? `${(Feed_flow * 0.3).toFixed(1)} m³/hr` : 'N/A', qty: MemType === 'uf' ? 1 : 0 },
+                        { name: 'CIP System', spec: `500 L tank with chemical dosing`, qty: 1 },
+                        { name: 'Pre-filters', spec: `Cartridge filters (5-10 µm)`, qty: 2 },
+                        { name: 'Instruments', spec: `Flow, pressure, turbidity meters`, qty: 1 },
+                        { name: 'Control Panel', spec: `PLC-based automation`, qty: 1 }
+                    ];
+
+                    let equipHTML = '';
+                    equipment.forEach(eq => {
+                        if (eq.qty > 0) {
+                            equipHTML += `<tr><td>${eq.name}</td><td>${eq.spec}</td><td>${eq.qty}</td></tr>`;
+                        }
+                    });
+                    document.getElementById('equipment_table').innerHTML = equipHTML;
+
+                    // Warnings
+                    const warnings = [];
+                    if (MemType === 'uf' && (Flux_target < 60 || Flux_target > 150))
+                        warnings.push('⚠️ UF flux outside typical range (60-150 LMH)');
+                    if (MemType === 'nf' && (Flux_target < 20 || Flux_target > 50))
+                        warnings.push('⚠️ NF flux outside typical range (20-50 LMH)');
+                    if (MemType === 'uf' && TMP > 3) warnings.push('⚠️ TMP too high for UF (>3 bar)');
+                    if (MemType === 'nf' && TMP < 5) warnings.push('⚠️ TMP too low for NF (<5 bar)');
+                    if (Recovery > 95) warnings.push('⚠️ Very high recovery - risk of fouling/scaling');
+                    if (Turbidity > 1 && MemType === 'nf') warnings.push('⚠️ High turbidity for NF - use UF pretreatment');
+                    if (Reject_TDS > 5000) warnings.push('⚠️ High reject TDS - check disposal/treatment');
+
+                    const warningBox = document.getElementById('warnings');
+                    if (warnings.length > 0) {
+                        warningBox.innerHTML = warnings.map(w => `<div class="warning-item">${w}</div>`).join('');
+                        warningBox.className = 'warning-box show';
+                    } else {
+                        warningBox.className = 'warning-box';
+                    }
+
+                    const successBox = document.getElementById('success');
+                    if (warnings.length === 0) {
+                        successBox.innerHTML = '<i class="fas fa-check-circle"></i> Membrane system design parameters are within recommended ranges!';
+                        successBox.className = 'success-box show';
+                    } else {
+                        successBox.className = 'success-box';
+                    }
+
+                    // Update Chart
+                    this.updateChart(Flux_corrected, TMP, Recovery, SEC, Modules, Life_years);
+
+                } catch (error) {
+                    alert('Calculation error: ' + error.message);
+                }
+            },
+
+            updateChart: function(flux, tmp, recovery, sec, modules, life) {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+
+                if (window.memChart) {
+                    window.memChart.destroy();
+                }
+
+                window.memChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Flux', 'TMP (×10)', 'Recovery', 'SEC', 'Modules', 'Life (years)'],
+                        datasets: [{
+                            label: 'Membrane System Parameters',
+                            data: [
+                                flux,
+                                tmp * 10,
+                                recovery,
+                                sec,
+                                modules,
+                                life
+                            ],
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.7)',
+                                'rgba(37, 99, 235, 0.7)',
+                                'rgba(96, 165, 250, 0.7)',
+                                'rgba(147, 197, 253, 0.7)',
+                                'rgba(191, 219, 254, 0.7)',
+                                'rgba(219, 234, 254, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(59, 130, 246, 1)',
+                                'rgba(37, 99, 235, 1)',
+                                'rgba(96, 165, 250, 1)',
+                                'rgba(147, 197, 253, 1)',
+                                'rgba(191, 219, 254, 1)',
+                                'rgba(219, 234, 254, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Membrane System Performance',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            exportPDF: function() {
+                const element = document.getElementById('results-panel');
+                const opt = {
+                    margin: 10,
+                    filename: 'Membrane_System_Design_Report.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            }
+        };
+
+        // Auto-calculate on input change
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => MEMEngine.calculate());
+            });
+
+            // Initial calculation
+            MEMEngine.calculate();
+        });
+    </script>
+</body>
+
+</html>
