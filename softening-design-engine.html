@@ -359,7 +359,7 @@
                     <div class="input-group">
                         <label>Magnesium Hardness</label>
                         <div class="input-wrapper">
-                            <input type="number" id="mgH" value="150" readonly style="background:#f1f5f9">
+                            <input type="number" id="mgH" value="150">
                             <span class="unit-badge">ppm CaCO3</span>
                         </div>
                     </div>
@@ -608,18 +608,14 @@
                     const TH = getVal('th');
                     const Alk = getVal('alk');
                     const CaH = getVal('caH');
-                    const MgH = Math.max(0, TH - CaH);
-
+                    const MgH = getVal('mgH');
+                    
                     const co2El = document.getElementById('co2');
                     const CO2 = co2El ? (parseFloat(co2El.value) || 0) : 0;
 
                     const limePurity = getVal('limePurity') / 100;
                     const sodaPurity = getVal('sodaPurity') / 100;
                     const excessLime = getVal('excessLime');
-
-                    // Update Readonly Fields
-                    const mgHEl = document.getElementById('mgH');
-                    if (mgHEl) mgHEl.value = MgH;
 
                     // 1. Hardness Profiling
                     const CH = Math.min(TH, Alk);
